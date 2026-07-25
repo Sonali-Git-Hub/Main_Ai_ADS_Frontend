@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply transition-colors duration-200;
+  }
+}
+
+/* Glassmorphism & Modern AISA UI Components */
+.glass-card {
+  background: rgba(17, 23, 38, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.light .glass-card {
+  background: #FFFFFF;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.glass-input {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  @apply transition-all duration-200 text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl px-4 py-2.5;
+}
+
+.light .glass-input {
+  background: #F8F9FD;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  @apply text-slate-900 placeholder-slate-500;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-[#6B5AED] to-[#7B61FF] hover:from-[#7B61FF] hover:to-[#A882FF] text-white font-medium px-4 py-2.5 rounded-xl shadow-lg shadow-[#7B61FF]/25 hover:shadow-[#7B61FF]/40 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 text-sm;
+}
+
+.btn-secondary {
+  @apply bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700/60 font-medium px-4 py-2.5 rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 text-sm;
+}
+
+.light .btn-secondary {
+  @apply bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.4);
+}
