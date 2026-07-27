@@ -2,26 +2,26 @@ import React from 'react';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
-import { AISAAssistantDrawer } from './components/layout/AISAAssistantDrawer';
-import { QuickPostModal } from './components/modals/QuickPostModal';
-import { ScraperOverlayModal } from './components/modals/ScraperOverlayModal';
-import { CreditTopupModal } from './components/modals/CreditTopupModal';
 
-// Modules
-import { DashboardModule } from './components/modules/DashboardModule';
-import { BrandDnaModule } from './components/modules/BrandDnaModule';
-import { StrategyModule } from './components/modules/StrategyModule';
-import { SeoModule } from './components/modules/SeoModule';
-import { CalendarModule } from './components/modules/CalendarModule';
-import { ContentStudioModule } from './components/modules/ContentStudioModule';
-import { CampaignBuilderModule } from './components/modules/CampaignBuilderModule';
-import { CreativeStudioModule } from './components/modules/CreativeStudioModule';
-import { RepurposeModule } from './components/modules/RepurposeModule';
-import { AssetLibraryModule } from './components/modules/AssetLibraryModule';
-import { ApprovalsDeskModule } from './components/modules/ApprovalsDeskModule';
-import { AnalyticsModule } from './components/modules/AnalyticsModule';
-import { TeamRbacModule } from './components/modules/TeamRbacModule';
-import { SettingsBillingModule } from './components/modules/SettingsBillingModule';
+// Feature Modules (Modular Architecture)
+import { DashboardModule } from './features/dashboard/DashboardModule';
+import { BrandDnaModule } from './features/brandDna/BrandDnaModule';
+import { ScraperOverlayModal } from './features/brandDna/ScraperOverlayModal';
+import { StrategyModule } from './features/strategy/StrategyModule';
+import { SeoModule } from './features/seo/SeoModule';
+import { CalendarModule } from './features/calendar/CalendarModule';
+import { ContentStudioModule } from './features/contentStudio/ContentStudioModule';
+import { QuickPostModal } from './features/contentStudio/QuickPostModal';
+import { CampaignBuilderModule } from './features/campaigns/CampaignBuilderModule';
+import { CreativeStudioModule } from './features/creativeStudio/CreativeStudioModule';
+import { CreditTopupModal } from './features/creativeStudio/CreditTopupModal';
+import { RepurposeModule } from './features/repurpose/RepurposeModule';
+import { AssetLibraryModule } from './features/assetLibrary/AssetLibraryModule';
+import { ApprovalsDeskModule } from './features/approvals/ApprovalsDeskModule';
+import { AnalyticsModule } from './features/analytics/AnalyticsModule';
+import { TeamRbacModule } from './features/teamRbac/TeamRbacModule';
+import { SettingsBillingModule } from './features/settingsBilling/SettingsBillingModule';
+import { AISAAssistantDrawer } from './features/aisaAssistant/AISAAssistantDrawer';
 
 const MainContent = () => {
   const { activeModule } = useWorkspace();
@@ -47,7 +47,7 @@ const MainContent = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100">
+    <div className="flex min-h-screen bg-[#F8F9FD] dark:bg-[#090d16] text-slate-900 dark:text-slate-100">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
@@ -56,7 +56,7 @@ const MainContent = () => {
         </main>
       </div>
 
-      {/* Global Modals & Overlay Drawers */}
+      {/* Feature Modals & Overlay Drawers */}
       <QuickPostModal />
       <ScraperOverlayModal />
       <CreditTopupModal />
