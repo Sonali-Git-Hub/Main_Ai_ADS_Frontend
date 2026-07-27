@@ -107,38 +107,46 @@ export const CalendarModule = () => {
 
       {/* Add Event Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#0f172a] border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-            <h3 className="font-bold text-white text-sm">Schedule Calendar Entry</h3>
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-[95vw] sm:max-w-md bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 text-slate-900 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 className="font-extrabold text-slate-900 text-base">Schedule Calendar Entry</h3>
+              <button 
+                onClick={() => setShowAddModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-900"
+              >
+                ✕
+              </button>
+            </div>
             <form onSubmit={handleSaveEvent} className="space-y-3">
               <div>
-                <label className="block text-xs text-slate-300 font-semibold mb-1">Topic / Title</label>
+                <label className="block text-xs text-slate-800 font-bold mb-1">Topic / Title</label>
                 <input 
                   type="text" 
                   value={title} 
                   onChange={(e) => setTitle(e.target.value)} 
                   placeholder="e.g. SEO Article Launch: Brand DNA"
-                  className="w-full glass-input text-xs" 
+                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#7B61FF] focus:ring-1 focus:ring-[#7B61FF] rounded-xl px-4 py-2 text-xs" 
                   required 
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-slate-300 font-semibold mb-1">Publishing Date</label>
+                <label className="block text-xs text-slate-800 font-bold mb-1">Publishing Date</label>
                 <input 
                   type="date" 
                   value={date} 
                   onChange={(e) => setDate(e.target.value)} 
-                  className="w-full glass-input text-xs" 
+                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#7B61FF] focus:ring-1 focus:ring-[#7B61FF] rounded-xl px-4 py-2 text-xs" 
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-slate-300 font-semibold mb-1">Channel Platform</label>
+                <label className="block text-xs text-slate-800 font-bold mb-1">Channel Platform</label>
                 <select 
                   value={platform} 
                   onChange={(e) => setPlatform(e.target.value)} 
-                  className="w-full glass-input text-xs"
+                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#7B61FF] focus:ring-1 focus:ring-[#7B61FF] rounded-xl px-4 py-2 text-xs"
                 >
                   <option value="Blog">Blog / Editorial</option>
                   <option value="LinkedIn">LinkedIn Post / Article</option>

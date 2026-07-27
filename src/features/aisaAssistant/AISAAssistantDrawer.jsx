@@ -56,70 +56,70 @@ export const AISAAssistantDrawer = () => {
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/60 backdrop-blur-sm flex justify-end animate-in fade-in">
-      <div className="w-full max-w-md h-full bg-[#0d121f] border-l border-slate-800 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-300">
+      <div className="w-full max-w-full sm:max-w-md h-full bg-white border-l border-slate-200 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-300 text-slate-900">
         {/* Drawer Header */}
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-purple-500 flex items-center justify-center text-white shadow-glow">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#6B5AED] to-[#7B61FF] flex items-center justify-center text-white shadow-md shadow-[#7B61FF]/30">
               <Bot className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-white text-sm">AISA™ Quick Module</h3>
-                <span className="text-[10px] bg-cyan-500/20 text-cyan-400 font-bold px-1.5 py-0.2 rounded-full">Gemini 3.5</span>
+                <h3 className="font-extrabold text-slate-900 text-sm">AISA™ Quick Module</h3>
+                <span className="text-[10px] bg-[#7B61FF]/15 text-[#7B61FF] font-bold px-1.5 py-0.2 rounded-full">Gemini 3.5</span>
               </div>
-              <p className="text-[11px] text-slate-400">Connected to {activeWorkspace.brandName} Memory</p>
+              <p className="text-[11px] text-slate-500 font-medium">Connected to {activeWorkspace.brandName} Memory</p>
             </div>
           </div>
           <button 
             onClick={() => setIsAISAAssistantOpen(false)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Quick Action Chips */}
-        <div className="px-4 py-2 border-b border-slate-800/60 bg-slate-900/30 flex gap-2 overflow-x-auto no-scrollbar">
+        <div className="px-4 py-2 border-b border-slate-200 bg-slate-50/50 flex gap-2 overflow-x-auto no-scrollbar">
           <button 
             onClick={() => handleSend("Summarize Brand DNA and voice guidelines")}
-            className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-brand-500/20 text-slate-300 hover:text-brand-300 border border-slate-700/60 whitespace-nowrap flex items-center gap-1.5 transition-all"
+            className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-white hover:bg-[#7B61FF]/10 text-slate-700 hover:text-[#7B61FF] border border-slate-200 shadow-sm whitespace-nowrap flex items-center gap-1.5 transition-all"
           >
-            <Dna className="w-3 h-3 text-brand-400" />
+            <Dna className="w-3 h-3 text-[#7B61FF]" />
             Brand DNA Summary
           </button>
           <button 
             onClick={() => handleSend("Generate 3 LinkedIn Post Hooks")}
-            className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-brand-500/20 text-slate-300 hover:text-brand-300 border border-slate-700/60 whitespace-nowrap flex items-center gap-1.5 transition-all"
+            className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-white hover:bg-[#7B61FF]/10 text-slate-700 hover:text-[#7B61FF] border border-slate-200 shadow-sm whitespace-nowrap flex items-center gap-1.5 transition-all"
           >
-            <PenTool className="w-3 h-3 text-cyan-400" />
+            <PenTool className="w-3 h-3 text-[#7B61FF]" />
             LinkedIn Hooks
           </button>
           <button 
             onClick={() => handleSend("Audit content against restricted claims")}
-            className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-brand-500/20 text-slate-300 hover:text-brand-300 border border-slate-700/60 whitespace-nowrap flex items-center gap-1.5 transition-all"
+            className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-white hover:bg-[#7B61FF]/10 text-slate-700 hover:text-[#7B61FF] border border-slate-200 shadow-sm whitespace-nowrap flex items-center gap-1.5 transition-all"
           >
-            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
             Claims Audit
           </button>
         </div>
 
         {/* Chat Messages */}
-        <div className="p-4 flex-1 overflow-y-auto space-y-4">
+        <div className="p-4 flex-1 overflow-y-auto space-y-4 bg-slate-50/30">
           {messages.map((m) => (
             <div 
               key={m.id} 
               className={`flex gap-3 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {m.sender === 'assistant' && (
-                <div className="w-7 h-7 rounded-lg bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-400 flex-shrink-0 mt-0.5">
+                <div className="w-7 h-7 rounded-lg bg-[#7B61FF]/10 border border-[#7B61FF]/30 flex items-center justify-center text-[#7B61FF] flex-shrink-0 mt-0.5">
                   <Sparkles className="w-3.5 h-3.5" />
                 </div>
               )}
-              <div className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed ${
+              <div className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed font-medium ${
                 m.sender === 'user' 
-                  ? 'bg-brand-600 text-white rounded-tr-none' 
-                  : 'bg-slate-800/80 text-slate-200 border border-slate-700/60 rounded-tl-none whitespace-pre-wrap'
+                  ? 'bg-gradient-to-r from-[#6B5AED] to-[#7B61FF] text-white rounded-tr-none shadow-md' 
+                  : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none whitespace-pre-wrap shadow-sm'
               }`}>
                 {m.text}
                 <div className="text-[9px] opacity-60 text-right mt-1">{m.time}</div>
@@ -127,7 +127,7 @@ export const AISAAssistantDrawer = () => {
             </div>
           ))}
           {loading && (
-            <div className="flex gap-2 items-center text-xs text-brand-400 animate-pulse">
+            <div className="flex gap-2 items-center text-xs text-[#7B61FF] font-bold animate-pulse">
               <RefreshCw className="w-4 h-4 animate-spin" />
               AISA™ Gemini 3.5 Engine reasoning...
             </div>
@@ -135,7 +135,7 @@ export const AISAAssistantDrawer = () => {
         </div>
 
         {/* Input Box */}
-        <div className="p-4 border-t border-slate-800 bg-slate-900/60">
+        <div className="p-4 border-t border-slate-200 bg-white">
           <form 
             onSubmit={(e) => { e.preventDefault(); handleSend(); }}
             className="flex items-center gap-2"
@@ -145,7 +145,7 @@ export const AISAAssistantDrawer = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={`Ask AISA™ for ${activeWorkspace.brandName}...`}
-              className="flex-1 glass-input text-xs"
+              className="flex-1 bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#7B61FF] focus:ring-1 focus:ring-[#7B61FF] rounded-xl px-4 py-2 text-xs"
             />
             <button 
               type="submit"

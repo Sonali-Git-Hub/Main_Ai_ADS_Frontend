@@ -49,22 +49,22 @@ export const QuickPostModal = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
-      <div className="w-full max-w-xl bg-[#0f172a] border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
+      <div className="w-full max-w-[95vw] sm:max-w-xl md:max-w-2xl bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5 text-slate-900 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-purple-500 flex items-center justify-center text-white shadow-glow">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#6B5AED] to-[#7B61FF] flex items-center justify-center text-white shadow-lg shadow-[#7B61FF]/30">
               <Zap className="w-5 h-5 text-amber-300 fill-amber-300" />
             </div>
             <div>
-              <h2 className="font-bold text-white text-base">Quick Social Post Generator</h2>
-              <p className="text-xs text-slate-400">Anchored to {activeWorkspace.brandName} Brand DNA</p>
+              <h2 className="font-extrabold text-slate-900 text-base sm:text-lg">Quick Social Post Generator</h2>
+              <p className="text-xs text-[#7B61FF] font-medium">Anchored to {activeWorkspace.brandName} Brand DNA</p>
             </div>
           </div>
           <button 
             onClick={() => setIsQuickPostOpen(false)}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -73,17 +73,17 @@ export const QuickPostModal = () => {
         {/* Options Form */}
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Target Platform</label>
-            <div className="grid grid-cols-4 gap-2">
+            <label className="block text-xs font-bold text-slate-800 mb-1.5">Target Platform</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {['LinkedIn', 'X/Twitter', 'Instagram', 'Facebook'].map(p => (
                 <button
                   key={p}
                   type="button"
                   onClick={() => setPlatform(p)}
-                  className={`py-2 px-3 rounded-xl text-xs font-medium border transition-all ${
+                  className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
                     platform === p 
-                      ? 'bg-brand-500/20 text-brand-300 border-brand-500 shadow-glow font-bold' 
-                      : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-700'
+                      ? 'bg-[#7B61FF]/15 text-[#7B61FF] border-[#7B61FF] shadow-sm' 
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
                   }`}
                 >
                   {p}
@@ -93,22 +93,22 @@ export const QuickPostModal = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Post Topic / Focus</label>
+            <label className="block text-xs font-bold text-slate-800 mb-1.5">Post Topic / Focus</label>
             <input 
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="e.g. 5 Reasons to Automate SEO Topic Clustering in 2026"
-              className="w-full glass-input text-xs"
+              className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#7B61FF] focus:ring-1 focus:ring-[#7B61FF] rounded-xl px-4 py-2.5 text-xs"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Voice Tone</label>
+            <label className="block text-xs font-bold text-slate-800 mb-1.5">Voice Tone</label>
             <select 
               value={tone} 
               onChange={(e) => setTone(e.target.value)}
-              className="w-full glass-input text-xs"
+              className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#7B61FF] focus:ring-1 focus:ring-[#7B61FF] rounded-xl px-4 py-2.5 text-xs"
             >
               <option value="Authoritative & Professional">Authoritative & Professional</option>
               <option value="Conversational & Friendly">Conversational & Friendly</option>
@@ -129,23 +129,23 @@ export const QuickPostModal = () => {
 
         {/* Output Preview */}
         {output && (
-          <div className="space-y-3 p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
-            <div className="flex items-center justify-between text-xs font-bold text-slate-400">
+          <div className="space-y-3 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-700">
               <span>{output.platform} Draft Preview</span>
               <button 
                 onClick={copyToClipboard}
-                className="flex items-center gap-1 text-brand-400 hover:underline"
+                className="flex items-center gap-1 text-[#7B61FF] hover:underline"
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 {copied ? 'Copied!' : 'Copy Post'}
               </button>
             </div>
             
-            <div className="space-y-2 text-xs text-slate-200">
-              <p className="font-bold text-brand-300">{output.hook}</p>
-              <p className="whitespace-pre-wrap">{output.caption}</p>
-              <p className="text-cyan-400">{output.hashtags.join(' ')}</p>
-              <p className="font-semibold text-slate-400">{output.cta}</p>
+            <div className="space-y-2 text-xs text-slate-900">
+              <p className="font-extrabold text-[#7B61FF] text-sm">{output.hook}</p>
+              <p className="whitespace-pre-wrap font-medium leading-relaxed">{output.caption}</p>
+              <p className="text-[#7B61FF] font-semibold">{output.hashtags.join(' ')}</p>
+              <p className="font-bold text-slate-700">{output.cta}</p>
             </div>
 
             <div className="pt-2 flex gap-2">
