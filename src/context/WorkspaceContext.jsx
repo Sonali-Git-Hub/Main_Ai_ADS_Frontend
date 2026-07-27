@@ -7,8 +7,25 @@ export const WorkspaceProvider = ({ children }) => {
   const [activeModule, setActiveModule] = useState('dashboard');
   
   // Theme & Role
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aisa_theme');
+      return saved || 'dark';
+    } catch (e) {
+      return 'dark';
+    }
+  });
   const [activeRole, setActiveRole] = useState('AgencyAdmin');
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    }
+  }, [theme]);
   
   // Workspace & Brand DNA Memory
   const [workspaces, setWorkspaces] = useState([
@@ -107,11 +124,6 @@ export const WorkspaceProvider = ({ children }) => {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(nextTheme);
     localStorage.setItem('aisa_theme', nextTheme);
-    if (nextTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
   };
 
   const addWorkspace = (newWs) => {

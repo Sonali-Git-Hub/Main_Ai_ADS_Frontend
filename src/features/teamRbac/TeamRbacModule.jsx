@@ -25,14 +25,14 @@ export const TeamRbacModule = () => {
   return (
     <div className="space-y-6 animate-in fade-in">
       {/* Header Bar */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-brand-400" />
-            <h1 className="text-xl font-extrabold text-white">Team Management & RBAC Permissions Matrix</h1>
+            <Users className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+            <h1 className="text-xl font-extrabold text-slate-800 dark:text-white">Team Management & RBAC Permissions Matrix</h1>
           </div>
-          <p className="text-xs text-slate-400">
-            Multi-tenant member access & role governance for <strong className="text-white">{activeWorkspace.brandName}</strong>.
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Multi-tenant member access & role governance for <strong className="text-slate-800 dark:text-white">{activeWorkspace.brandName}</strong>.
           </p>
         </div>
 
@@ -56,30 +56,30 @@ export const TeamRbacModule = () => {
       </div>
 
       {/* Members List */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-800 space-y-4">
-        <h2 className="text-sm font-bold text-white uppercase tracking-wider">Active Workspace Members</h2>
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        <h2 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">Active Workspace Members</h2>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[10px]">
+              <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">
                 <th className="pb-3 px-3">Name</th>
                 <th className="pb-3 px-3">Email</th>
                 <th className="pb-3 px-3">Assigned Role</th>
                 <th className="pb-3 px-3">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
               {teamMembers.map(m => (
-                <tr key={m.id} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="py-3 px-3 font-bold text-white">{m.name}</td>
-                  <td className="py-3 px-3 text-slate-300">{m.email}</td>
+                <tr key={m.id} className="hover:bg-slate-100/40 dark:hover:bg-slate-800/30 transition-colors">
+                  <td className="py-3 px-3 font-bold text-slate-800 dark:text-white">{m.name}</td>
+                  <td className="py-3 px-3 text-slate-600 dark:text-slate-300">{m.email}</td>
                   <td className="py-3 px-3">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-300 border border-brand-500/20 dark:border-brand-500/30">
                       {m.role}
                     </span>
                   </td>
-                  <td className="py-3 px-3 text-emerald-400 font-bold">{m.status}</td>
+                  <td className="py-3 px-3 text-emerald-600 dark:text-emerald-400 font-bold">{m.status}</td>
                 </tr>
               ))}
             </tbody>
@@ -88,16 +88,16 @@ export const TeamRbacModule = () => {
       </div>
 
       {/* RBAC Matrix Table */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-800 space-y-4">
-        <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        <h2 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           Canonical Role-Based Access Control (RBAC) Matrix
         </h2>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[10px]">
+              <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">
                 <th className="pb-3 px-3">Action / Module</th>
                 <th className="pb-3 px-3 text-center">Agency Admin</th>
                 <th className="pb-3 px-3 text-center">Strategist / Writer</th>
@@ -105,14 +105,14 @@ export const TeamRbacModule = () => {
                 <th className="pb-3 px-3 text-center">Client Portal User</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 text-slate-200">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 text-slate-700 dark:text-slate-200">
               {rbacMatrix.map((row, idx) => (
                 <tr key={idx}>
-                  <td className="py-3 px-3 font-semibold text-slate-300">{row.action}</td>
-                  <td className="py-3 px-3 text-center">{row.admin ? <Check className="w-4 h-4 mx-auto text-emerald-400" /> : <X className="w-4 h-4 mx-auto text-slate-600" />}</td>
-                  <td className="py-3 px-3 text-center">{row.strategist ? <Check className="w-4 h-4 mx-auto text-emerald-400" /> : <X className="w-4 h-4 mx-auto text-slate-600" />}</td>
-                  <td className="py-3 px-3 text-center">{row.compliance ? <Check className="w-4 h-4 mx-auto text-emerald-400" /> : <X className="w-4 h-4 mx-auto text-slate-600" />}</td>
-                  <td className="py-3 px-3 text-center">{row.client ? <span className="text-[10px] text-amber-400 font-bold">Restricted</span> : <X className="w-4 h-4 mx-auto text-slate-600" />}</td>
+                  <td className="py-3 px-3 font-semibold text-slate-600 dark:text-slate-300">{row.action}</td>
+                  <td className="py-3 px-3 text-center">{row.admin ? <Check className="w-4 h-4 mx-auto text-emerald-600 dark:text-emerald-400" /> : <X className="w-4 h-4 mx-auto text-slate-400 dark:text-slate-600" />}</td>
+                  <td className="py-3 px-3 text-center">{row.strategist ? <Check className="w-4 h-4 mx-auto text-emerald-600 dark:text-emerald-400" /> : <X className="w-4 h-4 mx-auto text-slate-400 dark:text-slate-600" />}</td>
+                  <td className="py-3 px-3 text-center">{row.compliance ? <Check className="w-4 h-4 mx-auto text-emerald-600 dark:text-emerald-400" /> : <X className="w-4 h-4 mx-auto text-slate-400 dark:text-slate-600" />}</td>
+                  <td className="py-3 px-3 text-center">{row.client ? <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Restricted</span> : <X className="w-4 h-4 mx-auto text-slate-400 dark:text-slate-600" />}</td>
                 </tr>
               ))}
             </tbody>
