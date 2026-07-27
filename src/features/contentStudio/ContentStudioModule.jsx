@@ -64,40 +64,40 @@ export const ContentStudioModule = () => {
   return (
     <div className="space-y-6 animate-in fade-in">
       {/* Header Bar */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <PenTool className="w-5 h-5 text-brand-400" />
-            <h1 className="text-xl font-extrabold text-white">Unified Content Studio</h1>
+            <PenTool className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Unified Content Studio</h1>
           </div>
-          <p className="text-xs text-slate-400">
-            Dedicated multi-format drafting engine with automated fact-checking for <strong className="text-white">{activeWorkspace.brandName}</strong>.
+          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+            Dedicated multi-format drafting engine with automated fact-checking for <strong className="text-slate-900 dark:text-white">{activeWorkspace.brandName}</strong>.
           </p>
         </div>
 
         {/* Sub-studio Tab Selector */}
-        <div className="flex bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800 text-xs font-semibold">
+        <div className="flex bg-slate-100 dark:bg-slate-900/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-semibold">
           <button 
             onClick={() => setTab('BLOG')} 
-            className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all ${tab === 'BLOG' ? 'bg-brand-500 text-white shadow-glow' : 'text-slate-400 hover:text-white'}`}
+            className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all ${tab === 'BLOG' ? 'bg-brand-500 text-white shadow-glow' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <FileText className="w-3.5 h-3.5" /> Blog & Editorial
           </button>
           <button 
             onClick={() => setTab('SOCIAL')} 
-            className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all ${tab === 'SOCIAL' ? 'bg-brand-500 text-white shadow-glow' : 'text-slate-400 hover:text-white'}`}
+            className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all ${tab === 'SOCIAL' ? 'bg-brand-500 text-white shadow-glow' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <Share2 className="w-3.5 h-3.5" /> Social Media
           </button>
           <button 
             onClick={() => setTab('WEBSITE')} 
-            className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all ${tab === 'WEBSITE' ? 'bg-brand-500 text-white shadow-glow' : 'text-slate-400 hover:text-white'}`}
+            className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all ${tab === 'WEBSITE' ? 'bg-brand-500 text-white shadow-glow' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <Globe className="w-3.5 h-3.5" /> Website Copy
           </button>
           <button 
             onClick={() => setTab('EMAIL')} 
-            className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all ${tab === 'EMAIL' ? 'bg-brand-500 text-white shadow-glow' : 'text-slate-400 hover:text-white'}`}
+            className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all ${tab === 'EMAIL' ? 'bg-brand-500 text-white shadow-glow' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <Mail className="w-3.5 h-3.5" /> Email & PR
           </button>
@@ -108,21 +108,21 @@ export const ContentStudioModule = () => {
       {tab === 'BLOG' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Col: Setup */}
-          <div className="p-6 rounded-3xl glass-card border border-slate-800 space-y-4">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider">8-Step Editorial Drafting</h2>
+          <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">8-Step Editorial Drafting</h2>
             
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">Article Topic / Title Focus</label>
+              <label className="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1">Article Topic / Title Focus</label>
               <textarea 
                 rows={3}
                 value={blogTopic}
                 onChange={(e) => setBlogTopic(e.target.value)}
-                className="w-full glass-input text-xs"
+                className="w-full glass-input text-xs text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 font-medium"
               />
             </div>
 
-            <div className="p-3 rounded-2xl bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400 space-y-1">
-              <span className="font-bold text-slate-200 block">Workflow Controls:</span>
+            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 space-y-1 font-medium">
+              <span className="font-bold text-slate-900 dark:text-slate-200 block">Workflow Controls:</span>
               <p>Brief → Outline → Draft → Fact Review → SEO Review → Brand Review → Approval → Export</p>
             </div>
 
@@ -137,9 +137,9 @@ export const ContentStudioModule = () => {
           </div>
 
           {/* Right Col: Editor & Fact Check Gate */}
-          <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-800 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">Live Editorial Canvas</span>
+          <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Live Editorial Canvas</span>
               {blogDraft && (
                 <button onClick={submitToApprovals} className="btn-primary text-xs py-1.5 px-3">
                   <Send className="w-3.5 h-3.5" />
@@ -152,17 +152,17 @@ export const ContentStudioModule = () => {
             {factCheck && (
               <div className={`p-3.5 rounded-2xl border flex items-center justify-between text-xs ${
                 factCheck.passed 
-                  ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300' 
-                  : 'bg-rose-500/10 border-rose-500/40 text-rose-300'
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300' 
+                  : 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300'
               }`}>
                 <div className="flex items-center gap-2">
-                  {factCheck.passed ? <ShieldCheck className="w-4 h-4 text-emerald-400" /> : <ShieldAlert className="w-4 h-4 text-rose-400" />}
+                  {factCheck.passed ? <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400" />}
                   <div>
                     <span className="font-bold uppercase tracking-wider text-[10px]">Decision Gate 1: Fact Check {factCheck.status}</span>
-                    <p className="text-[11px]">{factCheck.passed ? 'Every statistic and claim is verified against Brand DNA repository.' : factCheck.flags[0]?.message}</p>
+                    <p className="text-[11px] font-medium">{factCheck.passed ? 'Every statistic and claim is verified against Brand DNA repository.' : factCheck.flags[0]?.message}</p>
                   </div>
                 </div>
-                <span className="font-extrabold text-sm px-2 py-0.5 rounded-lg bg-slate-900/60 border border-slate-700">{factCheck.score}%</span>
+                <span className="font-extrabold text-sm px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">{factCheck.score}%</span>
               </div>
             )}
 
@@ -172,19 +172,19 @@ export const ContentStudioModule = () => {
                   type="text"
                   value={blogDraft.title}
                   onChange={(e) => setBlogDraft({ ...blogDraft, title: e.target.value })}
-                  className="w-full text-base font-extrabold text-white bg-transparent border-b border-slate-800 pb-2 focus:outline-none"
+                  className="w-full text-base font-extrabold text-slate-900 dark:text-white bg-transparent border-b border-slate-200 dark:border-slate-800 pb-2 focus:outline-none"
                 />
                 <textarea 
                   rows={14}
                   value={blogDraft.content}
                   onChange={(e) => setBlogDraft({ ...blogDraft, content: e.target.value })}
-                  className="w-full glass-input text-xs font-mono leading-relaxed"
+                  className="w-full glass-input text-xs font-mono leading-relaxed text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900"
                 />
               </div>
             ) : (
               <div className="p-12 text-center text-slate-500">
-                <FileText className="w-8 h-8 mx-auto text-slate-600 mb-2" />
-                <p className="text-xs">Click "Generate 8-Step Blog Draft" to invoke Gemini 3.5 Editorial Engine and run automatic fact-check scanning.</p>
+                <FileText className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600 mb-2" />
+                <p className="text-xs font-medium">Click "Generate 8-Step Blog Draft" to invoke Gemini 3.5 Editorial Engine and run automatic fact-check scanning.</p>
               </div>
             )}
           </div>
@@ -193,15 +193,15 @@ export const ContentStudioModule = () => {
 
       {/* 2. Social Media Studio */}
       {tab === 'SOCIAL' && (
-        <div className="p-6 rounded-3xl glass-card border border-slate-800 space-y-4">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider">Social Copywriting Studio</h2>
-          <p className="text-xs text-slate-400">Generate hooks, captions, hashtags, reel scripts, threads, and carousel slide text.</p>
+        <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Social Copywriting Studio</h2>
+          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Generate hooks, captions, hashtags, reel scripts, threads, and carousel slide text.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input 
               type="text" 
               value={socialTopic} 
               onChange={(e) => setSocialTopic(e.target.value)} 
-              className="glass-input text-xs" 
+              className="glass-input text-xs text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 font-medium" 
             />
             <button 
               onClick={() => setActiveModule('repurpose')} 
@@ -215,10 +215,10 @@ export const ContentStudioModule = () => {
 
       {/* 3. Website Studio & 4. Email Studio Placeholder Cards */}
       {(tab === 'WEBSITE' || tab === 'EMAIL') && (
-        <div className="p-12 rounded-3xl glass-card border border-slate-800 text-center space-y-3">
-          <Globe className="w-8 h-8 mx-auto text-brand-400" />
-          <h3 className="font-bold text-white text-base">{tab} Copy Studio Active</h3>
-          <p className="text-xs text-slate-400 max-w-md mx-auto">
+        <div className="p-12 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 text-center space-y-3">
+          <Globe className="w-8 h-8 mx-auto text-brand-600 dark:text-brand-400" />
+          <h3 className="font-bold text-slate-900 dark:text-white text-base">{tab} Copy Studio Active</h3>
+          <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto font-medium">
             Draft website value propositions, landing page copy, FAQs, newsletters, and press release pitches anchored to Brand DNA.
           </p>
         </div>

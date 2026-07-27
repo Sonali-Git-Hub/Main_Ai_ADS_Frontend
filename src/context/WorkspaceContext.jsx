@@ -3,8 +3,28 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const WorkspaceContext = createContext();
 
 export const WorkspaceProvider = ({ children }) => {
-  // Navigation
-  const [activeModule, setActiveModule] = useState('dashboard');
+  // Navigation & History Tracking
+  const [activeModule, setActiveModuleState] = useState('dashboard');
+  const [navigationHistory, setNavigationHistory] = useState([]);
+
+  const setActiveModule = (newModule) => {
+    if (newModule !== activeModule) {
+      setNavigationHistory(prev => [...prev, activeModule]);
+      setActiveModuleState(newModule);
+    }
+  };
+
+  const goBack = () => {
+    if (navigationHistory.length > 0) {
+      const prevModule = navigationHistory[navigationHistory.length - 1];
+      setNavigationHistory(prev => prev.slice(0, -1));
+      setActiveModuleState(prevModule);
+    } else if (activeModule !== 'dashboard') {
+      setActiveModuleState('dashboard');
+    }
+  };
+
+  const canGoBack = navigationHistory.length > 0 || activeModule !== 'dashboard';
   
   // Theme & Role
   const [theme, setTheme] = useState(() => {
@@ -162,7 +182,7 @@ export const WorkspaceProvider = ({ children }) => {
 
   return (
     <WorkspaceContext.Provider value={{
-      activeModule, setActiveModule,
+      activeModule, setActiveModule, goBack, canGoBack, navigationHistory,
       theme, toggleTheme,
       activeRole, setActiveRole,
       workspaces, activeWorkspaceId, setActiveWorkspaceId, activeWorkspace, addWorkspace,

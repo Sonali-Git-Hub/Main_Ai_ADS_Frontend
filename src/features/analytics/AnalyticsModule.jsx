@@ -6,10 +6,10 @@ export const AnalyticsModule = () => {
   const { activeWorkspace } = useWorkspace();
 
   const metrics = [
-    { title: 'Organic Search Impressions', value: '142,800', change: '+34.2%', icon: Eye, color: 'text-brand-400' },
-    { title: 'Social Engagement Rate', value: '4.85%', change: '+1.2%', icon: MousePointer, color: 'text-cyan-400' },
-    { title: 'Content Production Velocity', value: '14.2m', change: '-65% SLA time', icon: TrendingUp, color: 'text-emerald-400' },
-    { title: 'Attributable Pipeline Leads', value: '284 Leads', change: '+48%', icon: Award, color: 'text-purple-400' }
+    { title: 'Organic Search Impressions', value: '142,800', change: '+34.2%', icon: Eye, color: 'text-brand-600 dark:text-brand-400' },
+    { title: 'Social Engagement Rate', value: '4.85%', change: '+1.2%', icon: MousePointer, color: 'text-cyan-600 dark:text-cyan-400' },
+    { title: 'Content Production Velocity', value: '14.2m', change: '-65% SLA time', icon: TrendingUp, color: 'text-emerald-600 dark:text-emerald-400' },
+    { title: 'Attributable Pipeline Leads', value: '284 Leads', change: '+48%', icon: Award, color: 'text-purple-600 dark:text-purple-400' }
   ];
 
   const recommendations = [
@@ -21,14 +21,14 @@ export const AnalyticsModule = () => {
   return (
     <div className="space-y-6 animate-in fade-in">
       {/* Header Bar */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-brand-400" />
-            <h1 className="text-xl font-extrabold text-white">Analytics, Performance & AI Learning Loop</h1>
+            <BarChart3 className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Analytics, Performance & AI Learning Loop</h1>
           </div>
-          <p className="text-xs text-slate-400">
-            Real-time performance tracking and closed-loop recommendations for <strong className="text-white">{activeWorkspace.brandName}</strong>.
+          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+            Real-time performance tracking and closed-loop recommendations for <strong className="text-slate-900 dark:text-white">{activeWorkspace.brandName}</strong>.
           </p>
         </div>
       </div>
@@ -38,33 +38,33 @@ export const AnalyticsModule = () => {
         {metrics.map((m, idx) => {
           const Icon = m.icon;
           return (
-            <div key={idx} className="p-4 rounded-2xl glass-card border border-slate-800 space-y-2">
-              <div className="flex justify-between items-center text-xs text-slate-400 font-semibold">
+            <div key={idx} className="p-4 rounded-2xl glass-card border border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 font-semibold">
                 <span>{m.title}</span>
                 <Icon className={`w-4 h-4 ${m.color}`} />
               </div>
-              <div className="text-2xl font-extrabold text-white">{m.value}</div>
-              <span className="text-[10px] font-bold text-emerald-400">{m.change} vs prev month</span>
+              <div className="text-2xl font-extrabold text-slate-900 dark:text-white">{m.value}</div>
+              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">{m.change} vs prev month</span>
             </div>
           );
         })}
       </div>
 
       {/* AI Recommendation Engine Card */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-800 space-y-4">
-        <h2 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-cyan-400" />
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
           Closed-Loop AI Recommendation Engine
         </h2>
 
         <div className="space-y-3">
           {recommendations.map((rec, idx) => (
-            <div key={idx} className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between text-xs">
+            <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
               <div className="space-y-0.5">
-                <span className="text-[10px] uppercase font-bold text-cyan-400">{rec.type}</span>
-                <p className="text-slate-200 font-medium">{rec.text}</p>
+                <span className="text-[10px] uppercase font-bold text-cyan-600 dark:text-cyan-400">{rec.type}</span>
+                <p className="text-slate-800 dark:text-slate-200 font-medium">{rec.text}</p>
               </div>
-              <button className="btn-secondary py-1 px-3 text-[11px]">Apply Recommendation</button>
+              <button className="btn-secondary py-1 px-3 text-[11px] font-bold">Apply Recommendation</button>
             </div>
           ))}
         </div>

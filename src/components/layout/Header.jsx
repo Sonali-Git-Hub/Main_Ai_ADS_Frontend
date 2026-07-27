@@ -10,7 +10,8 @@ import {
   ChevronDown, 
   Plus, 
   Bot, 
-  UserCheck
+  UserCheck,
+  ArrowLeft
 } from 'lucide-react';
 
 export const Header = () => {
@@ -26,7 +27,10 @@ export const Header = () => {
     setIsCreditModalOpen,
     setIsScraperOpen,
     setIsAISAAssistantOpen,
-    notifications
+    notifications,
+    goBack,
+    canGoBack,
+    activeModule
   } = useWorkspace();
 
   const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
@@ -43,13 +47,25 @@ export const Header = () => {
   ];
 
   return (
-    <header className="h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-[#090d16]/90 backdrop-blur-md sticky top-0 z-30 px-6 flex items-center justify-between transition-colors">
-      {/* Left: Active Brand Workspace Switcher */}
-      <div className="flex items-center gap-4">
+    <header className="h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-[#090d16]/90 backdrop-blur-md sticky top-0 z-30 px-3 sm:px-6 flex items-center justify-between transition-colors">
+      {/* Left: Back Button & Workspace Switcher */}
+      <div className="flex items-center gap-2 sm:gap-4">
+        {/* Universal Back Button */}
+        {canGoBack && (
+          <button 
+            onClick={goBack}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-900/80 hover:bg-[#7B61FF]/10 text-slate-800 dark:text-slate-200 hover:text-[#7B61FF] dark:hover:text-[#A882FF] font-bold text-xs transition-all shadow-sm group"
+            title="Go to previous page"
+          >
+            <ArrowLeft className="w-4 h-4 text-[#7B61FF] group-hover:-translate-x-0.5 transition-transform" />
+            <span className="hidden sm:inline">Back</span>
+          </button>
+        )}
+
         <div className="relative">
           <button 
             onClick={() => setShowWorkspaceMenu(!showWorkspaceMenu)}
-            className="flex items-center gap-3 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 bg-slate-100/70 dark:bg-slate-900/80 transition-all text-left"
+            className="flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 bg-slate-100/70 dark:bg-slate-900/80 transition-all text-left"
           >
             <div className="w-7 h-7 rounded-lg bg-brand-500/15 border border-brand-500/30 flex items-center justify-center text-brand-400 font-bold text-xs overflow-hidden">
               {activeWorkspace?.logoUrl ? (
@@ -60,10 +76,10 @@ export const Header = () => {
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-sm text-slate-800 dark:text-slate-100">{activeWorkspace?.brandName}</span>
-                <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.2 bg-brand-500/20 text-brand-400 rounded-full font-medium">Brand DNA</span>
+                <span className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-100">{activeWorkspace?.brandName}</span>
+                <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.2 bg-brand-500/20 text-brand-400 rounded-full font-medium hidden sm:inline">Brand DNA</span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[140px]">{activeWorkspace?.domainUrl}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[100px] sm:max-w-[140px]">{activeWorkspace?.domainUrl}</p>
             </div>
             <ChevronDown className="w-4 h-4 text-slate-400 ml-1" />
           </button>
@@ -133,14 +149,14 @@ export const Header = () => {
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Visual Credit Badge */}
         <button 
           onClick={() => setIsCreditModalOpen(true)}
-          className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-violet-600/20 via-brand-500/20 to-cyan-500/20 border border-brand-500/40 hover:border-brand-400 text-slate-800 dark:text-slate-100 transition-all shadow-glow"
+          className="flex items-center gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-violet-600/20 via-brand-500/20 to-cyan-500/20 border border-brand-500/40 hover:border-brand-400 text-slate-800 dark:text-slate-100 transition-all shadow-glow"
         >
           <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
-          <div className="text-left">
+          <div className="text-left hidden xs:block">
             <div className="text-[10px] uppercase font-bold text-cyan-400 leading-tight">Visual Credits</div>
             <div className="text-xs font-extrabold text-brand-400">{credits.balance} Credits</div>
           </div>
@@ -159,7 +175,7 @@ export const Header = () => {
         {/* Theme Toggle */}
         <button 
           onClick={toggleTheme}
-          className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all"
+          className="p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all"
           title="Toggle Theme"
         >
           {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
@@ -169,7 +185,7 @@ export const Header = () => {
         <div className="relative">
           <button 
             onClick={() => setShowNotifs(!showNotifs)}
-            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 relative transition-all"
+            className="p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 relative transition-all"
           >
             <Bell className="w-4 h-4" />
             {notifications.some(n => n.unread) && (

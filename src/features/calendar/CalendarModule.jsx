@@ -27,13 +27,13 @@ export const CalendarModule = () => {
   return (
     <div className="space-y-6 animate-in fade-in">
       {/* Header Bar */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5 text-brand-400" />
-            <h1 className="text-xl font-extrabold text-white">Content Calendar Operations</h1>
+            <CalendarIcon className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Content Calendar Operations</h1>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
             Unified multi-channel publishing schedule & campaign execution calendar.
           </p>
         </div>
@@ -42,7 +42,7 @@ export const CalendarModule = () => {
           <select 
             value={filterPlatform}
             onChange={(e) => setFilterPlatform(e.target.value)}
-            className="glass-input text-xs py-2"
+            className="glass-input text-xs py-2 text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 font-medium"
           >
             <option value="ALL">All Channels</option>
             <option value="BLOG">Blog & SEO</option>
@@ -61,41 +61,41 @@ export const CalendarModule = () => {
       </div>
 
       {/* Calendar Grid Representation */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-800 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-          <span className="text-xs font-bold text-white uppercase tracking-wider">July 2026 Scheduled Operations</span>
-          <span className="text-xs text-brand-400 font-semibold">{filteredEvents.length} Active Events</span>
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+          <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">July 2026 Scheduled Operations</span>
+          <span className="text-xs text-brand-600 dark:text-brand-400 font-extrabold">{filteredEvents.length} Active Events</span>
         </div>
 
         {/* Days Header */}
-        <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 pb-2 border-b border-slate-800/60">
+        <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-500 dark:text-slate-400 pb-2 border-b border-slate-200 dark:border-slate-800/60">
           <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
         </div>
 
         {/* Calendar Grid Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredEvents.map((evt) => (
-            <div key={evt.id} className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-brand-500/40 transition-all space-y-2">
+            <div key={evt.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 hover:border-brand-500/40 transition-all space-y-2">
               <div className="flex items-center justify-between text-[11px]">
-                <span className="font-bold text-brand-400 flex items-center gap-1">
+                <span className="font-bold text-brand-600 dark:text-brand-400 flex items-center gap-1">
                   <Clock className="w-3 h-3" /> {evt.date}
                 </span>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                  evt.status === 'SCHEDULED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                  evt.status === 'APPROVED' ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30' :
-                  'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                  evt.status === 'SCHEDULED' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30' :
+                  evt.status === 'APPROVED' ? 'bg-brand-500/10 dark:bg-brand-500/20 text-brand-700 dark:text-brand-300 border border-brand-500/30' :
+                  'bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30'
                 }`}>
                   {evt.status}
                 </span>
               </div>
 
-              <h3 className="font-bold text-white text-xs leading-snug">{evt.title}</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white text-xs leading-snug">{evt.title}</h3>
 
-              <div className="flex items-center justify-between text-[10px] text-slate-400 pt-2 border-t border-slate-800">
+              <div className="flex items-center justify-between text-[10px] text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-800 font-medium">
                 <span>{evt.platform} • {evt.pillar}</span>
                 <button 
                   onClick={() => setActiveModule('studio')}
-                  className="text-brand-400 hover:underline font-semibold"
+                  className="text-brand-600 dark:text-brand-400 hover:underline font-bold"
                 >
                   Open Studio
                 </button>

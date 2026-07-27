@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
-import { Repeat, Sparkles, Send, Copy, Check, FileText, Share2, Mail, Layers, HelpCircle } from 'lucide-react';
+import { Repeat, Sparkles, Send, Copy, Check, FileText, Share2, Mail, Layers, HelpCircle, ArrowLeft } from 'lucide-react';
 
 export const RepurposeModule = () => {
-  const { activeWorkspace, approvalsQueue, setActiveModule } = useWorkspace();
+  const { activeWorkspace, approvalsQueue, setActiveModule, goBack, canGoBack } = useWorkspace();
   const [selectedSource, setSelectedSource] = useState(approvalsQueue[0]?.id || '');
   const [loading, setLoading] = useState(false);
   const [repurposed, setRepurposed] = useState(null);
@@ -54,6 +54,15 @@ export const RepurposeModule = () => {
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
+            {canGoBack && (
+              <button 
+                onClick={goBack}
+                className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 hover:bg-[#7B61FF]/10 text-[#7B61FF] transition-all mr-1"
+                title="Go to previous page"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+            )}
             <Repeat className="w-5 h-5 text-brand-600 dark:text-brand-400" />
             <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">1-Click Content Repurposing Engine</h1>
           </div>

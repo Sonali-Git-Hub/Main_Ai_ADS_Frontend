@@ -29,14 +29,14 @@ export const AssetLibraryModule = () => {
   return (
     <div className="space-y-6 animate-in fade-in">
       {/* Header Bar */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <FolderKanban className="w-5 h-5 text-brand-400" />
-            <h1 className="text-xl font-extrabold text-white">Central Asset Library & Cloud Storage Vault</h1>
+            <FolderKanban className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Central Asset Library & Cloud Storage Vault</h1>
           </div>
-          <p className="text-xs text-slate-400">
-            Stores every generated visual, document, carousel, and repurposed variant for <strong className="text-white">{activeWorkspace.brandName}</strong>.
+          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+            Stores every generated visual, document, carousel, and repurposed variant for <strong className="text-slate-900 dark:text-white">{activeWorkspace.brandName}</strong>.
           </p>
         </div>
 
@@ -48,14 +48,14 @@ export const AssetLibraryModule = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search assets..."
-              className="glass-input text-xs pl-8 py-1.5"
+              className="glass-input text-xs pl-8 py-1.5 text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 font-medium"
             />
           </div>
 
           <select 
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="glass-input text-xs py-1.5"
+            className="glass-input text-xs py-1.5 text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 font-medium"
           >
             <option value="ALL">All Types</option>
             <option value="IMAGE">AI Images</option>
@@ -68,7 +68,7 @@ export const AssetLibraryModule = () => {
       {/* Asset Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {filteredAssets.map(asset => (
-          <div key={asset.id} className="p-4 rounded-3xl glass-card border border-slate-800 hover:border-brand-500/40 transition-all space-y-3 group">
+          <div key={asset.id} className="p-4 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 hover:border-brand-500/40 transition-all space-y-3 group">
             <div className="aspect-square rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 relative">
               <img src={asset.url} alt={asset.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
               <span className="absolute top-2 right-2 bg-slate-950/80 text-brand-400 font-bold text-[9px] px-2 py-0.5 rounded-full border border-slate-800">
@@ -77,14 +77,14 @@ export const AssetLibraryModule = () => {
             </div>
 
             <div>
-              <h3 className="font-bold text-white text-xs truncate">{asset.name}</h3>
-              <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1">
+              <h3 className="font-bold text-slate-900 dark:text-white text-xs truncate">{asset.name}</h3>
+              <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
                 <span>{asset.date}</span>
-                <span className="text-cyan-400">{asset.credits > 0 ? `${asset.credits} Credits` : 'Free Text'}</span>
+                <span className="text-cyan-600 dark:text-cyan-400 font-bold">{asset.credits > 0 ? `${asset.credits} Credits` : 'Free Text'}</span>
               </div>
             </div>
 
-            <div className="flex gap-2 pt-1 border-t border-slate-800">
+            <div className="flex gap-2 pt-1 border-t border-slate-200 dark:border-slate-800">
               <button 
                 onClick={() => copyUrl(asset.id, asset.url)} 
                 className="w-full btn-secondary py-1.5 text-[11px]"
