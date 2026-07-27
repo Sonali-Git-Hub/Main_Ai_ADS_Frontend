@@ -60,21 +60,21 @@ export const SeoModule = () => {
   return (
     <div className="space-y-6 animate-in fade-in">
       {/* Header Bar */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Search className="w-5 h-5 text-brand-400" />
-            <h1 className="text-xl font-extrabold text-white">SEO Intelligence & Brief Builder Workspace</h1>
+            <Search className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">SEO Intelligence & Brief Builder Workspace</h1>
           </div>
-          <p className="text-xs text-slate-400">
-            Keyword intent classification, topic clustering, and structured 8-step SEO brief generation for <strong className="text-white">{activeWorkspace.brandName}</strong>.
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            Keyword intent classification, topic clustering, and structured 8-step SEO brief generation for <strong className="text-slate-900 dark:text-white">{activeWorkspace.brandName}</strong>.
           </p>
         </div>
       </div>
 
       {/* Mandatory Disclaimer Alert */}
-      <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3 text-xs text-amber-300">
-        <ShieldAlert className="w-4 h-4 flex-shrink-0 text-amber-400" />
+      <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3 text-xs text-amber-700 dark:text-amber-300 font-medium">
+        <ShieldAlert className="w-4 h-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
         <p>
           <strong>Mandatory Product Disclaimer:</strong> AI Ads™ strictly refrains from guaranteeing search engine rankings, indexing speed, organic traffic volumes, or backlinks. Controls focus on factual accuracy and structured schema readiness.
         </p>
@@ -83,28 +83,28 @@ export const SeoModule = () => {
       {/* Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Col 1: Keyword Workspace */}
-        <div className="p-6 rounded-3xl glass-card border border-slate-800 space-y-4">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <Layers className="w-4 h-4 text-brand-400" />
+        <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+            <Layers className="w-4 h-4 text-brand-600 dark:text-brand-400" />
             Keyword & Intent Workspace
           </h2>
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">Seed Keyword</label>
+            <label className="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1">Seed Keyword</label>
             <input 
               type="text"
               value={seedKeyword}
               onChange={(e) => setSeedKeyword(e.target.value)}
-              className="w-full glass-input text-xs"
+              className="w-full glass-input text-xs text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">Search Intent</label>
+            <label className="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1">Search Intent</label>
             <select 
               value={intent}
               onChange={(e) => setIntent(e.target.value)}
-              className="w-full glass-input text-xs"
+              className="w-full glass-input text-xs text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900"
             >
               <option value="Informational">Informational (Know)</option>
               <option value="Commercial">Commercial (Investigate)</option>
@@ -125,15 +125,15 @@ export const SeoModule = () => {
 
           {/* Clustered Keywords List */}
           <div className="pt-2">
-            <span className="text-xs font-bold text-slate-400 block mb-2">Clustered Target Keywords:</span>
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-2">Clustered Target Keywords:</span>
             <div className="space-y-2">
               {keywordsList.map((kw, idx) => (
-                <div key={idx} className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 flex justify-between items-center text-xs">
+                <div key={idx} className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
                   <div>
-                    <span className="font-bold text-slate-200 block">{kw.term}</span>
-                    <span className="text-[10px] text-slate-400">{kw.cluster} • Vol: {kw.volume}</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-200 block">{kw.term}</span>
+                    <span className="text-[10px] text-slate-600 dark:text-slate-400 font-medium">{kw.cluster} • Vol: {kw.volume}</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-300 border border-brand-500/20 dark:border-brand-500/30">
                     {kw.intent}
                   </span>
                 </div>
@@ -143,10 +143,10 @@ export const SeoModule = () => {
         </div>
 
         {/* Col 2 & 3: Generated Structured Brief */}
-        <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-800 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <FileText className="w-4 h-4 text-cyan-400" />
+        <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+              <FileText className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
               Structured 8-Step SEO Brief Output
             </h2>
             {brief && (
@@ -163,31 +163,31 @@ export const SeoModule = () => {
           {brief ? (
             <div className="space-y-4 text-xs animate-in fade-in">
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-2xl bg-slate-900/80 border border-slate-800">
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Primary Keyword</span>
-                  <span className="font-extrabold text-brand-300 text-sm">{brief.primaryKeyword}</span>
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-bold">Primary Keyword</span>
+                  <span className="font-extrabold text-brand-600 dark:text-brand-300 text-sm">{brief.primaryKeyword}</span>
                 </div>
-                <div className="p-3 rounded-2xl bg-slate-900/80 border border-slate-800">
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Target Word Count</span>
-                  <span className="font-extrabold text-cyan-300 text-sm">{brief.targetWordCount} Words</span>
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-bold">Target Word Count</span>
+                  <span className="font-extrabold text-cyan-600 dark:text-cyan-300 text-sm">{brief.targetWordCount} Words</span>
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-                <span className="text-slate-400 font-bold block">Proposed Title Tag:</span>
-                <p className="text-white font-semibold text-xs">{brief.suggestedTitles[0]}</p>
-                <span className="text-slate-400 font-bold block pt-1">Meta Description & Slug:</span>
-                <p className="text-slate-300">{brief.metaDescription}</p>
-                <code className="text-brand-400 text-[11px] block">Slug: /{brief.urlSlug}</code>
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-1">
+                <span className="text-slate-600 dark:text-slate-400 font-bold block">Proposed Title Tag:</span>
+                <p className="text-slate-900 dark:text-white font-semibold text-xs">{brief.suggestedTitles[0]}</p>
+                <span className="text-slate-600 dark:text-slate-400 font-bold block pt-1">Meta Description & Slug:</span>
+                <p className="text-slate-700 dark:text-slate-300 font-medium">{brief.metaDescription}</p>
+                <code className="text-brand-600 dark:text-brand-400 text-[11px] block font-mono">Slug: /{brief.urlSlug}</code>
               </div>
 
               {/* H2/H3 Outline Tree */}
-              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
-                <span className="text-slate-300 font-bold block">H2/H3 Editorial Outline Tree:</span>
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-2">
+                <span className="text-slate-800 dark:text-slate-300 font-bold block">H2/H3 Editorial Outline Tree:</span>
                 {brief.headingOutline.map((section, i) => (
                   <div key={i} className="pl-2 border-l-2 border-brand-500/50 space-y-1">
-                    <span className="font-bold text-white text-xs">H2: {section.h2}</span>
-                    <ul className="pl-4 text-[11px] text-slate-400 list-disc">
+                    <span className="font-bold text-slate-900 dark:text-white text-xs">H2: {section.h2}</span>
+                    <ul className="pl-4 text-[11px] text-slate-600 dark:text-slate-400 list-disc font-medium">
                       {section.h3s.map((h3, j) => <li key={j}>H3: {h3}</li>)}
                     </ul>
                   </div>
@@ -195,19 +195,19 @@ export const SeoModule = () => {
               </div>
 
               {/* JSON-LD Schema */}
-              <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                <span className="text-slate-400 font-bold flex items-center gap-1">
+              <div className="p-3.5 rounded-2xl bg-slate-900 dark:bg-slate-950 border border-slate-800 space-y-1">
+                <span className="text-slate-300 font-bold flex items-center gap-1">
                   <Code2 className="w-3.5 h-3.5 text-brand-400" /> JSON-LD Schema Markup Ready
                 </span>
-                <pre className="text-[10px] text-emerald-400 font-mono overflow-x-auto p-2 bg-slate-900/60 rounded-xl">
+                <pre className="text-[10px] text-emerald-400 font-mono overflow-x-auto p-2 bg-slate-950/80 rounded-xl">
                   {brief.jsonLdSchema}
                 </pre>
               </div>
             </div>
           ) : (
             <div className="p-12 text-center text-slate-500 space-y-2">
-              <Search className="w-8 h-8 mx-auto text-slate-600 animate-bounce" />
-              <p className="text-xs">Click "Generate Structured SEO Brief" to synthesize search intent, titles, H2/H3 outline tree, and JSON-LD schema.</p>
+              <Search className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600 animate-bounce" />
+              <p className="text-xs font-medium">Click "Generate Structured SEO Brief" to synthesize search intent, titles, H2/H3 outline tree, and JSON-LD schema.</p>
             </div>
           )}
         </div>

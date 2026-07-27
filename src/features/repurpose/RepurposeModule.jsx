@@ -10,7 +10,7 @@ export const RepurposeModule = () => {
 
   const handleTransform = async () => {
     setLoading(true);
-    const sourceObj = approvalsQueue.find(a => a.id === selectedSource) || { title: "How AI Ads Transforms Agency Content Velocity" };
+    const sourceObj = approvalsQueue.find(a => a.id === selectedSource) || { title: "How AI Ads Transforms Agency Content Production Velocity" };
 
     try {
       const res = await fetch('http://localhost:5000/api/repurpose/transform', {
@@ -51,14 +51,14 @@ export const RepurposeModule = () => {
   return (
     <div className="space-y-6 animate-in fade-in">
       {/* Header Bar */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Repeat className="w-5 h-5 text-brand-400" />
-            <h1 className="text-xl font-extrabold text-white">1-Click Content Repurposing Engine</h1>
+            <Repeat className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">1-Click Content Repurposing Engine</h1>
           </div>
-          <p className="text-xs text-slate-400">
-            Convert 1 approved source asset into 5 multi-channel channel-ready formats for <strong className="text-white">{activeWorkspace.brandName}</strong>.
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            Convert 1 approved source asset into 5 multi-channel channel-ready formats for <strong className="text-slate-900 dark:text-white">{activeWorkspace.brandName}</strong>.
           </p>
         </div>
 
@@ -73,12 +73,12 @@ export const RepurposeModule = () => {
       </div>
 
       {/* Select Source Asset */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-800 space-y-3">
-        <label className="block text-xs font-bold text-slate-300">Select Approved Source Asset</label>
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
+        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">Select Approved Source Asset</label>
         <select 
           value={selectedSource}
           onChange={(e) => setSelectedSource(e.target.value)}
-          className="w-full glass-input text-xs"
+          className="w-full glass-input text-xs text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900"
         >
           {approvalsQueue.map(item => (
             <option key={item.id} value={item.id}>
@@ -92,72 +92,72 @@ export const RepurposeModule = () => {
       {repurposed && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in">
           {/* Output 1: LinkedIn Post */}
-          <div className="p-5 rounded-3xl glass-card border border-slate-800 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Share2 className="w-4 h-4 text-brand-400" /> 1. LinkedIn Post
+          <div className="p-5 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Share2 className="w-4 h-4 text-brand-600 dark:text-brand-400" /> 1. LinkedIn Post
               </span>
-              <span className="text-[10px] bg-brand-500/20 text-brand-300 px-2 py-0.5 rounded font-bold">Social</span>
+              <span className="text-[10px] bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-300 px-2 py-0.5 rounded font-bold">Social</span>
             </div>
-            <p className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed">{repurposed.linkedInPost}</p>
+            <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed font-medium">{repurposed.linkedInPost}</p>
           </div>
 
           {/* Output 2: Twitter Thread */}
-          <div className="p-5 rounded-3xl glass-card border border-slate-800 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Repeat className="w-4 h-4 text-cyan-400" /> 2. Twitter/X Thread
+          <div className="p-5 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Repeat className="w-4 h-4 text-cyan-600 dark:text-cyan-400" /> 2. Twitter/X Thread
               </span>
-              <span className="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded font-bold">5 Tweets</span>
+              <span className="text-[10px] bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 px-2 py-0.5 rounded font-bold">5 Tweets</span>
             </div>
-            <div className="space-y-2 text-xs text-slate-300">
+            <div className="space-y-2 text-xs text-slate-800 dark:text-slate-300">
               {repurposed.twitterThread.map((tweet, idx) => (
-                <p key={idx} className="p-2 rounded-xl bg-slate-900/60 border border-slate-800">• {tweet}</p>
+                <p key={idx} className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 font-medium">• {tweet}</p>
               ))}
             </div>
           </div>
 
           {/* Output 3: Newsletter Email */}
-          <div className="p-5 rounded-3xl glass-card border border-slate-800 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Mail className="w-4 h-4 text-purple-400" /> 3. Newsletter Email
+          <div className="p-5 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Mail className="w-4 h-4 text-purple-600 dark:text-purple-400" /> 3. Newsletter Email
               </span>
-              <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded font-bold">Email</span>
+              <span className="text-[10px] bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded font-bold">Email</span>
             </div>
-            <p className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed">{repurposed.newsletterEmail}</p>
+            <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed font-medium">{repurposed.newsletterEmail}</p>
           </div>
 
           {/* Output 4: Carousel Outline */}
-          <div className="p-5 rounded-3xl glass-card border border-slate-800 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-amber-400" /> 4. Carousel Outline
+          <div className="p-5 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-amber-600 dark:text-amber-400" /> 4. Carousel Outline
               </span>
-              <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-bold">4 Slides</span>
+              <span className="text-[10px] bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded font-bold">4 Slides</span>
             </div>
             <div className="space-y-2 text-xs">
               {repurposed.carouselOutline.map((slide, idx) => (
-                <div key={idx} className="p-2 rounded-xl bg-slate-900/60 border border-slate-800">
-                  <span className="font-bold text-white block">Slide {slide.slide}: {slide.title}</span>
-                  <span className="text-[10px] text-slate-400">{slide.subtitle}</span>
+                <div key={idx} className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+                  <span className="font-bold text-slate-900 dark:text-white block">Slide {slide.slide}: {slide.title}</span>
+                  <span className="text-[10px] text-slate-600 dark:text-slate-400 font-medium">{slide.subtitle}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Output 5: FAQs & Schema */}
-          <div className="p-5 rounded-3xl glass-card border border-slate-800 space-y-3 col-span-1 md:col-span-2">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <HelpCircle className="w-4 h-4 text-emerald-400" /> 5. FAQ Bank & Schema
+          <div className="p-5 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-3 col-span-1 md:col-span-2">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <HelpCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> 5. FAQ Bank & Schema
               </span>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">SEO Ready</span>
+              <span className="text-[10px] bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded font-bold">SEO Ready</span>
             </div>
             {repurposed.faqList.map((faq, idx) => (
-              <div key={idx} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs">
-                <span className="font-bold text-white block">Q: {faq.q}</span>
-                <p className="text-slate-300 text-[11px] mt-0.5">A: {faq.a}</p>
+              <div key={idx} className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs">
+                <span className="font-bold text-slate-900 dark:text-white block">Q: {faq.q}</span>
+                <p className="text-slate-700 dark:text-slate-300 text-[11px] mt-0.5 font-medium">A: {faq.a}</p>
               </div>
             ))}
           </div>
