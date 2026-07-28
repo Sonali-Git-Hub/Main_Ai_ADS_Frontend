@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { 
   Building2, 
@@ -11,7 +11,8 @@ import {
   Plus, 
   Bot, 
   UserCheck,
-  ArrowLeft
+  ArrowLeft,
+  Trash2
 } from 'lucide-react';
 
 export const Header = () => {
@@ -19,6 +20,7 @@ export const Header = () => {
     workspaces, 
     activeWorkspace, 
     setActiveWorkspaceId, 
+    deleteWorkspace,
     activeRole, 
     setActiveRole, 
     theme, 
@@ -26,6 +28,7 @@ export const Header = () => {
     credits, 
     setIsCreditModalOpen,
     setIsScraperOpen,
+    openScraperModal,
     setIsAISAAssistantOpen,
     notifications,
     goBack,
@@ -36,6 +39,31 @@ export const Header = () => {
   const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
+
+  const workspaceRef = useRef(null);
+  const roleRef = useRef(null);
+  const notifRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (workspaceRef.current && !workspaceRef.current.contains(e.target)) {
+        setShowWorkspaceMenu(false);
+      }
+      if (roleRef.current && !roleRef.current.contains(e.target)) {
+        setShowRoleMenu(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setShowNotifs(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
+
 
   const roles = [
     { id: 'AgencyAdmin', label: 'Agency Administrator' },
@@ -62,7 +90,7 @@ export const Header = () => {
           </button>
         )}
 
-        <div className="relative">
+        <div className="relative" ref={workspaceRef}>
           <button 
             onClick={() => setShowWorkspaceMenu(!showWorkspaceMenu)}
             className="flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 bg-slate-100/70 dark:bg-slate-900/80 transition-all text-left"
@@ -86,26 +114,44 @@ export const Header = () => {
 
           {/* Workspace Dropdown */}
           {showWorkspaceMenu && (
-            <div className="absolute top-full left-0 mt-2 w-64 glass-card bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-2 z-50 animate-in fade-in slide-in-from-top-2">
+            <div className="absolute top-full left-0 mt-2 w-64 max-w-[calc(100vw-2rem)] glass-card bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-2 z-50 animate-in fade-in slide-in-from-top-2">
               <div className="px-3 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Workspaces</div>
-              {workspaces.map(ws => (
-                <button
-                  key={ws.id}
-                  onClick={() => {
-                    setActiveWorkspaceId(ws.id);
-                    setShowWorkspaceMenu(false);
-                  }}
-                  className={`w-full px-3 py-2 flex items-center gap-3 text-sm text-left hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors ${ws.id === activeWorkspace.id ? 'text-brand-400 font-medium bg-brand-500/10' : 'text-slate-700 dark:text-slate-300'}`}
-                >
-                  <Building2 className="w-4 h-4 text-brand-400" />
-                  <span className="truncate">{ws.brandName}</span>
-                </button>
-              ))}
+              {workspaces.map(ws => {
+                const wsId = ws.id || ws._id;
+                const isActive = wsId === (activeWorkspace.id || activeWorkspace._id);
+                return (
+                  <div
+                    key={wsId}
+                    onClick={() => {
+                      setActiveWorkspaceId(wsId);
+                      setShowWorkspaceMenu(false);
+                    }}
+                    className={`w-full px-3 py-2 flex items-center justify-between group/ws text-sm text-left hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors ${isActive ? 'text-brand-400 font-medium bg-brand-500/10' : 'text-slate-700 dark:text-slate-300'}`}
+                  >
+                    <div className="flex items-center gap-2.5 truncate">
+                      <Building2 className="w-4 h-4 text-brand-400 shrink-0" />
+                      <span className="truncate">{ws.brandName}</span>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteWorkspace(wsId);
+                      }}
+                      className="p-1 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-70 hover:opacity-100"
+                      title={`Delete ${ws.brandName}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+
               <div className="border-t border-slate-200 dark:border-slate-800 mt-1 pt-1 px-2">
                 <button 
                   onClick={() => {
                     setShowWorkspaceMenu(false);
-                    setIsScraperOpen(true);
+                    if (openScraperModal) openScraperModal('NEW_BRAND');
+                    else setIsScraperOpen(true);
                   }}
                   className="w-full py-2 px-3 flex items-center gap-2 text-xs font-medium text-brand-500 hover:bg-brand-500/10 rounded-xl transition-colors"
                 >
@@ -118,7 +164,7 @@ export const Header = () => {
         </div>
 
         {/* Role Switcher Badge */}
-        <div className="relative hidden md:block">
+        <div className="relative hidden md:block" ref={roleRef}>
           <button 
             onClick={() => setShowRoleMenu(!showRoleMenu)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 transition-all"
@@ -129,7 +175,7 @@ export const Header = () => {
           </button>
 
           {showRoleMenu && (
-            <div className="absolute top-full left-0 mt-2 w-56 glass-card bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-2 z-50">
+            <div className="absolute top-full left-0 mt-2 w-56 max-w-[calc(100vw-2rem)] glass-card bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-2 z-50">
               <div className="px-3 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Switch Role View</div>
               {roles.map(r => (
                 <button
@@ -182,7 +228,7 @@ export const Header = () => {
         </button>
 
         {/* Notifications */}
-        <div className="relative">
+        <div className="relative" ref={notifRef}>
           <button 
             onClick={() => setShowNotifs(!showNotifs)}
             className="p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 relative transition-all"
@@ -194,7 +240,8 @@ export const Header = () => {
           </button>
 
           {showNotifs && (
-            <div className="absolute top-full right-0 mt-2 w-72 glass-card bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 z-50">
+            <div className="absolute top-full right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] glass-card bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 z-50">
+
               <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-400">
                 <span>Notifications</span>
                 <button className="text-brand-400 hover:underline">Mark all read</button>

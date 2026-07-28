@@ -53,8 +53,15 @@ export const CreditTopupModal = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
-      <div className="w-full max-w-xl bg-[#0f172a] border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
+    <div 
+      className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in"
+      onClick={() => setIsCreditModalOpen(false)}
+    >
+      <div 
+        className="w-full max-w-xl bg-[#0f172a] border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-4">
           <div className="flex items-center gap-3">

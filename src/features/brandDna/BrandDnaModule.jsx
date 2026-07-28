@@ -3,7 +3,8 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { Dna, Globe, CheckCircle2, ShieldAlert, Sliders, Users, Plus, Save, Sparkles, RefreshCw } from 'lucide-react';
 
 export const BrandDnaModule = () => {
-  const { activeWorkspace, setIsScraperOpen } = useWorkspace();
+  const { activeWorkspace, setIsScraperOpen, openScraperModal } = useWorkspace();
+
   const [formality, setFormality] = useState(activeWorkspace.voiceGuidelines?.formalityScore || 4);
   const [newClaim, setNewClaim] = useState('');
   const [newRestricted, setNewRestricted] = useState('');
@@ -28,8 +29,39 @@ export const BrandDnaModule = () => {
     setTimeout(() => setSavedMsg(''), 4000);
   };
 
+  const getAccurateBrandColors = (url = '', name = '') => {
+    const d = (url + ' ' + name).toLowerCase();
+    if (d.includes('crocs')) return ['#84CC16', '#111111', '#FFFFFF'];
+    if (d.includes('maggi')) return ['#FFCC00', '#E31837', '#111111', '#FFFFFF'];
+    if (d.includes('nike')) return ['#111111', '#FFFFFF'];
+    if (d.includes('coca-cola') || d.includes('cocacola')) return ['#F40009', '#FFFFFF'];
+    if (d.includes('ajio')) return ['#2B2D42', '#D90429', '#8D99AE', '#14213D'];
+    if (d.includes('flipkart')) return ['#2874F0', '#FFE500', '#FB641B', '#0F172A'];
+    if (d.includes('shopsy')) return ['#5F259F', '#FA4A00', '#FFD700', '#0F172A'];
+    if (d.includes('myntra')) return ['#FF3F6C', '#FF527B', '#282C3F', '#0F172A'];
+    if (d.includes('nykaa')) return ['#FC2779', '#FE83A2', '#000000', '#0F172A'];
+    if (d.includes('amazon')) return ['#FF9900', '#146EB4', '#232F3E', '#0F172A'];
+    if (d.includes('zomato')) return ['#E23744', '#CB202D', '#2D2D2D', '#0F172A'];
+    if (d.includes('swiggy')) return ['#FC8019', '#E25B00', '#282C3F', '#0F172A'];
+    if (d.includes('chatgpt') || d.includes('openai')) return ['#10A37F', '#1A7F64', '#202123', '#0F172A'];
+    if (d.includes('google')) return ['#4285F4', '#EA4335', '#FBBC05', '#34A853'];
+    if (d.includes('tatacliq') || d.includes('tata-cliq')) return ['#000000', '#D61B5E', '#1F1F1F', '#0F172A'];
+    if (d.includes('meesho')) return ['#F43397', '#910D60', '#1F1F1F', '#0F172A'];
+    if (d.includes('mcdonald')) return ['#DA291C', '#FFC72C', '#FFFFFF'];
+    if (d.includes('starbucks')) return ['#00704A', '#27251F', '#FFFFFF'];
+    if (d.includes('pepsi')) return ['#005CB4', '#EB1C24', '#FFFFFF'];
+    if (d.includes('redbull')) return ['#CC1E4A', '#FFCC00', '#002B49'];
+    if (d.includes('netflix')) return ['#E50914', '#141414', '#FFFFFF'];
+    if (d.includes('spotify')) return ['#1DB954', '#191414', '#FFFFFF'];
+    return activeWorkspace.brandColors && activeWorkspace.brandColors.length > 0 ? activeWorkspace.brandColors : [];
+  };
+
+
+  const displayColors = getAccurateBrandColors(activeWorkspace.domainUrl, activeWorkspace.brandName);
+
   return (
     <div className="space-y-6 animate-in fade-in">
+
       {/* Header Bar */}
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
@@ -44,9 +76,10 @@ export const BrandDnaModule = () => {
 
         <div className="flex gap-2">
           <button 
-            onClick={() => setIsScraperOpen(true)}
+            onClick={() => (openScraperModal ? openScraperModal('ACTIVE_BRAND') : setIsScraperOpen(true))}
             className="btn-secondary text-xs"
           >
+
             <RefreshCw className="w-4 h-4 text-brand-600 dark:text-brand-400" />
             Auto Scrape Domain URL
           </button>
@@ -86,13 +119,20 @@ export const BrandDnaModule = () => {
           <div>
             <label className="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1">Brand Palette Colors</label>
             <div className="flex gap-2">
-              {activeWorkspace.brandColors?.map((color, i) => (
-                <div key={i} className="flex-1 text-center">
-                  <div className="h-8 rounded-xl border border-slate-300 dark:border-white/20 shadow-sm" style={{ backgroundColor: color }} />
-                  <span className="text-[10px] text-slate-600 dark:text-slate-400 font-mono uppercase mt-1 block font-bold">{color}</span>
+              {displayColors && displayColors.length > 0 ? (
+                displayColors.map((color, i) => (
+                  <div key={i} className="flex-1 text-center">
+                    <div className="h-8 rounded-xl border border-slate-300 dark:border-white/20 shadow-sm transition-transform hover:scale-105" style={{ backgroundColor: color }} />
+                    <span className="text-[10px] text-slate-600 dark:text-slate-400 font-mono uppercase mt-1 block font-bold">{color}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-xs text-slate-400 font-medium italic p-2 bg-slate-100 dark:bg-slate-800 rounded-xl w-full text-center">
+                  No high-confidence official brand colors extracted
                 </div>
-              ))}
+              )}
             </div>
+
           </div>
 
           <div>

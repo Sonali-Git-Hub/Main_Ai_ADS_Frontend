@@ -128,17 +128,41 @@ export const WorkspaceProvider = ({ children }) => {
     { id: 'cal_3', title: 'Reel Script: Stop Fragmentation', date: '2026-07-30', platform: 'Instagram', pillar: 'Social Studio Ops', status: 'DRAFT', owner: 'Content Writer' }
   ]);
 
-  // Modals
   const [isQuickPostOpen, setIsQuickPostOpen] = useState(false);
   const [isScraperOpen, setIsScraperOpen] = useState(false);
+  const [scraperMode, setScraperMode] = useState('NEW_BRAND'); // 'ACTIVE_BRAND' or 'NEW_BRAND'
   const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
   const [isAISAAssistantOpen, setIsAISAAssistantOpen] = useState(false);
+
+  const openScraperModal = (mode = 'NEW_BRAND') => {
+    setScraperMode(mode);
+    setIsScraperOpen(true);
+  };
+
   const [notifications, setNotifications] = useState([
     { id: 1, text: 'Brand DNA synced for UWO AI Ads', time: '10m ago', unread: true },
     { id: 2, text: 'Blog draft flagged: Citation Needed', time: '1h ago', unread: true }
   ]);
 
-  const activeWorkspace = workspaces.find(w => w.id === activeWorkspaceId) || workspaces[0];
+  const activeWorkspace = workspaces.find(w => w.id === activeWorkspaceId || w._id === activeWorkspaceId) || workspaces[0] || {
+    id: 'ws_empty',
+    brandName: 'No Brand Loaded',
+    domainUrl: 'https://',
+    logoUrl: '',
+    brandColors: ['#6366F1', '#8B5CF6'],
+    targetAudience: [],
+    brandVoiceTone: { formalityScore: 3, toneKeywords: [] },
+    competitorLandscape: [],
+    contentPillars: [],
+    socialMediaPresence: [],
+    contactInfo: { email: '', phone: '', location: '' },
+    industryCategory: 'General',
+    missionStatement: '',
+    tagline: '',
+    approvedClaims: [],
+    restrictedClaims: []
+  };
+
 
   const toggleTheme = () => {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
@@ -148,8 +172,25 @@ export const WorkspaceProvider = ({ children }) => {
 
   const addWorkspace = (newWs) => {
     setWorkspaces(prev => [newWs, ...prev]);
-    setActiveWorkspaceId(newWs.id);
+    setActiveWorkspaceId(newWs.id || newWs._id);
   };
+
+  const deleteWorkspace = async (idToDelete) => {
+    if (!idToDelete) return;
+    try {
+      await fetch(`http://localhost:5000/api/workspace/${idToDelete}`, { method: 'DELETE' });
+    } catch (e) {
+      console.log('Workspace Delete Note:', e.message);
+    }
+    const updated = workspaces.filter(w => w.id !== idToDelete && w._id !== idToDelete);
+    setWorkspaces(updated);
+    if (activeWorkspaceId === idToDelete || activeWorkspace?._id === idToDelete) {
+      if (updated.length > 0) {
+        setActiveWorkspaceId(updated[0].id || updated[0]._id);
+      }
+    }
+  };
+
 
   const deductVisualCredits = (cost = 5, reason = 'AI Visual Synthesis') => {
     if (credits.balance < cost) {
@@ -185,12 +226,13 @@ export const WorkspaceProvider = ({ children }) => {
       activeModule, setActiveModule, goBack, canGoBack, navigationHistory,
       theme, toggleTheme,
       activeRole, setActiveRole,
-      workspaces, activeWorkspaceId, setActiveWorkspaceId, activeWorkspace, addWorkspace,
+      workspaces, activeWorkspaceId, setActiveWorkspaceId, activeWorkspace, addWorkspace, deleteWorkspace,
       credits, deductVisualCredits, topUpCredits,
       approvalsQueue, setApprovalsQueue, updateApprovalStatus,
       calendarEvents, addCalendarEvent,
       isQuickPostOpen, setIsQuickPostOpen,
-      isScraperOpen, setIsScraperOpen,
+      isScraperOpen, setIsScraperOpen, scraperMode, setScraperMode, openScraperModal,
+
       isCreditModalOpen, setIsCreditModalOpen,
       isAISAAssistantOpen, setIsAISAAssistantOpen,
       notifications, setNotifications

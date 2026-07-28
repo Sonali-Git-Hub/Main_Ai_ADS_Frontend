@@ -56,8 +56,15 @@ export const AISAAssistantDrawer = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/60 backdrop-blur-sm flex justify-end animate-in fade-in">
-      <div className="w-full max-w-md h-full bg-[#0d121f] border-l border-slate-800 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-300">
+    <div 
+      className="fixed inset-0 z-50 overflow-hidden bg-slate-950/60 backdrop-blur-sm flex justify-end animate-in fade-in"
+      onClick={() => setIsAISAAssistantOpen(false)}
+    >
+      <div 
+        className="w-full max-w-md h-full bg-[#0d121f] border-l border-slate-800 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
+
         {/* Drawer Header */}
         <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
           <div className="flex items-center gap-3">

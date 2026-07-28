@@ -16,7 +16,8 @@ import {
 } from 'lucide-react';
 
 export const DashboardModule = () => {
-  const { activeWorkspace, setActiveModule, setIsQuickPostOpen, setIsScraperOpen, approvalsQueue, credits } = useWorkspace();
+  const { activeWorkspace, setActiveModule, setIsQuickPostOpen, setIsScraperOpen, openScraperModal, approvalsQueue, credits } = useWorkspace();
+
 
   const stats = [
     { label: 'Verified Brand DNA Memory', value: '100%', sub: 'Immutable positioning locked', icon: Dna, color: 'text-brand-600 dark:text-brand-400', bg: 'bg-brand-500/5 dark:bg-brand-500/10 border-brand-500/20 dark:border-brand-500/30' },
@@ -42,9 +43,10 @@ export const DashboardModule = () => {
         
         <div className="flex gap-2 relative z-10">
           <button 
-            onClick={() => setIsScraperOpen(true)}
+            onClick={() => (openScraperModal ? openScraperModal('NEW_BRAND') : setIsScraperOpen(true))}
             className="btn-secondary text-xs"
           >
+
             <Dna className="w-4 h-4 text-brand-600 dark:text-brand-400" />
             Rescrape Brand DNA
           </button>
