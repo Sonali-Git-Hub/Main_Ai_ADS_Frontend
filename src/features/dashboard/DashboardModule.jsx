@@ -15,8 +15,8 @@ import {
 } from 'lucide-react';
 
 export const DashboardModule = () => {
-<<<<<<< HEAD
   const { activeWorkspace, setActiveModule, setIsQuickPostOpen, setIsScraperOpen, openScraperModal, approvalsQueue, credits } = useWorkspace();
+
 
 
   const stats = [
