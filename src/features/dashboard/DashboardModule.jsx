@@ -5,7 +5,6 @@ import {
   Search, 
   PenTool, 
   CheckCircle2, 
-  Sparkles, 
   ArrowUpRight, 
   TrendingUp, 
   Clock, 
@@ -16,13 +15,11 @@ import {
 } from 'lucide-react';
 
 export const DashboardModule = () => {
-  const { activeWorkspace, setActiveModule, setIsQuickPostOpen, setIsScraperOpen, approvalsQueue, credits } = useWorkspace();
+  const { activeWorkspace, setActiveModule, setIsQuickPostOpen, setIsScraperOpen, approvalsQueue } = useWorkspace();
 
   const stats = [
     { label: 'Verified Brand DNA Memory', value: '100%', sub: 'Immutable positioning locked', icon: Dna, color: 'text-brand-600 dark:text-brand-400', bg: 'bg-brand-500/5 dark:bg-brand-500/10 border-brand-500/20 dark:border-brand-500/30' },
-    { label: 'Fact-Check Verification Rate', value: '98.4%', sub: '0 unverified stats published', icon: ShieldCheck, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20 dark:border-emerald-500/30' },
-    { label: 'Production SLA Velocity', value: '< 12s', sub: 'Long-form editorial drafting', icon: Clock, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-500/5 dark:bg-cyan-500/10 border-cyan-500/20 dark:border-cyan-500/30' },
-    { label: 'Visual Credits Balance', value: `${credits.balance}`, sub: `${credits.tier} Subscription Plan`, icon: Sparkles, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500/5 dark:bg-purple-500/10 border-purple-500/20 dark:border-purple-500/30' }
+    { label: 'Fact-Check Verification Rate', value: '98.4%', sub: '0 unverified stats published', icon: ShieldCheck, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20 dark:border-emerald-500/30' }
   ];
 
   return (
@@ -59,7 +56,7 @@ export const DashboardModule = () => {
       </div>
 
       {/* KPI Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {stats.map((s, idx) => {
           const Icon = s.icon;
           return (
