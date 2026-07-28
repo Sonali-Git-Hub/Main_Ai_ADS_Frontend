@@ -143,6 +143,7 @@ export const WorkspaceProvider = ({ children }) => {
     { id: 1, text: 'Brand DNA synced for UWO AI Ads', time: '10m ago', unread: true },
     { id: 2, text: 'Blog draft flagged: Citation Needed', time: '1h ago', unread: true }
   ]);
+  const [userAvatar, setUserAvatar] = useState(null);
 
   const activeWorkspace = workspaces.find(w => w.id === activeWorkspaceId || w._id === activeWorkspaceId) || workspaces[0] || {
     id: 'ws_empty',
@@ -235,7 +236,8 @@ export const WorkspaceProvider = ({ children }) => {
 
       isCreditModalOpen, setIsCreditModalOpen,
       isAISAAssistantOpen, setIsAISAAssistantOpen,
-      notifications, setNotifications
+      notifications, setNotifications,
+      userAvatar, setUserAvatar
     }}>
       {children}
     </WorkspaceContext.Provider>

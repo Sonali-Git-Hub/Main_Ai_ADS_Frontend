@@ -2,6 +2,7 @@ import React from 'react';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
+import { Bot } from 'lucide-react';
 
 // Feature Modules (Modular Architecture)
 import { DashboardModule } from './features/dashboard/DashboardModule';
@@ -24,7 +25,7 @@ import { SettingsBillingModule } from './features/settingsBilling/SettingsBillin
 import { AISAAssistantDrawer } from './features/aisaAssistant/AISAAssistantDrawer';
 
 const MainContent = () => {
-  const { activeModule } = useWorkspace();
+  const { activeModule, setIsAISAAssistantOpen } = useWorkspace();
 
   const renderModule = () => {
     switch (activeModule) {
@@ -61,6 +62,15 @@ const MainContent = () => {
       <ScraperOverlayModal />
       <CreditTopupModal />
       <AISAAssistantDrawer />
+
+      {/* Floating AISA Assistant Toggle Button */}
+      <button
+        onClick={() => setIsAISAAssistantOpen(true)}
+        className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-xl shadow-brand-500/30 transition-all hover:scale-105 active:scale-95 group"
+        title="Open AISA™ AI Drawer"
+      >
+        <Bot className="w-6 h-6" />
+      </button>
     </div>
   );
 };

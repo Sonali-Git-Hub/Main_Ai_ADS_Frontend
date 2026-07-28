@@ -7,9 +7,9 @@ import {
   Moon, 
   Bell, 
   ShieldCheck, 
-  ChevronDown, 
-  Plus, 
-  Bot, 
+  ChevronDown,
+  Plus,
+  User,
   UserCheck,
   ArrowLeft,
   Trash2
@@ -30,10 +30,13 @@ export const Header = () => {
     setIsScraperOpen,
     openScraperModal,
     setIsAISAAssistantOpen,
+
     notifications,
     goBack,
     canGoBack,
-    activeModule
+    activeModule,
+    setActiveModule,
+    userAvatar
   } = useWorkspace();
 
   const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
@@ -209,13 +212,21 @@ export const Header = () => {
           <span className="text-[10px] bg-brand-500 text-white font-bold px-1.5 py-0.5 rounded-full ml-1">+Top Up</span>
         </button>
 
-        {/* AISA Assistant Quick Drawer Toggle */}
-        <button 
-          onClick={() => setIsAISAAssistantOpen(true)}
-          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-lg shadow-brand-500/25 transition-all"
+        {/* Profile Button */}
+        <button
+          onClick={() => setActiveModule('settings')}
+          className={`p-2 sm:p-2.5 rounded-xl border transition-all ${
+            activeModule === 'settings' 
+              ? 'bg-brand-50 border-brand-200 text-brand-600 dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400' 
+              : 'border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+          }`}
+          title="Profile & Settings"
         >
-          <Bot className="w-4 h-4" />
-          <span className="hidden sm:inline">AISA™ AI Drawer</span>
+          {userAvatar ? (
+            <img src={userAvatar} alt="Profile" className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover" />
+          ) : (
+            <User className="w-4 h-4" />
+          )}
         </button>
 
         {/* Theme Toggle */}
