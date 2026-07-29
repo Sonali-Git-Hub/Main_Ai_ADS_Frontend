@@ -69,6 +69,35 @@ export const WorkspaceProvider = ({ children }) => {
   ]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState('ws_001');
 
+
+  // Sync workspaces from MongoDB Atlas Database on Page Load / Refresh
+  useEffect(() => {
+    const fetchWorkspacesFromDb = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/workspace/list');
+        const data = await res.json();
+        if (data.success && data.workspaces && data.workspaces.length > 0) {
+          const formatted = data.workspaces.map(w => ({
+            ...w,
+            id: w._id || w.id,
+            brandVoiceTone: w.brandVoiceTone || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative', 'Reliable'] },
+            voiceGuidelines: w.voiceGuidelines || { formalityScore: 4, toneKeywords: w.brandVoiceTone?.toneKeywords || ['Professional', 'Innovative'] }
+          }));
+          setWorkspaces(formatted);
+          setActiveWorkspaceId(prevId => {
+            const exists = formatted.some(item => (item.id === prevId || item._id === prevId));
+            return exists ? prevId : (formatted[0].id || formatted[0]._id);
+          });
+        }
+      } catch (err) {
+        console.log('Workspace DB Fetch Note:', err.message);
+      }
+    };
+
+    fetchWorkspacesFromDb();
+  }, []);
+
+
   // Credits & Subscriptions
   const [credits, setCredits] = useState({
     tier: 'Agency',
@@ -172,9 +201,35 @@ export const WorkspaceProvider = ({ children }) => {
   };
 
   const addWorkspace = (newWs) => {
-    setWorkspaces(prev => [newWs, ...prev]);
-    setActiveWorkspaceId(newWs.id || newWs._id);
+    const formatted = {
+      ...newWs,
+      id: newWs._id || newWs.id || `ws_${Date.now()}`,
+      brandVoiceTone: newWs.brandVoiceTone || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative', 'Reliable'] },
+      voiceGuidelines: newWs.voiceGuidelines || { formalityScore: 4, toneKeywords: newWs.brandVoiceTone?.toneKeywords || ['Professional', 'Innovative'] }
+    };
+    setWorkspaces(prev => {
+      const exists = prev.some(w => (w.id === formatted.id || w._id === formatted.id));
+      if (exists) return prev;
+      return [formatted, ...prev];
+    });
+    setActiveWorkspaceId(formatted.id);
   };
+
+
+  const updateWorkspace = async (id, updatedData) => {
+    if (!id) return;
+    try {
+      await fetch(`http://localhost:5000/api/workspace/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData)
+      });
+    } catch (e) {
+      console.log('Workspace Update Note:', e.message);
+    }
+    setWorkspaces(prev => prev.map(w => (w.id === id || w._id === id) ? { ...w, ...updatedData } : w));
+  };
+
 
   const deleteWorkspace = async (idToDelete) => {
     if (!idToDelete) return;
@@ -227,7 +282,8 @@ export const WorkspaceProvider = ({ children }) => {
       activeModule, setActiveModule, goBack, canGoBack, navigationHistory,
       theme, toggleTheme,
       activeRole, setActiveRole,
-      workspaces, activeWorkspaceId, setActiveWorkspaceId, activeWorkspace, addWorkspace, deleteWorkspace,
+      workspaces, activeWorkspaceId, setActiveWorkspaceId, activeWorkspace, addWorkspace, updateWorkspace, deleteWorkspace,
+
       credits, deductVisualCredits, topUpCredits,
       approvalsQueue, setApprovalsQueue, updateApprovalStatus,
       calendarEvents, addCalendarEvent,
