@@ -8,6 +8,8 @@ export const ScraperOverlayModal = () => {
   const [brandName, setBrandName] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [activeTab, setActiveTab] = useState('URL');
+  const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
     if (isScraperOpen) {
@@ -22,14 +24,42 @@ export const ScraperOverlayModal = () => {
     }
   }, [isScraperOpen, scraperMode, activeWorkspace]);
 
+
+
   if (!isScraperOpen) return null;
 
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedFile(file);
+    setLoading(true);
 
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('domainUrl', url || 'https://custombrand.com');
+    formData.append('brandName', brandName || file.name.split('.')[0].toUpperCase());
+
+    try {
+      const res = await fetch('http://localhost:5000/api/workspace/upload-doc', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        setResult(data.workspace);
+      }
+    } catch (e) {
+      console.log('File upload error fallback:', e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleScrape = async () => {
     if (!url.trim()) return;
     setLoading(true);
+
 
     try {
       const res = await fetch('http://localhost:5000/api/workspace/create', {
@@ -197,32 +227,72 @@ export const ScraperOverlayModal = () => {
         </div>
 
         {!result ? (
-          /* Step 1: Input URL */
+          /* Step 1: Input URL or Upload Brand Deck */
           <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-800 mb-1.5">Target Domain URL</label>
-              <div className="relative">
-                <Globe className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                <input 
-                  type="text"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://www.flipkart.com/"
-                  className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#7B61FF] focus:ring-1 focus:ring-[#7B61FF] rounded-xl px-4 py-2.5 text-xs pl-10 font-medium"
-                />
-              </div>
+            {/* Input Mode Selector */}
+            <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
+              <button
+                type="button"
+                onClick={() => setActiveTab('URL')}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'URL' ? 'bg-white text-[#7B61FF] shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+              >
+                🌐 Auto Scrape Website
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('FILE')}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'FILE' ? 'bg-white text-[#7B61FF] shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+              >
+                📄 Upload Brand Guideline PDF / Deck
+              </button>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-800 mb-1.5">Brand Name (Optional)</label>
-              <input 
-                type="text"
-                value={brandName}
-                onChange={(e) => setBrandName(e.target.value)}
-                placeholder="e.g. Flipkart"
-                className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#7B61FF] focus:ring-1 focus:ring-[#7B61FF] rounded-xl px-4 py-2.5 text-xs font-medium"
-              />
-            </div>
+            {activeTab === 'URL' ? (
+              <>
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">Target Domain URL</label>
+                  <div className="relative">
+                    <Globe className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                    <input 
+                      type="text"
+                      value={url}
+                      onChange={(e) => setUrl(e.target.value)}
+                      placeholder="https://www.flipkart.com/"
+                      className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#7B61FF] focus:ring-1 focus:ring-[#7B61FF] rounded-xl px-4 py-2.5 text-xs pl-10 font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">Brand Name (Optional)</label>
+                  <input 
+                    type="text"
+                    value={brandName}
+                    onChange={(e) => setBrandName(e.target.value)}
+                    placeholder="e.g. Flipkart"
+                    className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#7B61FF] focus:ring-1 focus:ring-[#7B61FF] rounded-xl px-4 py-2.5 text-xs font-medium"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="p-6 rounded-2xl border-2 border-dashed border-[#7B61FF]/40 bg-[#7B61FF]/5 text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-[#7B61FF]/10 text-[#7B61FF] flex items-center justify-center mx-auto font-bold text-lg">
+                  📄
+                </div>
+                <div>
+                  <p className="text-xs font-extrabold text-slate-900">Upload Official Brand Guideline PDF / PPT Deck</p>
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">Supports .pdf, .pptx, .docx, .xlsx files up to 25MB</p>
+                </div>
+                <label className="inline-block px-4 py-2 bg-[#7B61FF] text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-[#6B5AED] transition-colors shadow-md">
+                  Browse Brand File
+                  <input type="file" onChange={handleFileUpload} accept=".pdf,.pptx,.docx,.xlsx" className="hidden" />
+                </label>
+                {selectedFile && (
+                  <p className="text-xs font-bold text-[#7B61FF] pt-1">Selected: {selectedFile.name}</p>
+                )}
+              </div>
+            )}
+
 
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-1">
               <p className="font-bold text-[#7B61FF]">10 Specific Brand DNA Data Points Extracted:</p>
