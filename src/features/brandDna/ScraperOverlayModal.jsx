@@ -142,6 +142,7 @@ export const ScraperOverlayModal = () => {
 
         socialMediaPresence: ["Instagram", "Facebook", "Twitter/X", "LinkedIn", "YouTube"],
         faviconUrl: `https://www.google.com/s2/favicons?domain=${cleanUrl}&sz=128`,
+        logoUrl: `https://www.google.com/s2/favicons?domain=${cleanUrl}&sz=128`,
         contactInfo: {
           email: `support@${cleanUrl.replace('https://', '').replace('http://', '').replace('www.', '')}`,
           phone: "+1 (800) 555-0199",

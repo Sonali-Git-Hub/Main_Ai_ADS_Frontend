@@ -22,7 +22,7 @@ export const StrategyModule = () => {
             <h1 className="text-xl font-extrabold text-white">Marketing Strategy & Funnel Architecture</h1>
           </div>
           <p className="text-xs text-slate-400">
-            Define objectives, buyer personas, TOFU/MOFU/BOFU funnel mapping, and offer hierarchy for <strong className="text-white">{activeWorkspace.brandName}</strong>.
+            Define objectives, buyer personas, Brand Awareness / Lead Nurturing / Customer Conversion funnel mapping, and offer hierarchy for <strong className="text-white">{activeWorkspace.brandName}</strong>.
           </p>
         </div>
 
@@ -83,7 +83,7 @@ export const StrategyModule = () => {
 
         {/* Col 2 & 3: Funnel Stages & Personas */}
         <div className="lg:col-span-2 space-y-6">
-          {/* TOFU / MOFU / BOFU Mapping */}
+          {/* Brand Awareness / Lead Nurturing / Customer Conversion Mapping */}
           <div className="p-6 rounded-3xl glass-card border border-slate-800 space-y-4">
             <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
               <Layers className="w-4 h-4 text-brand-400" />
@@ -93,7 +93,7 @@ export const StrategyModule = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="p-4 rounded-2xl bg-slate-900/80 border border-brand-500/30 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold text-brand-400">TOFU (Awareness)</span>
+                  <span className="text-xs font-extrabold text-brand-400">Brand Awareness</span>
                   <span className="text-[10px] bg-brand-500/20 text-brand-300 px-1.5 py-0.5 rounded font-bold">50% Mix</span>
                 </div>
                 <p className="text-[11px] text-slate-300">Educational blogs, industry stats, keyword cluster pillar articles, reel scripts.</p>
@@ -102,7 +102,7 @@ export const StrategyModule = () => {
 
               <div className="p-4 rounded-2xl bg-slate-900/80 border border-purple-500/30 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold text-purple-400">MOFU (Consideration)</span>
+                  <span className="text-xs font-extrabold text-purple-400">Lead Nurturing</span>
                   <span className="text-[10px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded font-bold">30% Mix</span>
                 </div>
                 <p className="text-[11px] text-slate-300">How-to guides, comparative listicles, lead magnet offers, carousel breakdown posts.</p>
@@ -111,7 +111,7 @@ export const StrategyModule = () => {
 
               <div className="p-4 rounded-2xl bg-slate-900/80 border border-emerald-500/30 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold text-emerald-400">BOFU (Decision)</span>
+                  <span className="text-xs font-extrabold text-emerald-400">Customer Conversion</span>
                   <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-bold">20% Mix</span>
                 </div>
                 <p className="text-[11px] text-slate-300">Case studies, verified ROI claims, product landing pages, sales email sequences.</p>

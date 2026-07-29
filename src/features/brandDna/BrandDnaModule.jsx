@@ -72,7 +72,7 @@ export const BrandDnaModule = () => {
         </div>
         
         <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
-          <img src={activeWorkspace.logoUrl} alt={activeWorkspace.brandName} className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700 object-cover" />
+          <img src={activeWorkspace.logoUrl || activeWorkspace.faviconUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${activeWorkspace.brandName}`} alt={activeWorkspace.brandName} className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700 object-cover" />
           <div>
             <h3 className="font-extrabold text-slate-900 dark:text-white text-base">{activeWorkspace.brandName}</h3>
             <p className="text-xs text-brand-600 dark:text-brand-400 font-bold flex items-center gap-1">
