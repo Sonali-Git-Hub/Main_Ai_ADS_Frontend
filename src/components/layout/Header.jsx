@@ -99,8 +99,8 @@ export const Header = () => {
             className="flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 bg-slate-100/70 dark:bg-slate-900/80 transition-all text-left"
           >
             <div className="w-7 h-7 rounded-lg bg-brand-500/15 border border-brand-500/30 flex items-center justify-center text-brand-400 font-bold text-xs overflow-hidden">
-              {activeWorkspace?.logoUrl ? (
-                <img src={activeWorkspace.logoUrl} alt={activeWorkspace.brandName} className="w-full h-full object-cover" />
+              {activeWorkspace?.logoUrl || activeWorkspace?.faviconUrl ? (
+                <img src={activeWorkspace.logoUrl || activeWorkspace.faviconUrl} alt={activeWorkspace.brandName} className="w-full h-full object-cover bg-white" />
               ) : (
                 <Building2 className="w-4 h-4 text-brand-500" />
               )}
@@ -132,7 +132,11 @@ export const Header = () => {
                     className={`w-full px-3 py-2 flex items-center justify-between group/ws text-sm text-left hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors ${isActive ? 'text-brand-400 font-medium bg-brand-500/10' : 'text-slate-700 dark:text-slate-300'}`}
                   >
                     <div className="flex items-center gap-2.5 truncate">
-                      <Building2 className="w-4 h-4 text-brand-400 shrink-0" />
+                      {ws.logoUrl || ws.faviconUrl ? (
+                        <img src={ws.logoUrl || ws.faviconUrl} alt={ws.brandName} className="w-5 h-5 rounded-lg object-contain bg-white shrink-0 border border-slate-200 dark:border-slate-700" />
+                      ) : (
+                        <Building2 className="w-4 h-4 text-brand-400 shrink-0" />
+                      )}
                       <span className="truncate">{ws.brandName}</span>
                     </div>
                     <button

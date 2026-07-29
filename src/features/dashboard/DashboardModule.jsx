@@ -158,56 +158,77 @@ export const DashboardModule = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">
-                <th className="pb-3 px-3">Title & Format</th>
-                <th className="pb-3 px-3">Author</th>
-                <th className="pb-3 px-3">Fact Check Gate</th>
-                <th className="pb-3 px-3">Status</th>
-                <th className="pb-3 px-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
-              {approvalsQueue.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-100/40 dark:hover:bg-slate-800/30 transition-colors">
-                  <td className="py-3 px-3">
-                    <span className="font-bold text-slate-800 dark:text-slate-200 block">{item.title}</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">{item.type} {item.platform ? `(${item.platform})` : ''}</span>
-                  </td>
-                  <td className="py-3 px-3 text-slate-600 dark:text-slate-300 font-medium">{item.author}</td>
-                  <td className="py-3 px-3">
-                    {item.factCheck?.passed ? (
-                      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 dark:border-emerald-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold">
-                        <ShieldCheck className="w-3 h-3" /> VERIFIED ({item.factCheck.score}%)
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 dark:border-rose-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold">
-                        Citation Needed
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3 px-3">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                      item.status === 'APPROVED' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30' :
-                      item.status === 'RED_FLAG_CITATION_NEEDED' ? 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 dark:border-rose-500/30' :
-                      'bg-amber-500/10 dark:bg-amber-500/20 text-amber-650 dark:text-amber-300 border border-amber-500/20 dark:border-amber-500/30'
-                    }`}>
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-right">
-                    <button 
-                      onClick={() => setActiveModule('approvals')}
-                      className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 underline"
-                    >
-                      Review
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {(() => {
+            const currentWorkspaceId = activeWorkspace?.id || activeWorkspace?._id;
+            const filteredQueue = approvalsQueue.filter(item => item.workspaceId === currentWorkspaceId);
+
+            if (filteredQueue.length === 0) {
+              return (
+                <div className="flex flex-col items-center justify-center p-8 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 flex items-center justify-center text-slate-455 dark:text-slate-500">
+                    <Clock className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1 max-w-sm">
+                    <h3 className="text-slate-800 dark:text-slate-200 font-extrabold text-sm">No production items yet</h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">You haven't generated any drafts or campaigns for this brand yet. Get started by scraping the Brand DNA or writing a new post.</p>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">
+                    <th className="pb-3 px-3">Title & Format</th>
+                    <th className="pb-3 px-3">Author</th>
+                    <th className="pb-3 px-3">Fact Check Gate</th>
+                    <th className="pb-3 px-3">Status</th>
+                    <th className="pb-3 px-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
+                  {filteredQueue.map((item) => (
+                    <tr key={item.id} className="hover:bg-slate-100/40 dark:hover:bg-slate-800/30 transition-colors">
+                      <td className="py-3 px-3">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 block">{item.title}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">{item.type} {item.platform ? `(${item.platform})` : ''}</span>
+                      </td>
+                      <td className="py-3 px-3 text-slate-600 dark:text-slate-300 font-medium">{item.author}</td>
+                      <td className="py-3 px-3">
+                        {item.factCheck?.passed ? (
+                          <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 dark:border-emerald-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                            <ShieldCheck className="w-3 h-3" /> VERIFIED ({item.factCheck.score}%)
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 dark:border-rose-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                            Citation Needed
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          item.status === 'APPROVED' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30' :
+                          item.status === 'RED_FLAG_CITATION_NEEDED' ? 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 dark:border-rose-500/30' :
+                          'bg-amber-500/10 dark:bg-amber-500/20 text-amber-650 dark:text-amber-300 border border-amber-500/20 dark:border-amber-500/30'
+                        }`}>
+                          {item.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <button 
+                          onClick={() => setActiveModule('approvals')}
+                          className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 underline"
+                        >
+                          Review
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            );
+          })()}
         </div>
       </div>
     </div>

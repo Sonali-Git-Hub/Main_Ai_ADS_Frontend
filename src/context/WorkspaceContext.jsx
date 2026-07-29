@@ -79,10 +79,10 @@ export const WorkspaceProvider = ({ children }) => {
     ]
   });
 
-  // Approvals & Drafts Store
   const [approvalsQueue, setApprovalsQueue] = useState([
     {
       id: 'cnt_101',
+      workspaceId: 'ws_001',
       title: 'How AI Ads Transforms Agency Content Production Velocity',
       type: 'BLOG',
       status: 'APPROVED',
@@ -95,6 +95,7 @@ export const WorkspaceProvider = ({ children }) => {
     },
     {
       id: 'cnt_102',
+      workspaceId: 'ws_001',
       title: '5 Steps to Build Bulletproof Brand DNA in 2026',
       type: 'SOCIAL',
       platform: 'LinkedIn',
@@ -106,6 +107,7 @@ export const WorkspaceProvider = ({ children }) => {
     },
     {
       id: 'cnt_103',
+      workspaceId: 'ws_001',
       title: 'Unlocking 400% ROI With Multi-Tenant Campaign Operations',
       type: 'BLOG',
       status: 'RED_FLAG_CITATION_NEEDED',
