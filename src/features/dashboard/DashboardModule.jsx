@@ -177,7 +177,8 @@ export const DashboardModule = () => {
           >
             View Approvals Queue <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
-              {loading ? (
+        </div>
+        {loading ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="w-6 h-6 animate-spin text-brand-500" />
           </div>
