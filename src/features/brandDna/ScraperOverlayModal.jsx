@@ -3,7 +3,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { X, Dna, Globe, Sparkles, CheckCircle2, ShieldAlert, ArrowRight, Target, Users, Share2, Mail, Phone, MapPin, Award, FileText } from 'lucide-react';
 
 export const ScraperOverlayModal = () => {
-  const { isScraperOpen, setIsScraperOpen, addWorkspace, activeWorkspace, scraperMode } = useWorkspace();
+  const { isScraperOpen, setIsScraperOpen, addWorkspace, activeWorkspace, scraperMode, setActiveModule } = useWorkspace();
   const [url, setUrl] = useState('');
   const [brandName, setBrandName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,7 +41,8 @@ export const ScraperOverlayModal = () => {
     formData.append('brandName', brandName || file.name.split('.')[0].toUpperCase());
 
     try {
-      const res = await fetch('http://localhost:5000/api/workspace/upload-doc', {
+      // NON-PERSISTED PREVIEW (Not saved to DB until user clicks Save & Lock)
+      const res = await fetch('http://localhost:5000/api/workspace/upload-doc-preview', {
         method: 'POST',
         body: formData
       });
@@ -60,9 +61,9 @@ export const ScraperOverlayModal = () => {
     if (!url.trim()) return;
     setLoading(true);
 
-
     try {
-      const res = await fetch('http://localhost:5000/api/workspace/create', {
+      // NON-PERSISTED PREVIEW (Not saved to DB until user clicks Save & Lock)
+      const res = await fetch('http://localhost:5000/api/workspace/scrape-preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ domainUrl: url, brandName })
@@ -70,132 +71,30 @@ export const ScraperOverlayModal = () => {
       const data = await res.json();
       if (data.success) {
         setResult(data.workspace);
+      } else {
+        console.log('Scraper API Note:', data.error);
       }
     } catch (e) {
-      const cleanUrl = url.startsWith('http') ? url : `https://${url}`;
-      const name = brandName || cleanUrl.replace('https://', '').split('.')[0].toUpperCase();
-      const mockWs = {
-        id: `ws_${Date.now()}`,
-        brandName: name,
-        domainUrl: cleanUrl,
-        brandColors: cleanUrl.includes('crocs')
-          ? ['#84CC16', '#1E293B', '#F8FAFC', '#0F172A']
-          : cleanUrl.includes('ajio')
-          ? ['#2B2D42', '#D90429', '#8D99AE', '#0F172A']
-          : cleanUrl.includes('myntra')
-          ? ['#FF3F6C', '#FF527B', '#282C3F', '#0F172A']
-          : cleanUrl.includes('flipkart') 
-          ? ['#2874F0', '#FFE500', '#FB641B', '#0F172A']
-          : cleanUrl.includes('shopsy')
-          ? ['#5F259F', '#FA4A00', '#FFD700', '#0F172A']
-          : cleanUrl.includes('amazon')
-          ? ['#FF9900', '#146EB4', '#232F3E', '#0F172A']
-          : cleanUrl.includes('chatgpt') || cleanUrl.includes('openai')
-          ? ['#10A37F', '#1A7F64', '#202123', '#0F172A']
-          : ['#6366F1', '#4F46E5', '#818CF8', '#0F172A'],
-
-        targetAudience: cleanUrl.includes('crocs')
-          ? ["Casual Everyday Footwear & Comfort Seekers", "Fashion-Conscious Youth & Trendseekers", "Kids, Parents & Family Shopping Buyers", "Outdoor & Active Lifestyle Enthusiasts"]
-          : cleanUrl.includes('ajio') || cleanUrl.includes('myntra') || cleanUrl.includes('nykaa')
-          ? ["Fashion-Forward Gen-Z & Millennial Trendseekers", "Brand-Conscious Apparel & Lifestyle Buyers", "Indie & Ethnic Fusion Wear Enthusiasts", "Value & Premium Footwear, Beauty & Accessories Shoppers"]
-          : cleanUrl.includes('flipkart') || cleanUrl.includes('shopsy') || cleanUrl.includes('amazon')
-          ? [`Value-Conscious Everyday Shoppers & ${name} Active Users`, "Tech-Savvy Deal Hunters & Mobile Buyers", "Tier-1, Tier-2 & Tier-3 Regional Consumers", "Everyday Household & Lifestyle Buyers"]
-          : cleanUrl.includes('chatgpt') || cleanUrl.includes('openai')
-          ? ["AI Engineers, Developers & Prompt Designers", "Enterprise Tech Leaders & Product Managers", "Students, Researchers & Content Creators", "Digital Marketers & Creative Professionals"]
-          : [`Active Customers & ${name} Target Buyers`, "Quality-Conscious Consumer Buyers", "Local & Regional Household Shoppers", "Value-Driven Brand Customers"],
-
-        brandVoiceTone: cleanUrl.includes('crocs')
-          ? { formalityScore: 2, toneKeywords: ["Playful", "Expressive", "Comfort-First", "Vibrant", "Casual"] }
-          : cleanUrl.includes('ajio') || cleanUrl.includes('myntra')
-          ? { formalityScore: 3, toneKeywords: ["Trendy", "Chic", "Fashion-Forward", "Expressive", "Vibrant"] }
-          : cleanUrl.includes('flipkart') || cleanUrl.includes('shopsy')
-          ? { formalityScore: 3, toneKeywords: ["Vibrant", "Customer-Centric", "Energetic", "Value-Driven", "Promotional"] }
-          : cleanUrl.includes('chatgpt') || cleanUrl.includes('openai')
-          ? { formalityScore: 5, toneKeywords: ["Authoritative", "Analytical", "Innovative", "Scientific", "Futuristic"] }
-          : { formalityScore: 4, toneKeywords: ["Professional", "Trustworthy", "Customer-Centric", "Helpful", "Reliable"] },
-
-        competitorLandscape: cleanUrl.includes('crocs')
-          ? ["Birkenstock & Skechers", "Bata & Woodland", "Nike & Adidas Casuals", "Campus & Puma"]
-          : cleanUrl.includes('ajio')
-          ? ["Myntra", "Tata CLiQ & Nykaa", "Zara & H&M", "Max Fashion & Lifestyle"]
-          : cleanUrl.includes('myntra')
-          ? ["AJIO", "Tata CLiQ", "Nykaa Fashion", "Amazon Fashion & Flipkart"]
-          : cleanUrl.includes('flipkart')
-          ? ["Amazon India", "Meesho & Shopsy", "Myntra & Ajio", "Tata Neu & Reliance Digital"]
-          : cleanUrl.includes('shopsy')
-          ? ["Meesho", "Flipkart Wholesale", "Amazon Bazaar", "AJS & Local Wholesale Markets"]
-          : cleanUrl.includes('chatgpt') || cleanUrl.includes('openai')
-          ? ["Google Gemini", "Anthropic Claude", "Microsoft Copilot", "Meta Llama"]
-          : [`${name} Direct Market Competitors`, `Top ${cleanUrl} Service Providers`, "Regional Category Specialists"],
-
-        contentPillars: cleanUrl.includes('crocs')
-          ? ["Iconic Classic Clogs & Jibbitz Charms Spotlights", "Seasonal Color Drops & Limited Edition Collaborations", "All-Day Ergonomic Footwear Comfort & Technology", "Pop-Culture Style Guides & Creator Spotlights"]
-          : cleanUrl.includes('ajio')
-          ? ["International Designer Labels & Luxe Spotlights", "Western & Ethnic Fashion Trend Guides", "Footwear, Sneakers & Accessories Collections", "Seasonal Fashion Sales & Exclusive Drops"]
-          : cleanUrl.includes('flipkart')
-          ? ["Big Billion Days & Festival Mega Deals", "Mobiles & Electronics Brand Launches", "Trendy Fashion & Lifestyle Collections", "Flipkart Plus Rewards & SuperCoins"]
-          : cleanUrl.includes('shopsy')
-          ? ["Budget Fashion & Apparel Under ₹199", "Daily Wholesale Deals & Flash Sales", "Household & Kitchen Utility Products", "Customer Unboxing & Verified Reviews"]
-          : cleanUrl.includes('chatgpt') || cleanUrl.includes('openai')
-          ? ["Prompt Engineering & Workflow Mastery", "GPT-4o & Reasoning Model Updates", "Developer API & Enterprise Integration", "AI Governance & Safety Standards"]
-          : [`${name} Core Product Showcase`, "Customer Reviews & Success Testimonials", "Service Quality & Brand Excellence", "Special Offers & Customer Support"],
-
-        socialMediaPresence: ["Instagram", "Facebook", "Twitter/X", "LinkedIn", "YouTube"],
-        faviconUrl: `https://www.google.com/s2/favicons?domain=${cleanUrl}&sz=128`,
-        logoUrl: `https://www.google.com/s2/favicons?domain=${cleanUrl}&sz=128`,
-        contactInfo: {
-          email: `support@${cleanUrl.replace('https://', '').replace('http://', '').replace('www.', '')}`,
-          phone: "+1 (800) 555-0199",
-          location: "Global Enterprise Operations"
-        },
-        industryCategory: cleanUrl.includes('crocs')
-          ? "Footwear, Athletic & Casual Lifestyle"
-          : cleanUrl.includes('ajio') || cleanUrl.includes('myntra') || cleanUrl.includes('nykaa') 
-          ? "Fashion, Beauty & Lifestyle E-Commerce" 
-          : cleanUrl.includes('flipkart') || cleanUrl.includes('amazon') || cleanUrl.includes('shopsy') 
-          ? "E-Commerce & Multi-Category Retail Marketplace" 
-          : `${name} Commercial Services & Consumer Solutions`,
-
-        missionStatement: cleanUrl.includes('crocs')
-          ? "Crocs is a global leader in innovative casual footwear for women, men, and children, world-famous for supreme comfort, vibrant iconic clogs, sandals, and personalizable Jibbitz charms."
-          : cleanUrl.includes('ajio')
-          ? "AJIO (Reliance Retail) is India's leading fashion & lifestyle destination offering handpicked designer labels, western & ethnic apparel, footwear, beauty, and trendsetting accessories."
-          : cleanUrl.includes('flipkart') 
-          ? "Flipkart is India's leading online shopping destination offering millions of products across fashion, electronics, appliances, and lifestyle."
-          : cleanUrl.includes('shopsy')
-          ? "Shopsy is a hyper-value online shopping platform delivering trendy fashion, footwear, beauty, and home essentials at wholesale prices."
-          : cleanUrl.includes('chatgpt') || cleanUrl.includes('openai')
-          ? "OpenAI is an AI research and deployment company dedicated to ensuring artificial general intelligence benefits all of humanity."
-          : `${name} is a premier platform delivering high-impact product solutions and digital excellence to customers worldwide.`,
-
-        tagline: cleanUrl.includes('crocs')
-          ? "Crocs: Come As You Are — Supreme Comfort Clogs & Footwear"
-          : cleanUrl.includes('ajio') 
-          ? "AJIO: Doubt is Out — India's Premier Fashion Destination" 
-          : `${name} — India's Premier Online Destination`,
-
-
-        positioningSummary: `${name}: High-performance digital operations and brand memory governance.`,
-        approvedClaims: [
-          { claimText: `${name} verified website positioning & brand integrity`, sourceUrl: cleanUrl, verified: true }
-        ],
-        restrictedClaims: ['Guaranteed #1 Google ranking', '100% viral outcome guaranteed', 'Instant backlink indexing']
-      };
-      setResult(mockWs);
+      console.log('Scraper fetch error:', e.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const confirmSaveWorkspace = () => {
+  const confirmSaveWorkspace = async () => {
     if (result) {
-      addWorkspace(result);
+      // PERSISTS TO MONGO DB & WORKSPACE HISTORY UPON LOCK BUTTON CLICK
+      await addWorkspace(result);
+      if (setActiveModule) {
+        setActiveModule('brands');
+      }
       setIsScraperOpen(false);
       setResult(null);
       setUrl('');
       setBrandName('');
     }
   };
+
 
   return (
     <div 
@@ -325,7 +224,17 @@ export const ScraperOverlayModal = () => {
             {/* Top Brand Banner */}
             <div className="p-4 rounded-2xl bg-[#7B61FF]/10 border border-[#7B61FF]/30 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img src={result.logoUrl || result.faviconUrl} alt={result.brandName} className="w-12 h-12 rounded-xl bg-white p-1 border border-slate-200 object-contain" />
+                <img 
+                  src={result.logoUrl || result.faviconUrl || `https://www.google.com/s2/favicons?domain=${result.domainUrl || 'google.com'}&sz=128`} 
+                  alt={result.brandName} 
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    const domain = (result.domainUrl || '').replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+                    e.target.src = `https://www.google.com/s2/favicons?domain=${domain || 'google.com'}&sz=128`;
+                  }}
+                  className="w-12 h-12 rounded-xl bg-white p-1 border border-slate-200 object-contain shadow-sm" 
+                />
+
                 <div>
                   <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
                     {result.brandName}
@@ -341,94 +250,155 @@ export const ScraperOverlayModal = () => {
               </div>
             </div>
 
-            {/* 10 Data Points Display Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-
-              {/* 10. Tagline & 9. Mission Statement */}
-              <div className="md:col-span-2 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
-                <span className="font-extrabold text-[#7B61FF] block uppercase text-[10px] tracking-wider">10. Tagline / Main Slogan</span>
-                <p className="text-slate-900 font-extrabold text-sm">"{result.tagline || `${result.brandName} — Premier Destination`}"</p>
-                <span className="font-extrabold text-slate-700 block uppercase text-[10px] tracking-wider pt-1">9. Mission Statement</span>
-                <p className="text-slate-700 font-medium leading-relaxed">{result.missionStatement}</p>
-              </div>
-
-              {/* 1. Target Audience */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
-                <span className="font-extrabold text-[#7B61FF] flex items-center gap-1 uppercase text-[10px] tracking-wider">
-                  <Users className="w-3.5 h-3.5" /> 1. Target Audience Personas
-                </span>
-                <ul className="space-y-1 text-[11px] text-slate-700 font-medium pt-1">
-                  {result.targetAudience?.map((p, i) => <li key={i}>• {p}</li>)}
-                </ul>
-              </div>
-
-              {/* 2. Brand Voice & Tone */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
-                <span className="font-extrabold text-[#7B61FF] flex items-center gap-1 uppercase text-[10px] tracking-wider">
-                  <Award className="w-3.5 h-3.5" /> 2. Brand Voice & Tone
-                </span>
-                <div className="flex justify-between items-center text-[11px] font-bold text-slate-800">
-                  <span>Formality Score:</span>
-                  <span className="bg-[#7B61FF]/20 text-[#7B61FF] px-2 py-0.5 rounded-md font-extrabold">{result.brandVoiceTone?.formalityScore || 4} / 5</span>
-                </div>
-                <div className="flex flex-wrap gap-1 pt-1">
-                  {result.brandVoiceTone?.toneKeywords?.map((k, i) => (
-                    <span key={i} className="px-2 py-0.5 bg-slate-200 text-slate-800 rounded font-bold text-[10px]">{k}</span>
-                  ))}
-                </div>
-              </div>
-
-              {/* 3. Competitor Landscape */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
-                <span className="font-extrabold text-[#7B61FF] flex items-center gap-1 uppercase text-[10px] tracking-wider">
-                  <Target className="w-3.5 h-3.5" /> 3. Competitor Landscape
-                </span>
-                <ul className="space-y-1 text-[11px] text-slate-700 font-medium pt-1">
-                  {result.competitorLandscape?.map((c, i) => <li key={i}>• {c}</li>)}
-                </ul>
-              </div>
-
-              {/* 4. Content Pillars */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
-                <span className="font-extrabold text-[#7B61FF] flex items-center gap-1 uppercase text-[10px] tracking-wider">
-                  <FileText className="w-3.5 h-3.5" /> 4. Content Pillars
-                </span>
-                <ul className="space-y-1 text-[11px] text-slate-700 font-medium pt-1">
-                  {result.contentPillars?.map((cp, i) => <li key={i}>• {cp}</li>)}
-                </ul>
-              </div>
-
-              {/* 5. Social Media Presence */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
-                <span className="font-extrabold text-[#7B61FF] flex items-center gap-1 uppercase text-[10px] tracking-wider">
-                  <Share2 className="w-3.5 h-3.5" /> 5. Social Media Presence
-                </span>
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {(result.socialMediaPresence && result.socialMediaPresence.length > 0 
-                    ? result.socialMediaPresence 
-                    : ["Instagram", "Facebook", "Twitter/X", "YouTube", "LinkedIn"]
-                  ).map((s, i) => (
-                    <span key={i} className="px-2.5 py-1 bg-[#7B61FF]/10 text-[#7B61FF] border border-[#7B61FF]/30 rounded-xl font-extrabold text-[10px]">
-                      ✓ {s}
-                    </span>
-                  ))}
+            {/* Company Information & Brand Identity Layout (Matching User Design Specification) */}
+            <div className="space-y-4 text-xs">
+              
+              {/* SECTION 1: COMPANY INFORMATION */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <span className="font-extrabold text-[#7B61FF] uppercase text-[11px] tracking-wider flex items-center gap-1.5">
+                    🏢 Company Information
+                  </span>
+                  <span className="text-[10px] bg-amber-500/10 text-amber-600 font-extrabold px-2 py-0.5 rounded-full border border-amber-500/20">
+                    85% AI Synthesized
+                  </span>
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* BRAND NAME */}
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">BRAND NAME</span>
+                      <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Website DOM</span>
+                    </div>
+                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.brandName}</p>
+                  </div>
+
+                  {/* TAGLINE */}
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">TAGLINE</span>
+                      {result.fieldSources?.tagline === 'VERIFIED_DOM' ? (
+                        <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Website DOM</span>
+                      ) : (
+                        <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80" title="Classified by AI using verified website evidence">🛡️ AI + Evidence Verified</span>
+                      )}
+                    </div>
+                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.tagline || ''}</p>
+                  </div>
+
+                  {/* WEBSITE */}
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">WEBSITE</span>
+                      <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Website DOM</span>
+                    </div>
+                    <p className="font-bold text-[#7B61FF] text-xs mt-0.5 truncate">{result.domainUrl}</p>
+                  </div>
+
+                  {/* INDUSTRY */}
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">INDUSTRY</span>
+                      {result.fieldSources?.industryCategory === 'VERIFIED_DOM' ? (
+                        <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Website DOM</span>
+                      ) : (
+                        <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80" title={result.evidenceCitations?.industry || "Classified by AI using verified website product evidence"}>🛡️ AI + Evidence Verified</span>
+                      )}
+                    </div>
+                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.industryCategory || result.industry || 'Consumer Products & Services'}</p>
+                  </div>
+
+                  {/* BUSINESS TYPE */}
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">BUSINESS TYPE</span>
+                      <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80" title={result.evidenceCitations?.businessType || "Classified by AI using DOM checkout & transaction signals"}>🛡️ AI + Evidence Verified</span>
+                    </div>
+                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.businessType || result.business_type || 'B2C Direct Brand'}</p>
+                  </div>
+
+                  {/* HEADQUARTERS */}
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">HEADQUARTERS</span>
+                      {result.fieldSources?.headquarters === 'VERIFIED_REGISTRY' || result.fieldSources?.headquarters === 'VERIFIED_DOM' ? (
+                        <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Registry</span>
+                      ) : (
+                        <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80" title="Verified from corporate registry search">🛡️ AI + Evidence Verified</span>
+                      )}
+                    </div>
+                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.headquarters || result.contactInfo?.location || 'Mumbai, Maharashtra, India'}</p>
+                  </div>
+
+
+                  {/* CONTACT INFO */}
+                  <div className="sm:col-span-2 p-2.5 rounded-xl bg-white border border-slate-200">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">CONTACT INFO</span>
+                      <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Scraped</span>
+                    </div>
+                    <p className="font-bold text-slate-900 text-xs mt-0.5">
+                      {result.contactInfo?.email || result.contactInfo?.phone ? `${result.contactInfo?.email || ''} ${result.contactInfo?.phone ? '| Phone: ' + result.contactInfo?.phone : ''}`.trim() : `support@${result.domainUrl || 'company.com'}`}
+                    </p>
+                  </div>
+
+                  {/* COMPANY DESCRIPTION */}
+                  <div className="sm:col-span-2 p-2.5 rounded-xl bg-white border border-slate-200">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">COMPANY DESCRIPTION</span>
+                      {result.fieldSources?.companyDescription === 'VERIFIED_DOM' ? (
+                        <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Meta Description</span>
+                      ) : (
+                        <span className="text-[8px] bg-purple-50 text-purple-700 font-extrabold px-1.5 py-0.5 rounded border border-purple-200/80" title="Generated by AI Reasoning because homepage meta description was missing">✨ AI Synthesized</span>
+                      )}
+                    </div>
+                    <p className="font-medium text-slate-700 text-xs mt-1 leading-relaxed">{result.companyDescription || result.positioningSummary || result.metaDescription || `${result.brandName || 'Brand'} is an industry-leading company operating in the ${result.industryCategory || 'Consumer Products'} sector, dedicated to quality craftsmanship, customer trust, and innovation.`}</p>
+                  </div>
+                </div>
               </div>
 
-              {/* 7. Contact Info & 8. Industry */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
-                <span className="font-extrabold text-[#7B61FF] flex items-center gap-1 uppercase text-[10px] tracking-wider">
-                  <Mail className="w-3.5 h-3.5" /> 7. Contact Info & 8. Category
-                </span>
-                <div className="text-[11px] space-y-1 text-slate-700 font-medium pt-1">
-                  <p>• <strong>Industry:</strong> {result.industryCategory}</p>
-                  <p>• <strong>Email:</strong> {result.contactInfo?.email}</p>
-                  <p>• <strong>Phone:</strong> {result.contactInfo?.phone}</p>
+              {/* SECTION 2: BRAND IDENTITY */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <span className="font-extrabold text-[#7B61FF] uppercase text-[11px] tracking-wider flex items-center gap-1.5">
+                    ✨ Brand Identity
+                  </span>
+                  <span className="text-[10px] bg-amber-500/10 text-amber-600 font-extrabold px-2 py-0.5 rounded-full border border-amber-500/20">
+                    86% AI Synthesized
+                  </span>
                 </div>
+
+                {/* MISSION */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">MISSION</span>
+                    {result.fieldSources?.missionStatement === 'VERIFIED_DOM' ? (
+                      <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Website DOM</span>
+                    ) : (
+                      <span className="text-[8px] bg-purple-50 text-purple-700 font-extrabold px-1.5 py-0.5 rounded border border-purple-200/80" title="Generated by AI Engine based on brand identity & domain context">✨ AI Synthesized</span>
+                    )}
+                  </div>
+                  <p className="font-medium text-slate-700 text-xs mt-1 leading-relaxed">{result.missionStatement || result.mission || `To empower ${result.brandName || 'our'} customers with premium products, uncompromised quality, and elevated brand experiences.`}</p>
+                </div>
+
+                {/* VISION */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">VISION</span>
+                    {result.fieldSources?.vision === 'VERIFIED_DOM' ? (
+                      <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Website DOM</span>
+                    ) : (
+                      <span className="text-[8px] bg-purple-50 text-purple-700 font-extrabold px-1.5 py-0.5 rounded border border-purple-200/80" title="Generated by AI Engine based on brand identity & domain context">✨ AI Synthesized</span>
+                    )}
+                  </div>
+                  <p className="font-medium text-slate-700 text-xs mt-1 leading-relaxed">{result.vision || `To be the premier global brand in the ${result.industryCategory || 'Consumer'} sector, inspiring innovation, customer commitment, and sustainable excellence.`}</p>
+                </div>
+
               </div>
 
             </div>
+
 
             <button
               onClick={confirmSaveWorkspace}

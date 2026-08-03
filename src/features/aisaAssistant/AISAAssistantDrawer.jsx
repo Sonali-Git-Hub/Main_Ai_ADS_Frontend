@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
-import { X, Bot, Send, Sparkles, RefreshCw, Dna, Search, PenTool, CheckCircle2 } from 'lucide-react';
+import { X, Bot, Send, Sparkles, RefreshCw, Dna, Search, PenTool, CheckCircle2, ChevronDown } from 'lucide-react';
+import { chatAPI } from '../../services/api';
+
+const MODELS = [
+  { id: 'gemini', label: 'Gemini' },
+  { id: 'gpt-4o', label: 'GPT-4o' },
+  { id: 'groq', label: 'Groq Llama' },
+];
 
 export const AISAAssistantDrawer = () => {
   const { isAISAAssistantOpen, setIsAISAAssistantOpen, activeWorkspace } = useWorkspace();
@@ -8,47 +15,72 @@ export const AISAAssistantDrawer = () => {
     {
       id: 1,
       sender: 'assistant',
-      text: `Hello! I am AISA™, your AI Social & Content Operations Assistant. I am linked directly to **${activeWorkspace.brandName}** Brand DNA memory.\n\nHow can I assist your campaign strategy today?`,
+      text: `Hello! I am AISA\u2122, your AI Advertising & Content Strategy Assistant. I'm connected to **${activeWorkspace?.brandName || 'your brand'}** brand memory.\n\nAsk me to generate social posts, write ad copy, plan campaigns, or analyze your brand strategy.`,
       time: 'Just now'
     }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+  const [selectedModel, setSelectedModel] = useState('gemini');
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
 
   if (!isAISAAssistantOpen) return null;
 
   const handleSend = async (customPrompt) => {
     const promptText = customPrompt || input;
-    if (!promptText.trim()) return;
+    if (!promptText.trim() || loading) return;
 
-    const userMsg = { id: Date.now(), sender: 'user', text: promptText, time: 'Just now' };
-    setMessages(prev => [...prev, userMsg]);
+    const userMsg = { id: Date.now(), sender: 'user', text: promptText, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
+    setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
 
+    // Build conversation history for AI
+    const history = messages.slice(-10).map((m) => ({
+      role: m.sender === 'user' ? 'user' : 'model',
+      content: m.text,
+    }));
+    history.push({ role: 'user', content: promptText });
+
     try {
-      const res = await fetch('http://localhost:5000/api/content/social/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: promptText, brandName: activeWorkspace.brandName })
+      const result = await chatAPI.sendMessage({
+        message: promptText,
+        sessionId,
+        model: selectedModel,
+        history,
+        workspaceId: activeWorkspace?._id || activeWorkspace?.id,
+        brandContext: activeWorkspace?.brandVoiceTone || activeWorkspace?.positioningSummary || '',
+        systemInstruction: `You are AISA\u2122, an AI Advertising & Brand Strategy expert assistant. Help with campaigns, content strategy, brand analysis, and ad copy for ${activeWorkspace?.brandName || 'the brand'}.`,
       });
-      const data = await res.json();
 
-      let replyText = `Here is your strategy suggestion anchored to **${activeWorkspace.brandName}** Brand DNA:\n\n`;
-      if (data.data) {
-        replyText += `**Hook:** ${data.data.hook}\n\n**Caption:** ${data.data.caption}\n\n**Hashtags:** ${data.data.hashtags.join(' ')}`;
-      } else {
-        replyText += `I have analyzed your prompt against the approved brand memory. ${activeWorkspace.positioningSummary}`;
-      }
 
-      setMessages(prev => [...prev, { id: Date.now() + 1, sender: 'assistant', text: replyText, time: 'Just now' }]);
+      if (result.sessionId && !sessionId) setSessionId(result.sessionId);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          sender: 'assistant',
+          text: result.response || 'I processed your request.',
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+
     } catch (err) {
-      setMessages(prev => [...prev, { 
-        id: Date.now() + 1, 
-        sender: 'assistant', 
-        text: `Executed AISA™ assistant task based on ${activeWorkspace.brandName} positioning: Generated structured output and verified against restricted claims repository.`, 
-        time: 'Just now' 
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          sender: 'assistant',
+          text: `\u26a0\ufe0f Could not connect to AI service. Please check that the backend is running on port 5000.\n\nError: ${err.message}`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -58,22 +90,28 @@ export const AISAAssistantDrawer = () => {
     <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/60 backdrop-blur-sm flex justify-end animate-in fade-in">
       <div className="w-full max-w-full sm:max-w-md h-full bg-white border-l border-slate-200 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-300 text-slate-900">
         {/* Drawer Header */}
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-900">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#6B5AED] to-[#7B61FF] flex items-center justify-center text-white shadow-md shadow-[#7B61FF]/30">
               <Bot className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-slate-900 text-sm">AISA™ Quick Module</h3>
-                <span className="text-[10px] bg-[#7B61FF]/15 text-[#7B61FF] font-bold px-1.5 py-0.2 rounded-full">Gemini 3.5</span>
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">AISA\u2122 Assistant</h3>
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="text-[10px] bg-[#7B61FF]/15 text-[#7B61FF] font-bold px-1.5 py-0.5 rounded-full border-0 outline-none cursor-pointer"
+                >
+                  {MODELS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+                </select>
               </div>
-              <p className="text-[11px] text-slate-500 font-medium">Connected to {activeWorkspace.brandName} Memory</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Connected to {activeWorkspace?.brandName || 'Brand'} Memory</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setIsAISAAssistantOpen(false)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -105,10 +143,10 @@ export const AISAAssistantDrawer = () => {
         </div>
 
         {/* Chat Messages */}
-        <div className="p-4 flex-1 overflow-y-auto space-y-4 bg-slate-50/30">
+        <div className="p-4 flex-1 overflow-y-auto space-y-4 bg-slate-50/30 dark:bg-slate-950/50">
           {messages.map((m) => (
-            <div 
-              key={m.id} 
+            <div
+              key={m.id}
               className={`flex gap-3 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {m.sender === 'assistant' && (
@@ -117,9 +155,9 @@ export const AISAAssistantDrawer = () => {
                 </div>
               )}
               <div className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed font-medium ${
-                m.sender === 'user' 
-                  ? 'bg-gradient-to-r from-[#6B5AED] to-[#7B61FF] text-white rounded-tr-none shadow-md' 
-                  : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none whitespace-pre-wrap shadow-sm'
+                m.sender === 'user'
+                  ? 'bg-gradient-to-r from-[#6B5AED] to-[#7B61FF] text-white rounded-tr-none shadow-md'
+                  : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-tl-none whitespace-pre-wrap shadow-sm'
               }`}>
                 {m.text}
                 <div className="text-[9px] opacity-60 text-right mt-1">{m.time}</div>
@@ -127,11 +165,14 @@ export const AISAAssistantDrawer = () => {
             </div>
           ))}
           {loading && (
-            <div className="flex gap-2 items-center text-xs text-[#7B61FF] font-bold animate-pulse">
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              AISA™ Gemini 3.5 Engine reasoning...
+            <div className="flex gap-2 items-center text-xs text-[#7B61FF] font-bold">
+              <div className="flex gap-1">
+                {[0,1,2].map((i) => <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#7B61FF] animate-bounce" style={{ animationDelay: `${i * 150}ms` }} />)}
+              </div>
+              AISA\u2122 {MODELS.find(m => m.id === selectedModel)?.label} thinking...
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Box */}

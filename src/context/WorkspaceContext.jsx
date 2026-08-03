@@ -81,27 +81,40 @@ export const WorkspaceProvider = ({ children }) => {
   }, [theme]);
   
   // Workspace & Brand DNA Memory
-  const [workspaces, setWorkspaces] = useState([
-    {
-      id: 'ws_001',
-      brandName: 'UWO AI Ads',
-      domainUrl: 'https://aiads.uwo.ai',
-      logoUrl: 'https://api.dicebear.com/7.x/identicon/svg?seed=UWO',
-      brandColors: ['#6366F1', '#8B5CF6', '#06B6D4', '#0F172A'],
-      metaDescription: 'Governed AI-native content marketing, SEO and social-media operations platform.',
-      positioningSummary: 'UWO AI Ads is the premier operating system for agencies and enterprise marketing teams to plan, create, govern, approve, publish, and scale digital content.',
-      voiceGuidelines: { formalityScore: 4, toneKeywords: ['Authoritative', 'Evidence-Based', 'Innovative', 'Direct'], taboos: ['Guaranteed ranking', 'Low effort', 'Spam'] },
-      approvedClaims: [
-        { claimText: 'Reduces long-form SEO draft turnaround time to under 12 seconds', sourceUrl: 'https://uwo.ai/benchmarks', verified: true },
-        { claimText: 'Governed multi-brand workspace with RBAC role control', sourceUrl: 'https://uwo.ai/governance', verified: true }
-      ],
-      restrictedClaims: ['Guaranteed #1 Google ranking', '100% viral outcome guaranteed'],
-      priorityKeywords: ['AI Content Marketing', 'Brand DNA', 'SEO Intelligence', 'Campaign Operations'],
-      contentPillars: ['Enterprise AI', 'SEO Clustering', 'Brand Governance', 'Social Studio Ops']
-    }
-  ]);
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState('ws_001');
+  // Workspace & Brand DNA Memory - Persistent User State
+  const [workspaces, setWorkspaces] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aisa_workspaces');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  });
 
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState(() => {
+    try {
+      return localStorage.getItem('aisa_active_ws_id') || '';
+    } catch (e) {
+      return '';
+    }
+  });
+
+  // Keep localStorage synced whenever workspaces state changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('aisa_workspaces', JSON.stringify(workspaces));
+    } catch (e) {}
+  }, [workspaces]);
+
+  useEffect(() => {
+    try {
+      if (activeWorkspaceId) {
+        localStorage.setItem('aisa_active_ws_id', activeWorkspaceId);
+      }
+    } catch (e) {}
+  }, [activeWorkspaceId]);
 
   // Sync workspaces from MongoDB Atlas Database on Page Load / Refresh
   useEffect(() => {
@@ -109,18 +122,28 @@ export const WorkspaceProvider = ({ children }) => {
       try {
         const res = await fetch('http://localhost:5000/api/workspace/list');
         const data = await res.json();
-        if (data.success && data.workspaces && data.workspaces.length > 0) {
-          const formatted = data.workspaces.map(w => ({
-            ...w,
-            id: w._id || w.id,
-            brandVoiceTone: w.brandVoiceTone || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative', 'Reliable'] },
-            voiceGuidelines: w.voiceGuidelines || { formalityScore: 4, toneKeywords: w.brandVoiceTone?.toneKeywords || ['Professional', 'Innovative'] }
-          }));
-          setWorkspaces(formatted);
-          setActiveWorkspaceId(prevId => {
-            const exists = formatted.some(item => (item.id === prevId || item._id === prevId));
-            return exists ? prevId : (formatted[0].id || formatted[0]._id);
-          });
+        if (data.success && Array.isArray(data.workspaces)) {
+          if (data.workspaces.length > 0) {
+            const formatted = data.workspaces.map(w => ({
+              ...w,
+              id: w._id || w.id,
+              brandVoiceTone: w.brandVoiceTone || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative', 'Reliable'] },
+              voiceGuidelines: w.voiceGuidelines || { formalityScore: 4, toneKeywords: w.brandVoiceTone?.toneKeywords || ['Professional', 'Innovative'] }
+            }));
+            setWorkspaces(formatted);
+            setActiveWorkspaceId(prevId => {
+              const exists = formatted.some(item => (item.id === prevId || item._id === prevId));
+              return exists ? prevId : (formatted[0].id || formatted[0]._id);
+            });
+          } else {
+            // DB is empty (user deleted all brands)
+            setWorkspaces([]);
+            setActiveWorkspaceId('');
+            try {
+              localStorage.removeItem('aisa_workspaces');
+              localStorage.removeItem('aisa_active_ws_id');
+            } catch (e) {}
+          }
         }
       } catch (err) {
         console.log('Workspace DB Fetch Note:', err.message);
@@ -129,6 +152,7 @@ export const WorkspaceProvider = ({ children }) => {
 
     fetchWorkspacesFromDb();
   }, []);
+
 
 
   // Credits & Subscriptions
@@ -235,12 +259,40 @@ export const WorkspaceProvider = ({ children }) => {
     localStorage.setItem('aisa_theme', nextTheme);
   };
 
-  const addWorkspace = (newWs) => {
+  const addWorkspace = async (newWs) => {
+    try {
+      // Persist workspace to MongoDB Atlas ONLY when user clicks "Save & Lock Brand DNA Memory"
+      const res = await fetch('http://localhost:5000/api/workspace/save-dna', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newWs)
+      });
+      const data = await res.json();
+      if (data.success && data.workspace) {
+        const savedDoc = {
+          ...data.workspace,
+          id: data.workspace._id || data.workspace.id || `ws_${Date.now()}`,
+          brandVoiceTone: data.workspace.brandVoiceTone || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative', 'Reliable'] },
+          voiceGuidelines: data.workspace.voiceGuidelines || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative'] }
+        };
+        setWorkspaces(prev => {
+          const exists = prev.some(w => (w.id === savedDoc.id || w._id === savedDoc.id));
+          if (exists) return prev.map(w => (w.id === savedDoc.id || w._id === savedDoc.id) ? savedDoc : w);
+          return [savedDoc, ...prev];
+        });
+        setActiveWorkspaceId(savedDoc.id);
+        return savedDoc;
+      }
+    } catch (e) {
+      console.log('Workspace Save DNA Error:', e.message);
+    }
+
+    // Local Fallback if offline
     const formatted = {
       ...newWs,
       id: newWs._id || newWs.id || `ws_${Date.now()}`,
       brandVoiceTone: newWs.brandVoiceTone || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative', 'Reliable'] },
-      voiceGuidelines: newWs.voiceGuidelines || { formalityScore: 4, toneKeywords: newWs.brandVoiceTone?.toneKeywords || ['Professional', 'Innovative'] }
+      voiceGuidelines: newWs.voiceGuidelines || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative'] }
     };
     setWorkspaces(prev => {
       const exists = prev.some(w => (w.id === formatted.id || w._id === formatted.id));
@@ -248,22 +300,30 @@ export const WorkspaceProvider = ({ children }) => {
       return [formatted, ...prev];
     });
     setActiveWorkspaceId(formatted.id);
+    return formatted;
   };
 
 
   const updateWorkspace = async (id, updatedData) => {
     if (!id) return;
     try {
-      await fetch(`http://localhost:5000/api/workspace/${id}`, {
+      const res = await fetch(`http://localhost:5000/api/workspace/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData)
       });
+      const data = await res.json();
+      if (data.success && data.workspace) {
+        const updatedDoc = { ...data.workspace, id: data.workspace._id || data.workspace.id || id };
+        setWorkspaces(prev => prev.map(w => (w.id === id || w._id === id) ? updatedDoc : w));
+        return;
+      }
     } catch (e) {
       console.log('Workspace Update Note:', e.message);
     }
     setWorkspaces(prev => prev.map(w => (w.id === id || w._id === id) ? { ...w, ...updatedData } : w));
   };
+
 
 
   const deleteWorkspace = async (idToDelete) => {
