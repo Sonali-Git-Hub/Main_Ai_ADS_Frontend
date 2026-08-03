@@ -3,7 +3,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { X, Dna, Globe, Sparkles, CheckCircle2, ShieldAlert, ArrowRight } from 'lucide-react';
 
 export const ScraperOverlayModal = () => {
-  const { isScraperOpen, setIsScraperOpen, addWorkspace } = useWorkspace();
+  const { isScraperOpen, setIsScraperOpen, addWorkspace, setActiveModule } = useWorkspace();
   const [url, setUrl] = useState('');
   const [brandName, setBrandName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,7 +16,7 @@ export const ScraperOverlayModal = () => {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/workspace/create', {
+      const res = await fetch('http://localhost:5000/api/workspace/scrape-preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ domainUrl: url, brandName })
@@ -26,40 +26,26 @@ export const ScraperOverlayModal = () => {
         setResult(data.workspace);
       }
     } catch (e) {
-      // Fallback scraped memory object
-      const cleanUrl = url.startsWith('http') ? url : `https://${url}`;
-      const name = brandName || cleanUrl.replace('https://', '').split('.')[0].toUpperCase();
-      const mockWs = {
-        id: `ws_${Date.now()}`,
-        brandName: name,
-        domainUrl: cleanUrl,
-        logoUrl: `https://api.dicebear.com/7.x/identicon/svg?seed=${name}`,
-        brandColors: ['#6366F1', '#8B5CF6', '#06B6D4', '#0F172A'],
-        metaDescription: `${name} is an enterprise digital provider delivering AI-driven digital transformation, innovative software solutions, and high-performance customer growth across global markets.`,
-        positioningSummary: `${name} empowers modern enterprise marketing teams and digital agencies to scale multi-channel performance through cutting-edge strategy, governed content operations, and real-time intelligence.`,
-        voiceGuidelines: { formalityScore: 4, toneKeywords: ['Authoritative', 'Evidence-Based', 'Innovative'], taboos: [] },
-        approvedClaims: [
-          { claimText: `${name} improves content delivery velocity by 400%`, sourceUrl: `${cleanUrl}/case-studies`, verified: true }
-        ],
-        restrictedClaims: ['Guaranteed #1 Google ranking', '100% viral outcome guaranteed'],
-        priorityKeywords: ['Digital Growth', 'Brand Intelligence', 'SEO Automation'],
-        contentPillars: ['Product Insights', 'Industry Trends', 'Case Studies']
-      };
-      setResult(mockWs);
+      console.log('Scraper fetch error:', e.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const confirmSaveWorkspace = () => {
+
+  const confirmSaveWorkspace = async () => {
     if (result) {
-      addWorkspace(result);
+      await addWorkspace(result);
+      if (setActiveModule) {
+        setActiveModule('brands');
+      }
       setIsScraperOpen(false);
       setResult(null);
       setUrl('');
       setBrandName('');
     }
   };
+
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">

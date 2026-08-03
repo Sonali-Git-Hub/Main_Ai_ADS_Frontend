@@ -226,12 +226,40 @@ export const WorkspaceProvider = ({ children }) => {
     localStorage.setItem('aisa_theme', nextTheme);
   };
 
-  const addWorkspace = (newWs) => {
+  const addWorkspace = async (newWs) => {
+    try {
+      // Persist workspace to MongoDB Atlas ONLY when user clicks "Save & Lock Brand DNA Memory"
+      const res = await fetch('http://localhost:5000/api/workspace/save-dna', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newWs)
+      });
+      const data = await res.json();
+      if (data.success && data.workspace) {
+        const savedDoc = {
+          ...data.workspace,
+          id: data.workspace._id || data.workspace.id || `ws_${Date.now()}`,
+          brandVoiceTone: data.workspace.brandVoiceTone || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative', 'Reliable'] },
+          voiceGuidelines: data.workspace.voiceGuidelines || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative'] }
+        };
+        setWorkspaces(prev => {
+          const exists = prev.some(w => (w.id === savedDoc.id || w._id === savedDoc.id));
+          if (exists) return prev.map(w => (w.id === savedDoc.id || w._id === savedDoc.id) ? savedDoc : w);
+          return [savedDoc, ...prev];
+        });
+        setActiveWorkspaceId(savedDoc.id);
+        return savedDoc;
+      }
+    } catch (e) {
+      console.log('Workspace Save DNA Error:', e.message);
+    }
+
+    // Local Fallback if offline
     const formatted = {
       ...newWs,
       id: newWs._id || newWs.id || `ws_${Date.now()}`,
       brandVoiceTone: newWs.brandVoiceTone || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative', 'Reliable'] },
-      voiceGuidelines: newWs.voiceGuidelines || { formalityScore: 4, toneKeywords: newWs.brandVoiceTone?.toneKeywords || ['Professional', 'Innovative'] }
+      voiceGuidelines: newWs.voiceGuidelines || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative'] }
     };
     setWorkspaces(prev => {
       const exists = prev.some(w => (w.id === formatted.id || w._id === formatted.id));
@@ -239,22 +267,30 @@ export const WorkspaceProvider = ({ children }) => {
       return [formatted, ...prev];
     });
     setActiveWorkspaceId(formatted.id);
+    return formatted;
   };
 
 
   const updateWorkspace = async (id, updatedData) => {
     if (!id) return;
     try {
-      await fetch(`http://localhost:5000/api/workspace/${id}`, {
+      const res = await fetch(`http://localhost:5000/api/workspace/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData)
       });
+      const data = await res.json();
+      if (data.success && data.workspace) {
+        const updatedDoc = { ...data.workspace, id: data.workspace._id || data.workspace.id || id };
+        setWorkspaces(prev => prev.map(w => (w.id === id || w._id === id) ? updatedDoc : w));
+        return;
+      }
     } catch (e) {
       console.log('Workspace Update Note:', e.message);
     }
     setWorkspaces(prev => prev.map(w => (w.id === id || w._id === id) ? { ...w, ...updatedData } : w));
   };
+
 
 
   const deleteWorkspace = async (idToDelete) => {
