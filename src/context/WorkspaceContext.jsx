@@ -35,7 +35,40 @@ export const WorkspaceProvider = ({ children }) => {
       return 'dark';
     }
   });
-  const [activeRole, setActiveRole] = useState('AgencyAdmin');
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aisa_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const [activeRole, setActiveRole] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aisa_user');
+      if (saved) {
+        const u = JSON.parse(saved);
+        return u.role || 'AgencyAdmin';
+      }
+    } catch (e) {}
+    return 'AgencyAdmin';
+  });
+
+  const loginUser = (userData) => {
+    setUser(userData);
+    localStorage.setItem('aisa_user', JSON.stringify(userData));
+    if (userData.role) {
+      setActiveRole(userData.role);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('aisa_user');
+    setActiveModuleState('dashboard');
+  };
+
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -343,6 +376,7 @@ export const WorkspaceProvider = ({ children }) => {
     <WorkspaceContext.Provider value={{
       activeModule, setActiveModule, goBack, canGoBack, navigationHistory,
       theme, toggleTheme,
+      user, loginUser, logout,
       activeRole, setActiveRole,
       workspaces, activeWorkspaceId, setActiveWorkspaceId, activeWorkspace, addWorkspace, updateWorkspace, deleteWorkspace,
 

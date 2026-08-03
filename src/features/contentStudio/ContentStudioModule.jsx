@@ -117,16 +117,19 @@ export const ContentStudioModule = () => {
   };
 
   const submitToApprovals = (item) => {
-    if (setApprovalsQueue && item) {
+    if (!item) return;
+    if (setApprovalsQueue) {
       setApprovalsQueue((prev) => [
         {
-          id: `cnt_${Date.now()}`,
+          id: item.id || `cnt_${Date.now()}`,
           title: item.title || item.caption || item.subject || 'Generated Content',
           type: tab,
-          status: 'INTERNAL_REVIEW',
+          status: tab === 'BLOG' ? (factCheck?.passed ? 'INTERNAL_REVIEW' : 'RED_FLAG_CITATION_NEEDED') : 'INTERNAL_REVIEW',
+          wordCount: item.wordCount || 1800,
           author: 'AISA AI Engine',
           factCheck: factCheck || { passed: true, score: 98, status: 'VERIFIED' },
           createdAt: new Date().toISOString(),
+          workspaceId: activeWorkspace?.id || activeWorkspace?._id
         },
         ...prev,
       ]);

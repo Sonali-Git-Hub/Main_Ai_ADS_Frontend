@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
-import { Search, Layers, FileText, Code2, Sparkles, Send, ShieldAlert, TrendingUp, BarChart3, Tag, Hash, ChevronRight, Copy, Check, RefreshCw } from 'lucide-react';
+import { Search, Layers, FileText, Code2, Sparkles, Send, ShieldAlert, TrendingUp, BarChart3, Tag, Hash, ChevronRight, Copy, Check, RefreshCw, Globe, CheckCircle2 } from 'lucide-react';
 
 // Derive seed keyword from brand's content pillars or industry
 const deriveSeedKeyword = (ws) => {
@@ -22,33 +22,37 @@ const deriveKeywords = (ws) => {
   const pillars = ws.contentPillars || [];
   if (pillars.length >= 4) {
     return [
-      { term: pillars[0], intent: 'Informational', volume: '12,400/mo', difficulty: 'Medium (38)', cluster: 'Pillar 1' },
-      { term: pillars[1], intent: 'Commercial', volume: '8,900/mo', difficulty: 'Low (29)', cluster: 'Pillar 2' },
-      { term: pillars[2], intent: 'Transactional', volume: '6,200/mo', difficulty: 'High (61)', cluster: 'Pillar 3' },
-      { term: pillars[3], intent: 'Informational', volume: '10,100/mo', difficulty: 'Medium (44)', cluster: 'Pillar 4' },
+      { term: pillars[0], intent: 'Informational', volume: '12.4K', kd: 38, cpc: '$1.20', cluster: 'Pillar 1' },
+      { term: pillars[1], intent: 'Commercial', volume: '8.9K', kd: 29, cpc: '$2.50', cluster: 'Pillar 2' },
+      { term: pillars[2], intent: 'Transactional', volume: '6.2K', kd: 61, cpc: '$4.80', cluster: 'Pillar 3' },
+      { term: pillars[3], intent: 'Informational', volume: '10.1K', kd: 44, cpc: '$0.90', cluster: 'Pillar 4' },
     ];
   }
   return [
-    { term: `${name} Complete Guide 2026`, intent: 'Informational', volume: '14,200/mo', difficulty: 'Medium (42)', cluster: 'Brand Authority' },
-    { term: `Best ${name} Products & Reviews`, intent: 'Commercial', volume: '8,900/mo', difficulty: 'Low (28)', cluster: 'Product Discovery' },
-    { term: `Buy ${name} Online`, intent: 'Transactional', volume: '5,400/mo', difficulty: 'High (68)', cluster: 'Conversion' },
-    { term: `${name} vs Competitors`, intent: 'Commercial', volume: '12,100/mo', difficulty: 'Medium (38)', cluster: 'Comparison' },
+    { term: `${name} Complete Guide 2026`, intent: 'Informational', volume: '14.2K', kd: 42, cpc: '$1.05', cluster: 'Brand Authority' },
+    { term: `Best ${name} Products & Reviews`, intent: 'Commercial', volume: '8.9K', kd: 28, cpc: '$2.15', cluster: 'Product Discovery' },
+    { term: `Buy ${name} Online`, intent: 'Transactional', volume: '5.4K', kd: 68, cpc: '$3.50', cluster: 'Conversion' },
+    { term: `${name} vs Competitors`, intent: 'Commercial', volume: '12.1K', kd: 38, cpc: '$2.80', cluster: 'Comparison' },
   ];
 };
 
-const intentColors = {
-  Informational: 'bg-brand-500/10 text-brand-600 dark:text-brand-300 border border-brand-500/20 dark:border-brand-500/30',
-  Commercial: 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20 dark:border-amber-500/30',
-  Transactional: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20 dark:border-emerald-500/30',
-  Navigational: 'bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 dark:border-purple-500/30',
-  Local: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/20 dark:border-cyan-500/30',
+const getIntentStyle = (intent) => {
+  if (intent === 'Informational') return { char: 'I', class: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' };
+  if (intent === 'Commercial') return { char: 'C', class: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' };
+  if (intent === 'Transactional') return { char: 'T', class: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' };
+  if (intent === 'Navigational') return { char: 'N', class: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' };
+  return { char: 'I', class: 'bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300' };
 };
 
-const difficultyColor = (diff) => {
-  if (diff.includes('Low')) return 'text-emerald-600 dark:text-emerald-400';
-  if (diff.includes('High')) return 'text-rose-600 dark:text-rose-400';
-  return 'text-amber-600 dark:text-amber-400';
+const getKdColor = (kd) => {
+  if (kd <= 14) return 'bg-emerald-500';
+  if (kd <= 29) return 'bg-emerald-400';
+  if (kd <= 49) return 'bg-yellow-400';
+  if (kd <= 69) return 'bg-orange-400';
+  if (kd <= 84) return 'bg-rose-500';
+  return 'bg-rose-700';
 };
+
 
 export const SeoModule = () => {
   const { activeWorkspace, setActiveModule } = useWorkspace();
@@ -58,6 +62,7 @@ export const SeoModule = () => {
   const [brief, setBrief] = useState(null);
   const [keywordsList, setKeywordsList] = useState([]);
   const [copiedIdx, setCopiedIdx] = useState(null);
+  const [showRawSchema, setShowRawSchema] = useState(false);
 
   const handleCopyKeyword = (text, idx, e) => {
     e.stopPropagation();
@@ -71,15 +76,15 @@ export const SeoModule = () => {
     const ws = activeWorkspace;
     const name = ws.brandName || 'Brand';
     const alternates = [
-      [`${name} Marketing Guide 2026`, 'Commercial', '11,800/mo', 'Medium (40)', 'Authority'],
-      [`Best ${name} Strategies for Growth`, 'Informational', '7,600/mo', 'Low (25)', 'Growth'],
-      [`${name} Review & Comparison`, 'Commercial', '9,300/mo', 'Medium (35)', 'Comparison'],
-      [`${name} Premium Services`, 'Transactional', '4,800/mo', 'High (58)', 'Conversion'],
-      [`How ${name} Builds Trust`, 'Informational', '6,100/mo', 'Low (22)', 'Brand Trust'],
-      [`${name} vs Top Competitors`, 'Commercial', '8,400/mo', 'Medium (46)', 'Competitive'],
+      { term: `${name} Marketing Guide 2026`, intent: 'Commercial', volume: '11.8K', kd: 40, cpc: '$3.10', cluster: 'Authority' },
+      { term: `Best ${name} Strategies for Growth`, intent: 'Informational', volume: '7.6K', kd: 25, cpc: '$1.40', cluster: 'Growth' },
+      { term: `${name} Review & Comparison`, intent: 'Commercial', volume: '9.3K', kd: 35, cpc: '$2.90', cluster: 'Comparison' },
+      { term: `${name} Premium Services`, intent: 'Transactional', volume: '4.8K', kd: 58, cpc: '$5.50', cluster: 'Conversion' },
+      { term: `How ${name} Builds Trust`, intent: 'Informational', volume: '6.1K', kd: 22, cpc: '$0.80', cluster: 'Brand Trust' },
+      { term: `${name} vs Top Competitors`, intent: 'Commercial', volume: '8.4K', kd: 46, cpc: '$4.20', cluster: 'Competitive' },
     ];
     const pick = alternates[Math.floor(Math.random() * alternates.length)];
-    setKeywordsList(prev => prev.map((kw, i) => i === idx ? { term: pick[0], intent: pick[1], volume: pick[2], difficulty: pick[3], cluster: pick[4] } : kw));
+    setKeywordsList(prev => prev.map((kw, i) => i === idx ? pick : kw));
   };
 
   const handleRegenerateAll = () => {
@@ -222,22 +227,11 @@ export const SeoModule = () => {
                   onClick={() => setSeedKeyword(kw.term)}
                   className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-brand-500/40 cursor-pointer transition-all group"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-1.5 min-w-0 flex-1">
-                      <span className="font-bold text-slate-800 dark:text-slate-200 block text-xs leading-snug group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors break-words">{kw.term}</span>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{kw.cluster}</span>
-                        <span className="text-[10px] font-bold text-slate-400">·</span>
-                        <span className="text-[10px] text-slate-500">Vol: {kw.volume}</span>
-                        <span className="text-[10px] font-bold text-slate-400">·</span>
-                        <span className={`text-[10px] font-bold ${difficultyColor(kw.difficulty)}`}>{kw.difficulty}</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-1.5 shrink-0">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${intentColors[kw.intent] || intentColors.Informational}`}>
-                        {kw.intent}
-                      </span>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <span className="font-bold text-slate-800 dark:text-slate-200 block text-xs leading-snug group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors break-words flex-1">
+                      {kw.term}
+                    </span>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                         <button
                           onClick={(e) => handleCopyKeyword(kw.term, idx, e)}
                           className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
@@ -252,7 +246,32 @@ export const SeoModule = () => {
                         >
                           <RefreshCw className="w-3 h-3 text-slate-400" />
                         </button>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-4 gap-2 text-[10px]">
+                    <div className="flex flex-col">
+                      <span className="text-slate-400 font-medium">Intent</span>
+                      <div className="mt-0.5">
+                        <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full font-bold text-[9px] ${getIntentStyle(kw.intent).class}`} title={kw.intent}>
+                          {getIntentStyle(kw.intent).char}
+                        </span>
                       </div>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-slate-400 font-medium">Vol</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-300 mt-0.5">{kw.volume}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-slate-400 font-medium">KD %</span>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{kw.kd}</span>
+                        <div className={`w-2 h-2 rounded-full ${getKdColor(kw.kd)}`}></div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-slate-400 font-medium">CPC</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-300 mt-0.5">{kw.cpc}</span>
                     </div>
                   </div>
                 </div>
@@ -346,16 +365,66 @@ export const SeoModule = () => {
                 </div>
               )}
 
-              {/* JSON-LD Schema */}
-              <div className="rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-800">
-                  <Code2 className="w-3.5 h-3.5 text-brand-400" />
-                  <span className="text-[11px] font-bold text-slate-300">JSON-LD Schema Markup Ready</span>
-                  <span className="ml-auto text-[10px] text-emerald-400 font-semibold">✓ Valid</span>
+              {/* JSON-LD Schema - User Friendly View */}
+              <div className="rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80">
+                  <Globe className="w-4 h-4 text-brand-400" />
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200">Schema Markup Status</span>
+                  <span className="ml-auto flex items-center gap-1.5 text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    <CheckCircle2 className="w-3 h-3" /> Valid & Ready
+                  </span>
                 </div>
-                <pre className="text-[10px] text-emerald-400 font-mono overflow-x-auto p-4 leading-relaxed">
-                  {brief.jsonLdSchema}
-                </pre>
+                <div className="p-4 space-y-3">
+                  {(() => {
+                    try {
+                      const schema = JSON.parse(brief.jsonLdSchema);
+                      return (
+                        <div className="space-y-2.5">
+                          <div className="flex items-center gap-3">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase w-16 shrink-0">Type</span>
+                            <span className="text-xs font-semibold text-brand-600 dark:text-brand-300 bg-brand-500/10 px-2.5 py-1 rounded-lg">{schema['@type'] || 'Article'}</span>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase w-16 shrink-0 pt-1">Headline</span>
+                            <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{schema.headline || '—'}</span>
+                          </div>
+                          {schema.keywords && (
+                            <div className="flex items-start gap-3">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase w-16 shrink-0 pt-1">Keywords</span>
+                              <div className="flex flex-wrap gap-1.5">
+                                {(Array.isArray(schema.keywords) ? schema.keywords : [schema.keywords]).map((kw, i) => (
+                                  <span key={i} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/20">{kw}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {schema.inLanguage && (
+                            <div className="flex items-center gap-3">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase w-16 shrink-0">Language</span>
+                              <span className="text-xs text-slate-600 dark:text-slate-300">{schema.inLanguage}</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    } catch {
+                      return <p className="text-xs text-slate-400">Schema data unavailable.</p>;
+                    }
+                  })()}
+
+                  {/* Toggle for Developers */}
+                  <button
+                    onClick={() => setShowRawSchema(!showRawSchema)}
+                    className="mt-2 text-[10px] font-semibold text-slate-400 hover:text-brand-400 transition-colors flex items-center gap-1"
+                  >
+                    <Code2 className="w-3 h-3" />
+                    {showRawSchema ? 'Hide Raw JSON' : 'View Raw JSON (Developers)'}
+                  </button>
+                  {showRawSchema && (
+                    <pre className="text-[10px] text-emerald-400 font-mono overflow-x-auto p-3 bg-slate-950 rounded-xl border border-slate-800 leading-relaxed mt-1">
+                      {brief.jsonLdSchema}
+                    </pre>
+                  )}
+                </div>
               </div>
             </div>
           ) : (

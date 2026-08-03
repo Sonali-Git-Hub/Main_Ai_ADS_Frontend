@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
-import { Target, Layers, Zap, CheckCircle2, ArrowRight, TrendingUp, Users, BarChart3, Globe, Mail, Instagram, Linkedin } from 'lucide-react';
+import { Target, Layers, Zap, CheckCircle2, ArrowRight, TrendingUp, Users, BarChart3, Globe, Mail, Instagram, Linkedin, Loader2, Save, Crosshair, Gift, MousePointerClick, Edit3, Sparkles, PieChart } from 'lucide-react';
 
 // Helper: derive a brand-specific business goal from workspace data
 const deriveGoal = (ws) => {
@@ -46,33 +46,92 @@ const deriveCta = (ws) => {
   return `Get Started Free — No Credit Card Required`;
 };
 
+// Channel icon color mapping
+const channelColors = {
+  Globe: { gradient: 'from-violet-500 to-indigo-600', bg: 'bg-violet-500/10', text: 'text-violet-600 dark:text-violet-400', bar: 'from-violet-500 to-indigo-500', ring: 'ring-violet-500/20' },
+  Linkedin: { gradient: 'from-blue-500 to-cyan-500', bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', bar: 'from-blue-500 to-cyan-500', ring: 'ring-blue-500/20' },
+  Mail: { gradient: 'from-amber-500 to-orange-500', bg: 'bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', bar: 'from-amber-500 to-orange-500', ring: 'ring-amber-500/20' },
+  Instagram: { gradient: 'from-pink-500 to-rose-500', bg: 'bg-pink-500/10', text: 'text-pink-600 dark:text-pink-400', bar: 'from-pink-500 to-rose-500', ring: 'ring-pink-500/20' },
+};
+
 export const StrategyModule = () => {
-  const { activeWorkspace, setActiveModule } = useWorkspace();
+  const { activeWorkspace, setActiveModule, updateWorkspace } = useWorkspace();
   const [businessGoal, setBusinessGoal] = useState('');
   const [leadMagnet, setLeadMagnet] = useState('');
   const [primaryCta, setPrimaryCta] = useState('');
+  const [channelMix, setChannelMix] = useState([]);
   const [generatedDoc, setGeneratedDoc] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editingField, setEditingField] = useState(null);
 
-  // Reset all content whenever the active brand changes
+  // Initialize fields from workspace currentStrategy
   useEffect(() => {
-    setBusinessGoal(deriveGoal(activeWorkspace));
-    setLeadMagnet(deriveLeadMagnet(activeWorkspace));
-    setPrimaryCta(deriveCta(activeWorkspace));
+    const strat = activeWorkspace.currentStrategy || {};
+    setBusinessGoal(strat.businessGoal || deriveGoal(activeWorkspace));
+    setLeadMagnet(strat.leadMagnet || deriveLeadMagnet(activeWorkspace));
+    setPrimaryCta(strat.primaryCta || deriveCta(activeWorkspace));
+    
+    if (strat.channelMix && strat.channelMix.length > 0) {
+      setChannelMix(strat.channelMix);
+    } else {
+      const rawSocial = activeWorkspace.socialMediaPresence || [];
+      const hasLinkedin = rawSocial.some(s => s.toLowerCase().includes('linkedin'));
+      const hasInstagram = rawSocial.some(s => s.toLowerCase().includes('instagram'));
+      const hasYoutube = rawSocial.some(s => s.toLowerCase().includes('youtube'));
+      
+      setChannelMix([
+        { label: 'SEO Blogs (Long-Form)', pct: 40, icon: 'Globe', color: 'bg-brand-500' },
+        { label: hasLinkedin ? 'LinkedIn & Founder Copy' : 'Facebook & Community Posts', pct: 30, icon: 'Linkedin', color: 'bg-blue-500' },
+        { label: 'Email Newsletters', pct: hasYoutube ? 15 : 20, icon: 'Mail', color: 'bg-amber-500' },
+        { label: hasInstagram ? 'Instagram & Reels Copy' : 'Twitter/X & Short-Form', pct: hasYoutube ? 15 : 10, icon: 'Instagram', color: 'bg-rose-500' },
+      ]);
+    }
     setGeneratedDoc(false);
-  }, [activeWorkspace.id || activeWorkspace._id]);
+  }, [activeWorkspace.id || activeWorkspace._id, activeWorkspace.currentStrategy]);
 
-  // Derive channel mix from socialMediaPresence if available
-  const rawSocial = activeWorkspace.socialMediaPresence || [];
-  const hasLinkedin = rawSocial.some(s => s.toLowerCase().includes('linkedin'));
-  const hasInstagram = rawSocial.some(s => s.toLowerCase().includes('instagram'));
-  const hasYoutube = rawSocial.some(s => s.toLowerCase().includes('youtube'));
+  // Handle Save
+  const handleSave = useCallback(async () => {
+    setIsSaving(true);
+    const updatedStrategy = {
+        ...(activeWorkspace.currentStrategy || {}),
+        businessGoal,
+        leadMagnet,
+        primaryCta,
+        channelMix
+    };
+    await updateWorkspace(activeWorkspace.id || activeWorkspace._id, { currentStrategy: updatedStrategy });
+    setIsSaving(false);
+    setEditingField(null);
+  }, [activeWorkspace, businessGoal, leadMagnet, primaryCta, channelMix, updateWorkspace]);
 
-  const channelMix = [
-    { label: 'SEO Blogs (Long-Form)', pct: 40, icon: Globe, color: 'bg-brand-500' },
-    { label: hasLinkedin ? 'LinkedIn & Founder Copy' : 'Facebook & Community Posts', pct: 30, icon: Linkedin, color: 'bg-blue-500' },
-    { label: 'Email Newsletters', pct: hasYoutube ? 15 : 20, icon: Mail, color: 'bg-amber-500' },
-    { label: hasInstagram ? 'Instagram & Reels Copy' : 'Twitter/X & Short-Form', pct: hasYoutube ? 15 : 10, icon: Instagram, color: 'bg-rose-500' },
-  ];
+  // Handle Generate API Call
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    try {
+        const id = activeWorkspace.id || activeWorkspace._id;
+        const res = await fetch(`/api/workspace/${id}/generate-strategy`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (data.success && data.strategy) {
+            setBusinessGoal(data.strategy.businessGoal || '');
+            setLeadMagnet(data.strategy.leadMagnet || '');
+            setPrimaryCta(data.strategy.primaryCta || '');
+            if (data.strategy.channelMix) {
+                setChannelMix(data.strategy.channelMix);
+            }
+            await updateWorkspace(id, { currentStrategy: data.strategy });
+            setGeneratedDoc(true);
+        } else {
+            alert('Generation failed: ' + (data.message || data.error));
+        }
+    } catch(err) {
+        alert('Generation failed: ' + err.message);
+    }
+    setIsGenerating(false);
+  };
 
   const funnelStages = [
     {
@@ -121,6 +180,55 @@ export const StrategyModule = () => {
 
   const personas = (activeWorkspace.targetAudience || ['Decision Makers', 'Content Teams', 'SEO Specialists', 'Agency Leaders']).slice(0, 4);
 
+  // Objective card config
+  const objectiveCards = [
+    {
+      key: 'businessGoal',
+      label: 'Primary Business Goal',
+      sublabel: 'The north-star metric driving all content strategy',
+      value: businessGoal,
+      setter: setBusinessGoal,
+      icon: Crosshair,
+      gradient: 'from-violet-500 to-indigo-600',
+      lightBg: 'bg-violet-50 dark:bg-violet-500/5',
+      iconBg: 'bg-gradient-to-br from-violet-500 to-indigo-600',
+      borderAccent: 'border-l-violet-500',
+      tag: 'GOAL',
+      tagColor: 'bg-violet-500/15 text-violet-700 dark:text-violet-300',
+    },
+    {
+      key: 'leadMagnet',
+      label: 'Lead Magnet / Conversion Offer',
+      sublabel: 'High-value asset to capture qualified leads',
+      value: leadMagnet,
+      setter: setLeadMagnet,
+      icon: Gift,
+      gradient: 'from-amber-500 to-orange-500',
+      lightBg: 'bg-amber-50 dark:bg-amber-500/5',
+      iconBg: 'bg-gradient-to-br from-amber-500 to-orange-500',
+      borderAccent: 'border-l-amber-500',
+      tag: 'OFFER',
+      tagColor: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
+    },
+    {
+      key: 'primaryCta',
+      label: 'Primary CTA',
+      sublabel: 'Main call-to-action across all touchpoints',
+      value: primaryCta,
+      setter: setPrimaryCta,
+      icon: MousePointerClick,
+      gradient: 'from-emerald-500 to-teal-500',
+      lightBg: 'bg-emerald-50 dark:bg-emerald-500/5',
+      iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-500',
+      borderAccent: 'border-l-emerald-500',
+      tag: 'CTA',
+      tagColor: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
+    },
+  ];
+
+  // Total for channel mix percentage
+  const totalPct = channelMix.reduce((sum, ch) => sum + ch.pct, 0);
+
   return (
     <div className="space-y-6 animate-in fade-in">
       {/* Header */}
@@ -141,70 +249,213 @@ export const StrategyModule = () => {
             )}
           </p>
         </div>
-        <button onClick={() => setGeneratedDoc(true)} className="btn-primary text-xs shrink-0">
-          <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
-          Generate Master Strategy
-        </button>
+        <div className="flex items-center gap-2">
+          {isSaving && <span className="text-xs text-slate-400 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin"/> Saving...</span>}
+          <button onClick={handleSave} className="btn-secondary text-xs shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+            <Save className="w-4 h-4" /> Save
+          </button>
+          <button onClick={handleGenerate} disabled={isGenerating} className="btn-primary text-xs shrink-0 disabled:opacity-50">
+            {isGenerating ? <Loader2 className="w-4 h-4 animate-spin text-amber-300" /> : <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />}
+            {isGenerating ? 'Generating...' : 'Generate Master Strategy'}
+          </button>
+        </div>
       </div>
 
-      {/* Row 1: Objectives + Channel Mix */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Objectives */}
-        <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-          <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-            Objectives & Conversion Path
-          </h2>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Primary Business Goal</label>
-              <input type="text" value={businessGoal} onChange={(e) => setBusinessGoal(e.target.value)} className="w-full glass-input text-xs" />
-            </div>
-            <div>
-              <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Lead Magnet / Conversion Offer</label>
-              <input type="text" value={leadMagnet} onChange={(e) => setLeadMagnet(e.target.value)} className="w-full glass-input text-xs" />
-            </div>
-            <div>
-              <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Primary CTA</label>
-              <input type="text" value={primaryCta} onChange={(e) => setPrimaryCta(e.target.value)} className="w-full glass-input text-xs" />
-            </div>
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* ROW 1: OBJECTIVES & CONVERSION PATH — Redesigned Premium Cards */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        
+        {/* Left Column: 3 Objective Cards — takes 3/5 */}
+        <div className="lg:col-span-3 space-y-4">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
+                <TrendingUp className="w-3.5 h-3.5 text-white" />
+              </div>
+              Objectives & Conversion Path
+            </h2>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium flex items-center gap-1">
+              <Sparkles className="w-3 h-3" /> Click any card to edit
+            </span>
           </div>
-        </div>
 
-        {/* Channel Mix */}
-        <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-          <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-            Publishing Channel Mix
-          </h2>
-          <div className="space-y-3.5">
-            {channelMix.map((ch) => {
-              const Icon = ch.icon;
+          <div className="space-y-3">
+            {objectiveCards.map((card) => {
+              const IconComp = card.icon;
+              const isEditing = editingField === card.key;
               return (
-                <div key={ch.label} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300 font-semibold">
-                      <Icon className="w-3.5 h-3.5 text-slate-400" />
-                      {ch.label}
-                    </span>
-                    <span className="font-extrabold text-slate-800 dark:text-white">{ch.pct}%</span>
+                <div
+                  key={card.key}
+                  className="group relative p-5 rounded-2xl glass-card border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50 flex flex-col sm:flex-row sm:items-start gap-4"
+                >
+                  {/* Subtle hover overlay */}
+                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+                  
+                  {/* Icon Container - Clean & modern */}
+                  <div className={`shrink-0 w-10 h-10 rounded-xl ${card.iconBg} flex items-center justify-center shadow-md shadow-${card.borderAccent.replace('border-l-', '')}/20 ring-4 ring-slate-50 dark:ring-slate-900`}>
+                    <IconComp className="w-4 h-4 text-white" />
                   </div>
-                  <div className="h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                    <div className={`h-full rounded-full ${ch.color} transition-all duration-700`} style={{ width: `${ch.pct}%` }} />
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full ${card.tagColor}`}>
+                        {card.tag}
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
+                        {card.label}
+                      </span>
+                    </div>
+                    
+                    {isEditing ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={card.value}
+                          onChange={(e) => card.setter(e.target.value)}
+                          onBlur={() => { handleSave(); setEditingField(null); }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { handleSave(); setEditingField(null); } }}
+                          autoFocus
+                          className="flex-1 glass-input text-sm font-semibold py-2.5 w-full"
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => setEditingField(card.key)}
+                        className="cursor-pointer group/text flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors -ml-3"
+                      >
+                        <p className="text-[13px] font-semibold text-slate-800 dark:text-white leading-relaxed flex-1">
+                          {card.value}
+                        </p>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-[10px] text-slate-400 font-medium hidden sm:block opacity-0 group-hover/text:opacity-100 transition-opacity">Click to edit</span>
+                          <Edit3 className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 opacity-0 group-hover:opacity-100 group-hover/text:text-brand-500 transition-all duration-200" />
+                        </div>
+                      </div>
+                    )}
+                    
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium pl-3 border-l-2 border-slate-100 dark:border-slate-800">{card.sublabel}</p>
                   </div>
                 </div>
               );
             })}
           </div>
         </div>
+
+        {/* Right Column: Publishing Channel Mix — takes 2/5 */}
+        <div className="lg:col-span-2">
+          <div className="h-full p-6 rounded-2xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                  <PieChart className="w-3.5 h-3.5 text-white" />
+                </div>
+                Publishing Channel Mix
+              </h2>
+              <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold px-2 py-0.5 rounded-full">
+                {totalPct}% Total
+              </span>
+            </div>
+
+            {/* Visual Donut Ring */}
+            <div className="flex justify-center mb-5">
+              <div className="relative w-32 h-32">
+                <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
+                  {(() => {
+                    let offset = 0;
+                    const radius = 48;
+                    const circumference = 2 * Math.PI * radius;
+                    const gradientColors = [
+                      ['#8B5CF6', '#6366F1'],
+                      ['#3B82F6', '#06B6D4'],
+                      ['#F59E0B', '#F97316'],
+                      ['#EC4899', '#F43F5E'],
+                    ];
+                    return channelMix.map((ch, i) => {
+                      const pct = ch.pct / totalPct;
+                      const dashLength = pct * circumference;
+                      const gap = circumference - dashLength;
+                      const currentOffset = offset;
+                      offset += pct * circumference;
+                      const gradId = `grad-${i}`;
+                      return (
+                        <React.Fragment key={ch.label}>
+                          <defs>
+                            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="0%" stopColor={gradientColors[i]?.[0] || '#6366F1'} />
+                              <stop offset="100%" stopColor={gradientColors[i]?.[1] || '#8B5CF6'} />
+                            </linearGradient>
+                          </defs>
+                          <circle
+                            cx="60"
+                            cy="60"
+                            r={radius}
+                            fill="none"
+                            stroke={`url(#${gradId})`}
+                            strokeWidth="12"
+                            strokeDasharray={`${dashLength} ${gap}`}
+                            strokeDashoffset={-currentOffset}
+                            strokeLinecap="round"
+                            className="transition-all duration-1000 ease-out"
+                            style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }}
+                          />
+                        </React.Fragment>
+                      );
+                    });
+                  })()}
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl font-extrabold text-slate-900 dark:text-white leading-none">{channelMix.length}</span>
+                  <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">Channels</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Channel List */}
+            <div className="flex-1 space-y-3">
+              {channelMix.map((ch, idx) => {
+                let Icon = Globe;
+                if (ch.icon === 'Linkedin' || ch.icon?.type?.displayName === 'Linkedin') Icon = Linkedin;
+                if (ch.icon === 'Mail' || ch.icon?.type?.displayName === 'Mail') Icon = Mail;
+                if (ch.icon === 'Instagram' || ch.icon?.type?.displayName === 'Instagram') Icon = Instagram;
+                const colors = channelColors[ch.icon] || channelColors.Globe;
+                return (
+                  <div key={ch.label} className={`group relative flex items-center gap-3 p-3 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-all duration-200 cursor-default`}>
+                    {/* Icon */}
+                    <div className={`shrink-0 w-9 h-9 rounded-lg ${colors.bg} flex items-center justify-center ring-2 ${colors.ring} transition-transform duration-200 group-hover:scale-105`}>
+                      <Icon className={`w-4 h-4 ${colors.text}`} />
+                    </div>
+                    
+                    {/* Label + Bar */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">{ch.label}</span>
+                        <span className="text-sm font-extrabold text-slate-900 dark:text-white ml-2">{ch.pct}%</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full bg-gradient-to-r ${colors.bar} transition-all duration-1000 ease-out`}
+                          style={{ width: `${ch.pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Row 2: Funnel Stages */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* ROW 2: FUNNEL STAGE CONTENT MAPPING                          */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-5">
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
             <Layers className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-            Funnel Stage Content Mapping
+            Content Strategy Flow
           </h2>
           <span className="text-[10px] text-slate-400 font-medium">Auto-mapped from {activeWorkspace.brandName} content pillars</span>
         </div>
@@ -228,11 +479,13 @@ export const StrategyModule = () => {
         </div>
       </div>
 
-      {/* Row 3: Buyer Personas */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* ROW 3: BUYER PERSONAS                                        */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
         <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
           <Users className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-          Target Buyer Personas — <span className="text-brand-500 normal-case">{activeWorkspace.brandName}</span>
+          Target Audience — <span className="text-brand-500 normal-case">{activeWorkspace.brandName}</span>
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           {personas.map((persona, i) => (

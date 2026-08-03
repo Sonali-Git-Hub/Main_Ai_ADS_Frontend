@@ -10,9 +10,11 @@ import {
   ChevronDown,
   Plus,
   User,
+  Users,
   UserCheck,
   ArrowLeft,
-  Trash2
+  Trash2,
+  LogOut
 } from 'lucide-react';
 
 export const Header = () => {
@@ -36,16 +38,20 @@ export const Header = () => {
     canGoBack,
     activeModule,
     setActiveModule,
-    userAvatar
+    userAvatar,
+    user,
+    logout
   } = useWorkspace();
 
   const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const workspaceRef = useRef(null);
   const roleRef = useRef(null);
   const notifRef = useRef(null);
+  const profileRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -57,6 +63,9 @@ export const Header = () => {
       }
       if (notifRef.current && !notifRef.current.contains(e.target)) {
         setShowNotifs(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setShowProfileMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -217,21 +226,69 @@ export const Header = () => {
         </button>
 
         {/* Profile Button */}
-        <button
-          onClick={() => setActiveModule('settings')}
-          className={`p-2 sm:p-2.5 rounded-xl border transition-all ${
-            activeModule === 'settings' 
-              ? 'bg-brand-50 border-brand-200 text-brand-600 dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400' 
-              : 'border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
-          }`}
-          title="Profile & Settings"
-        >
-          {userAvatar ? (
-            <img src={userAvatar} alt="Profile" className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover" />
-          ) : (
-            <User className="w-4 h-4" />
+        {/* Profile Dropdown */}
+        <div className="relative" ref={profileRef}>
+          <button
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            className={`p-2 sm:p-2.5 rounded-xl border transition-all flex items-center justify-center ${
+              showProfileMenu || activeModule === 'settings'
+                ? 'bg-brand-50 border-brand-200 text-brand-600 dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400'
+                : 'border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+            }`}
+            title="User Profile Menu"
+          >
+            {userAvatar ? (
+              <img src={userAvatar} alt="Profile" className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover" />
+            ) : (
+              <User className="w-4 h-4" />
+            )}
+          </button>
+
+          {showProfileMenu && (
+            <div className="absolute top-full right-0 mt-2 w-60 glass-card bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-3 px-4 z-50 animate-in fade-in slide-in-from-top-2">
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-3 mb-3">
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Signed In As</p>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate mt-0.5">{user?.email}</p>
+                <span className="inline-block text-[10px] bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full mt-1.5 border border-emerald-500/20">
+                  {roles.find(r => r.id === activeRole)?.label || activeRole}
+                </span>
+              </div>
+              
+              <div className="space-y-1">
+                <button
+                  onClick={() => {
+                    setActiveModule('team');
+                    setShowProfileMenu(false);
+                  }}
+                  className="w-full text-left py-2 px-3 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl transition-colors text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2"
+                >
+                  <Users className="w-4 h-4 text-brand-500" />
+                  Team & User Management
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveModule('settings');
+                    setShowProfileMenu(false);
+                  }}
+                  className="w-full text-left py-2 px-3 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl transition-colors text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2"
+                >
+                  <User className="w-4 h-4 text-slate-400" />
+                  Account Settings
+                </button>
+                <button
+                  onClick={() => {
+                    logout();
+                    setShowProfileMenu(false);
+                  }}
+                  className="w-full text-left py-2 px-3 hover:bg-red-500/10 text-red-500 rounded-xl transition-colors text-xs font-semibold flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4 text-red-500" />
+                  Sign Out
+                </button>
+              </div>
+            </div>
           )}
-        </button>
+        </div>
 
         {/* Theme Toggle */}
         <button 
