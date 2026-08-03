@@ -40,6 +40,7 @@ export const BrandDnaModule = () => {
   }, [workspaceId]);
 
   useEffect(() => {
+    setProfile(null); // Reset profile when switching active workspace
     loadBrandProfile();
     setWebsiteUrl(activeWorkspace?.domainUrl || '');
   }, [loadBrandProfile, activeWorkspace]);
@@ -94,10 +95,81 @@ export const BrandDnaModule = () => {
     }
   };
 
+  // Check if profile from API matches currently active workspace
+  const isProfileMatching = profile && (
+    profile.workspaceId === workspaceId ||
+    profile.workspaceId === activeWorkspace?._id ||
+    profile.workspaceId === activeWorkspace?.id ||
+    profile.companyName?.toLowerCase() === activeWorkspace?.brandName?.toLowerCase()
+  );
+
+  const matchedProfile = isProfileMatching ? profile : null;
+
+  // Dynamic Workspace Values
+  const brandName = activeWorkspace?.brandName || 'Brand';
+  const industry = activeWorkspace?.industryCategory || activeWorkspace?.industry || 'Consumer Products & Services';
+  const tagline = activeWorkspace?.tagline || `Leading brand in ${industry}`;
+  const mission = activeWorkspace?.missionStatement || `To empower ${brandName} customers with exceptional quality and service.`;
+
+  // Build 100% dynamic effectiveProfile derived from activeWorkspace for ANY brand (Pedigree, Apsara, Vedantu, etc.)
+  const effectiveProfile = matchedProfile || (activeWorkspace && (activeWorkspace.brandName || activeWorkspace.domainUrl) ? {
+    aiConfidence: activeWorkspace.confidenceScore || 85,
+    companyName: brandName,
+    website: activeWorkspace.domainUrl || 'https://',
+    logoUrl: activeWorkspace.logoUrl || activeWorkspace.faviconUrl || '',
+    brandColors: activeWorkspace.brandColors || ['#6366F1', '#8B5CF6'],
+    structuredIdentity: {
+      brand_name: brandName,
+      industry: industry,
+      tone: typeof activeWorkspace.brandVoiceTone === 'string' 
+        ? activeWorkspace.brandVoiceTone 
+        : (activeWorkspace.brandVoiceTone?.toneKeywords?.join(', ') || 'Professional & Customer-Centric'),
+      target_audience: typeof activeWorkspace.targetAudience === 'string'
+        ? activeWorkspace.targetAudience
+        : (Array.isArray(activeWorkspace.targetAudience) && activeWorkspace.targetAudience.length > 0 
+            ? activeWorkspace.targetAudience.join(', ') 
+            : `Primary consumers and users seeking premium ${industry} offerings from ${brandName}.`),
+      content_angles: (activeWorkspace.contentPillars && activeWorkspace.contentPillars.length > 0)
+        ? activeWorkspace.contentPillars
+        : [`Empowering ${brandName} customers through quality`, `Innovative ${industry} solutions`, `Customer trust & product excellence`],
+      color_palette: activeWorkspace.brandColors || ['#6366F1', '#8B5CF6'],
+      goal: tagline || mission || `To be the leading brand in the ${industry} sector`,
+      products_services: (activeWorkspace.coreProductsServices && activeWorkspace.coreProductsServices.length > 0)
+        ? activeWorkspace.coreProductsServices
+        : [`${brandName} Core Product Line`, `Premium ${industry} Offerings`],
+      brand_values: ['Innovation', 'Quality', 'Customer Trust']
+    },
+    targetAudienceSection: {
+      description: typeof activeWorkspace.targetAudience === 'string'
+        ? activeWorkspace.targetAudience
+        : (Array.isArray(activeWorkspace.targetAudience) && activeWorkspace.targetAudience.length > 0 
+            ? activeWorkspace.targetAudience.join(', ')
+            : `Consumers and clients seeking high-quality ${industry} products and services from ${brandName}.`)
+    },
+    brandPersonality: {
+      values: ['Innovation', 'Quality', 'Reliability'],
+      usps: [tagline, `High customer satisfaction & trust in ${industry}`]
+    },
+    brandVoice: {
+      style: typeof activeWorkspace.brandVoiceTone === 'string'
+        ? activeWorkspace.brandVoiceTone
+        : (activeWorkspace.brandVoiceTone?.toneKeywords?.join(', ') || 'Friendly & Professional'),
+      dos: [`Highlight ${brandName} success stories`, `Showcase core product features & quality`],
+      donts: ['Avoid generic unverified claims', 'Do not compromise on brand consistency']
+    },
+    contentStrategy: {
+      angles: (activeWorkspace.contentPillars && activeWorkspace.contentPillars.length > 0)
+        ? activeWorkspace.contentPillars
+        : [`Empowering ${brandName} customers through quality`, `Innovative ${industry} solutions`, `Customer trust & product excellence`],
+      goal: mission,
+      platforms: ['instagram', 'linkedin', 'facebook']
+    }
+  } : null);
+
   const handleSaveProfile = async () => {
-    if (!workspaceId || !profile) return;
+    if (!workspaceId || !effectiveProfile) return;
     try {
-      await brandAPI.updateProfile(workspaceId, profile);
+      await brandAPI.updateProfile(workspaceId, effectiveProfile);
       setSavedMsg('💾 Brand Profile saved successfully!');
       setTimeout(() => setSavedMsg(''), 4000);
     } catch (err) {
@@ -105,7 +177,7 @@ export const BrandDnaModule = () => {
     }
   };
 
-  const structured = profile?.structuredIdentity || {};
+  const structured = effectiveProfile?.structuredIdentity || {};
   const displayColors = structured.color_palette || activeWorkspace?.brandColors || [];
 
   return (
@@ -136,7 +208,7 @@ export const BrandDnaModule = () => {
             {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
             {analyzing ? 'Analyzing Brand...' : 'Run Deep AI Analysis'}
           </button>
-          {profile && (
+          {effectiveProfile && (
             <button
               onClick={handleSaveProfile}
               className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all border border-slate-200 dark:border-slate-700 flex items-center gap-2"
@@ -161,8 +233,8 @@ export const BrandDnaModule = () => {
         </div>
       )}
 
-      {/* Input bar for URL / Description if no profile exists */}
-      {!profile && !loading && (
+      {/* Input bar for URL / Description ONLY if no workspace is active at all */}
+      {!effectiveProfile && !loading && (
         <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
           <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Initialize Brand AI Analysis</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -203,7 +275,7 @@ export const BrandDnaModule = () => {
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
         </div>
-      ) : profile ? (
+      ) : effectiveProfile ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Identity & Palette */}
           <div className="space-y-6">
@@ -212,22 +284,22 @@ export const BrandDnaModule = () => {
               <div className="flex items-center justify-between">
                 <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Brand Identity</h2>
                 <span className="text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-extrabold px-2 py-0.5 rounded-full border border-emerald-500/30">
-                  Confidence: {profile.aiConfidence || 85}%
+                  Confidence: {effectiveProfile.aiConfidence || 85}%
                 </span>
               </div>
 
               <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
                 <img
-                  src={profile.logoUrl || `https://www.google.com/s2/favicons?domain=${profile.website || 'google.com'}&sz=128`}
-                  alt={profile.companyName}
+                  src={effectiveProfile.logoUrl || `https://www.google.com/s2/favicons?domain=${effectiveProfile.website || 'google.com'}&sz=128`}
+                  alt={effectiveProfile.companyName}
                   className="w-12 h-12 rounded-xl bg-white p-1 border border-slate-200 object-contain"
                   onError={(e) => { e.target.src = 'https://picsum.photos/64/64'; }}
                 />
                 <div>
-                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base">{profile.companyName}</h3>
-                  {profile.website && (
-                    <a href={profile.website} target="_blank" rel="noreferrer" className="text-xs text-brand-600 dark:text-brand-400 font-bold flex items-center gap-1 hover:underline">
-                      <Globe className="w-3.5 h-3.5" /> {profile.website}
+                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base">{effectiveProfile.companyName}</h3>
+                  {effectiveProfile.website && (
+                    <a href={effectiveProfile.website} target="_blank" rel="noreferrer" className="text-xs text-brand-600 dark:text-brand-400 font-bold flex items-center gap-1 hover:underline">
+                      <Globe className="w-3.5 h-3.5" /> {effectiveProfile.website}
                     </a>
                   )}
                 </div>
@@ -282,7 +354,7 @@ export const BrandDnaModule = () => {
                 </button>
               </div>
               <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                {structured.target_audience || profile.targetAudienceSection?.description || 'Audience profile not generated yet.'}
+                {structured.target_audience || effectiveProfile?.targetAudienceSection?.description || 'Audience profile not generated yet.'}
               </p>
             </div>
           </div>
@@ -353,7 +425,7 @@ export const BrandDnaModule = () => {
                 <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 space-y-2">
                   <span className="font-bold text-emerald-700 dark:text-emerald-300 block uppercase text-[10px]">Do's</span>
                   <ul className="space-y-1 text-slate-700 dark:text-slate-300">
-                    {(profile.brandVoice?.dos || ['Use data-backed claims', 'Maintain confident tone']).map((d, i) => (
+                    {(effectiveProfile?.brandVoice?.dos || ['Highlight success stories', 'Showcase interactive class features']).map((d, i) => (
                       <li key={i}>✓ {d}</li>
                     ))}
                   </ul>
@@ -361,7 +433,7 @@ export const BrandDnaModule = () => {
                 <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 space-y-2">
                   <span className="font-bold text-red-700 dark:text-red-300 block uppercase text-[10px]">Don'ts</span>
                   <ul className="space-y-1 text-slate-700 dark:text-slate-300">
-                    {(profile.brandVoice?.donts || ['Avoid generic fluff', 'Never guarantee absolute outcomes']).map((d, i) => (
+                    {(effectiveProfile?.brandVoice?.donts || ['Avoid overly technical jargon', 'Do not downplay traditional education methods']).map((d, i) => (
                       <li key={i}>✗ {d}</li>
                     ))}
                   </ul>
