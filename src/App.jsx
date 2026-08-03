@@ -23,9 +23,15 @@ import { AnalyticsModule } from './features/analytics/AnalyticsModule';
 import { TeamRbacModule } from './features/teamRbac/TeamRbacModule';
 import { SettingsBillingModule } from './features/settingsBilling/SettingsBillingModule';
 import { AISAAssistantDrawer } from './features/aisaAssistant/AISAAssistantDrawer';
+import { Login } from './features/auth/Login';
 
 const MainContent = () => {
-  const { activeModule, setIsAISAAssistantOpen } = useWorkspace();
+  const { activeModule, setIsAISAAssistantOpen, user, loginUser } = useWorkspace();
+
+  if (!user) {
+    return <Login onLoginSuccess={loginUser} />;
+  }
+
 
   const renderModule = () => {
     switch (activeModule) {

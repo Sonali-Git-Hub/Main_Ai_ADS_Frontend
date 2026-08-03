@@ -17,11 +17,25 @@ import {
 export const DashboardModule = () => {
   const { activeWorkspace, setActiveModule, setIsQuickPostOpen, setIsScraperOpen, openScraperModal, approvalsQueue, credits } = useWorkspace();
 
+  const currentWorkspaceId = activeWorkspace?.id || activeWorkspace?._id;
+  const filteredQueue = approvalsQueue.filter(item => item.workspaceId === currentWorkspaceId);
 
+  let verificationRate = '0%';
+  let unverifiedText = '0 unverified stats published';
+
+  if (filteredQueue.length > 0) {
+    const passedCount = filteredQueue.filter(item => item.factCheck?.passed).length;
+    verificationRate = Math.round((passedCount / filteredQueue.length) * 100) + '%';
+    const unverifiedCount = filteredQueue.length - passedCount;
+    unverifiedText = `${unverifiedCount} item${unverifiedCount === 1 ? '' : 's'} unverified`;
+  } else {
+    verificationRate = 'N/A';
+    unverifiedText = 'No items generated yet';
+  }
 
   const stats = [
-    { label: 'Verified Brand DNA Memory', value: '100%', sub: 'Immutable positioning locked', icon: Dna, color: 'text-brand-600 dark:text-brand-400', bg: 'bg-brand-500/5 dark:bg-brand-500/10 border-brand-500/20 dark:border-brand-500/30' },
-    { label: 'Fact-Check Verification Rate', value: '98.4%', sub: '0 unverified stats published', icon: ShieldCheck, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20 dark:border-emerald-500/30' }
+    { label: 'Verified Brand DNA Memory', value: (activeWorkspace?.id === 'ws_empty' || !activeWorkspace) ? '0%' : '100%', sub: 'Immutable positioning locked', icon: Dna, color: 'text-brand-600 dark:text-brand-400', bg: 'bg-brand-500/5 dark:bg-brand-500/10 border-brand-500/20 dark:border-brand-500/30' },
+    { label: 'Fact-Check Verification Rate', value: verificationRate, sub: unverifiedText, icon: ShieldCheck, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20 dark:border-emerald-500/30' }
   ];
 
   return (
@@ -159,9 +173,6 @@ export const DashboardModule = () => {
 
         <div className="overflow-x-auto">
           {(() => {
-            const currentWorkspaceId = activeWorkspace?.id || activeWorkspace?._id;
-            const filteredQueue = approvalsQueue.filter(item => item.workspaceId === currentWorkspaceId);
-
             if (filteredQueue.length === 0) {
               return (
                 <div className="flex flex-col items-center justify-center p-8 text-center space-y-3">
@@ -180,11 +191,11 @@ export const DashboardModule = () => {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">
-                    <th className="pb-3 px-3">Title & Format</th>
-                    <th className="pb-3 px-3">Author</th>
-                    <th className="pb-3 px-3">Fact Check Gate</th>
+                    <th className="pb-3 px-3">Content</th>
+                    <th className="pb-3 px-3">Type</th>
+                    <th className="pb-3 px-3">Verified</th>
                     <th className="pb-3 px-3">Status</th>
-                    <th className="pb-3 px-3 text-right">Action</th>
+                    <th className="pb-3 px-3 text-right">View</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
@@ -192,9 +203,10 @@ export const DashboardModule = () => {
                     <tr key={item.id} className="hover:bg-slate-100/40 dark:hover:bg-slate-800/30 transition-colors">
                       <td className="py-3 px-3">
                         <span className="font-bold text-slate-800 dark:text-slate-200 block">{item.title}</span>
+                      </td>
+                      <td className="py-3 px-3">
                         <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">{item.type} {item.platform ? `(${item.platform})` : ''}</span>
                       </td>
-                      <td className="py-3 px-3 text-slate-600 dark:text-slate-300 font-medium">{item.author}</td>
                       <td className="py-3 px-3">
                         {item.factCheck?.passed ? (
                           <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 dark:border-emerald-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold">
@@ -220,7 +232,7 @@ export const DashboardModule = () => {
                           onClick={() => setActiveModule('approvals')}
                           className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 underline"
                         >
-                          Review
+                          View
                         </button>
                       </td>
                     </tr>

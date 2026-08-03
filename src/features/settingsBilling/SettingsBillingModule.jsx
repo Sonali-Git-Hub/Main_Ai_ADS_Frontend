@@ -1,9 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { Settings, CreditCard, Key, Sparkles, Check, ShieldCheck, Globe, Zap, User, Mail, Phone, Lock, Camera, LogOut, Save, Image, Trash2, ChevronDown } from 'lucide-react';
 
 export const SettingsBillingModule = () => {
-  const { credits, setIsCreditModalOpen, userAvatar, setUserAvatar, setActiveModule } = useWorkspace();
+  const { credits, setIsCreditModalOpen, userAvatar, setUserAvatar, setActiveModule, user } = useWorkspace();
   const [activeTier, setActiveTier] = useState(credits.tier || 'Agency');
   const [apiKey, setApiKey] = useState('aisa_live_pk_9948271038571029481');
   const [copiedKey, setCopiedKey] = useState(false);
@@ -86,12 +86,28 @@ export const SettingsBillingModule = () => {
   };
 
   // Profile states
+  const getUserName = (u) => {
+    if (!u?.email) return 'Agency User';
+    const prefix = u.email.split('@')[0];
+    return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+  };
+
   const [profile, setProfile] = useState({
-    name: 'Jane Doe',
-    email: 'jane.doe@uwo.ai',
+    name: getUserName(user),
+    email: user?.email || '',
     region: '+91',
     phoneOnly: '9876543210',
   });
+
+  useEffect(() => {
+    if (user?.email) {
+      setProfile(prev => ({
+        ...prev,
+        email: user.email,
+        name: prev.name === 'Agency User' || prev.name === 'Jane Doe' ? getUserName(user) : prev.name
+      }));
+    }
+  }, [user]);
   const [passwords, setPasswords] = useState({
     current: '',
     new: '',

@@ -54,7 +54,8 @@ export const ContentStudioModule = () => {
         wordCount: blogDraft.wordCount || 1800,
         author: 'Gemini 3.5 Editorial Engine',
         factCheck: factCheck || { passed: true, score: 100, status: 'VERIFIED' },
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        workspaceId: activeWorkspace.id || activeWorkspace._id
       },
       ...prev
     ]);
