@@ -140,8 +140,9 @@ export const ContentStudioModule = () => {
   return (
     <div className="space-y-6 animate-in fade-in max-w-7xl mx-auto p-6">
       {/* Header Bar */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="space-y-1">
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col gap-4">
+        {/* Full width Heading */}
+        <div className="space-y-1 w-full">
           <div className="flex items-center gap-2">
             <PenTool className="w-5 h-5 text-brand-600 dark:text-brand-400" />
             <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Unified Content Studio</h1>
@@ -152,8 +153,8 @@ export const ContentStudioModule = () => {
           </p>
         </div>
 
-        {/* Sub-studio Tab Selector */}
-        <div className="flex flex-wrap bg-slate-100 dark:bg-slate-900/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-semibold gap-1">
+        {/* Sub-studio Tab Selector (Stacked below heading) */}
+        <div className="flex flex-wrap bg-slate-100 dark:bg-slate-900/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-semibold gap-1 self-start">
           {[
             { id: 'BLOG', label: 'Blog Article', icon: FileText },
             { id: 'SOCIAL', label: 'Social Media', icon: Share2 },
