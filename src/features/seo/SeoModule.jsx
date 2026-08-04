@@ -103,10 +103,41 @@ export const SeoModule = () => {
       const res = await fetch('http://localhost:5000/api/seo/brief/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword: seedKeyword, intent, targetAudience: activeWorkspace.targetAudience?.[0] || 'Target Buyers' })
+        body: JSON.stringify({
+          primaryKeyword: seedKeyword,
+          industry: activeWorkspace.industryCategory || 'General',
+          targetAudience: activeWorkspace.targetAudience?.[0] || 'Target Buyers',
+          workspaceId: activeWorkspace.id || activeWorkspace._id,
+          model: 'gemini'
+        })
       });
       const data = await res.json();
-      if (data.success) setBrief(data.brief);
+      if (data.success && data.brief) {
+        // Map backend response to the UI structure
+        const b = data.brief;
+        setBrief({
+          primaryKeyword: b.primaryKeyword || seedKeyword,
+          searchIntent: b.searchIntent || intent,
+          suggestedTitles: b.suggestedTitles || [],
+          metaTitle: b.suggestedTitles?.[0] || `${seedKeyword} Guide 2026`,
+          metaDescription: b.metaDescription || '',
+          urlSlug: (b.primaryKeyword || seedKeyword).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          targetWordCount: b.wordCountTarget || 2400,
+          headingOutline: (b.contentOutline || []).map((h, i) => ({
+            h2: h.replace(/^H2:\s*/i, ''),
+            h3s: b.faqSuggestions?.slice(i * 2, i * 2 + 2) || []
+          })),
+          entityKeywords: b.secondaryKeywords || [seedKeyword, activeWorkspace.brandName],
+          jsonLdSchema: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": b.suggestedTitles?.[0] || `The Ultimate Guide to ${seedKeyword}`,
+            "keywords": b.secondaryKeywords || [seedKeyword]
+          }, null, 2)
+        });
+      } else {
+        throw new Error(data.error || 'Generation failed');
+      }
     } catch (e) {
       setBrief({
         primaryKeyword: seedKeyword,
