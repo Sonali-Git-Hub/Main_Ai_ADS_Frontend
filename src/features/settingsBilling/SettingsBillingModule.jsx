@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
-import { Settings, CreditCard, Key, Sparkles, Check, ShieldCheck, Globe, Zap, User, Mail, Phone, Lock, Camera, LogOut, Save, Image, Trash2, ChevronDown } from 'lucide-react';
+import { Settings, CreditCard, Key, Sparkles, Check, ShieldCheck, Globe, Zap, User, Mail, Phone, Lock, Camera, LogOut, Save, Image, Trash2, ChevronDown, Eye, EyeOff } from 'lucide-react';
 
 export const SettingsBillingModule = () => {
   const { credits, setIsCreditModalOpen, userAvatar, setUserAvatar, setActiveModule, user } = useWorkspace();
@@ -10,6 +10,11 @@ export const SettingsBillingModule = () => {
   const [showPhotoMenu, setShowPhotoMenu] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isSavedPopupOpen, setIsSavedPopupOpen] = useState(false);
+
+  // Password Visibility Toggles
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
@@ -267,11 +272,66 @@ export const SettingsBillingModule = () => {
             </div>
 
             <div className="border-t border-slate-200 dark:border-slate-800/80 pt-4 mt-4">
-              <h3 className="text-xs font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2"><Lock className="w-3.5 h-3.5 text-slate-400" /> Change Password</h3>
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                <Lock className="w-3.5 h-3.5 text-slate-400" /> Change Password
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input type="password" placeholder="Current Password" value={passwords.current} onChange={e => setPasswords({...passwords, current: e.target.value})} className="glass-input text-xs" />
-                <input type="password" placeholder="New Password" value={passwords.new} onChange={e => setPasswords({...passwords, new: e.target.value})} className="glass-input text-xs" />
-                <input type="password" placeholder="Confirm Password" value={passwords.confirm} onChange={e => setPasswords({...passwords, confirm: e.target.value})} className="glass-input text-xs" />
+                {/* Current Password */}
+                <div className="relative">
+                  <input 
+                    type={showCurrentPassword ? "text" : "password"} 
+                    placeholder="Current Password" 
+                    value={passwords.current} 
+                    onChange={e => setPasswords({...passwords, current: e.target.value})} 
+                    className="glass-input text-xs w-full pr-10" 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors p-1"
+                    title={showCurrentPassword ? "Hide password" : "Show password"}
+                  >
+                    {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+
+                {/* New Password */}
+                <div className="relative">
+                  <input 
+                    type={showNewPassword ? "text" : "password"} 
+                    placeholder="New Password" 
+                    value={passwords.new} 
+                    onChange={e => setPasswords({...passwords, new: e.target.value})} 
+                    className="glass-input text-xs w-full pr-10" 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors p-1"
+                    title={showNewPassword ? "Hide password" : "Show password"}
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+
+                {/* Confirm Password */}
+                <div className="relative">
+                  <input 
+                    type={showConfirmPassword ? "text" : "password"} 
+                    placeholder="Confirm Password" 
+                    value={passwords.confirm} 
+                    onChange={e => setPasswords({...passwords, confirm: e.target.value})} 
+                    className="glass-input text-xs w-full pr-10" 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors p-1"
+                    title={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
             </div>
 

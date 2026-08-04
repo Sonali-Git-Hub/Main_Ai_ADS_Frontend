@@ -32,11 +32,12 @@ export const Login = ({ onLoginSuccess }) => {
 
       if (data.success) {
         setSuccess(true);
-        // Save token to localStorage (optional but good practice)
+        const cleanEmail = (data.user?.email || email).toLowerCase().trim();
         localStorage.setItem('aisa_token', data.token);
+        localStorage.setItem('aisa_user_email', cleanEmail);
         
         setTimeout(() => {
-          onLoginSuccess(data.user);
+          onLoginSuccess(data.user || { email: cleanEmail, role: 'AgencyAdmin' });
         }, 800);
       } else {
         setError(data.error || 'Login failed.');

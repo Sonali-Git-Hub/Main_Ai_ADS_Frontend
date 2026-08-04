@@ -2,15 +2,69 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const WorkspaceContext = createContext();
 
+const MODULE_TO_PATH = {
+  dashboard: '/dashboard',
+  brands: '/brand-dna',
+  strategy: '/strategy',
+  seo: '/seo-intelligence',
+  calendar: '/calendar',
+  studio: '/content-studio',
+  campaigns: '/campaigns',
+  creative: '/creative-studio',
+  repurpose: '/repurpose',
+  assets: '/asset-library',
+  approvals: '/approvals-desk',
+  analytics: '/analytics',
+  team: '/team-rbac',
+  settings: '/settings-billing',
+};
+
+const PATH_TO_MODULE = {
+  '/': 'dashboard',
+  '/dashboard': 'dashboard',
+  '/brand-dna': 'brands',
+  '/brands': 'brands',
+  '/strategy': 'strategy',
+  '/seo': 'seo',
+  '/seo-intelligence': 'seo',
+  '/calendar': 'calendar',
+  '/content-studio': 'studio',
+  '/studio': 'studio',
+  '/campaigns': 'campaigns',
+  '/creative-studio': 'creative',
+  '/creative': 'creative',
+  '/repurpose': 'repurpose',
+  '/asset-library': 'assets',
+  '/assets': 'assets',
+  '/approvals': 'approvals',
+  '/approvals-desk': 'approvals',
+  '/analytics': 'analytics',
+  '/team-rbac': 'team',
+  '/team': 'team',
+  '/settings-billing': 'settings',
+  '/settings': 'settings',
+};
+
+function getModuleFromLocation() {
+  if (typeof window === 'undefined') return 'dashboard';
+  const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+  return PATH_TO_MODULE[path] || 'dashboard';
+}
+
 export const WorkspaceProvider = ({ children }) => {
-  // Navigation & History Tracking
-  const [activeModule, setActiveModuleState] = useState('dashboard');
+  // Navigation & History Tracking (Synced with Browser URL Routes)
+  const [activeModule, setActiveModuleState] = useState(getModuleFromLocation);
   const [navigationHistory, setNavigationHistory] = useState([]);
 
   const setActiveModule = (newModule) => {
     if (newModule !== activeModule) {
       setNavigationHistory(prev => [...prev, activeModule]);
       setActiveModuleState(newModule);
+
+      const targetPath = MODULE_TO_PATH[newModule] || '/dashboard';
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ module: newModule }, '', targetPath);
+      }
     }
   };
 
@@ -19,10 +73,35 @@ export const WorkspaceProvider = ({ children }) => {
       const prevModule = navigationHistory[navigationHistory.length - 1];
       setNavigationHistory(prev => prev.slice(0, -1));
       setActiveModuleState(prevModule);
+      const targetPath = MODULE_TO_PATH[prevModule] || '/dashboard';
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ module: prevModule }, '', targetPath);
+      }
     } else if (activeModule !== 'dashboard') {
       setActiveModuleState('dashboard');
+      if (window.location.pathname !== '/dashboard') {
+        window.history.pushState({ module: 'dashboard' }, '', '/dashboard');
+      }
     }
   };
+
+  // Sync state on browser Back / Forward buttons (popstate)
+  useEffect(() => {
+    const handlePopState = () => {
+      const currentMod = getModuleFromLocation();
+      setActiveModuleState(currentMod);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    // Set clean URL on initial load if at root /
+    const initialPath = MODULE_TO_PATH[activeModule] || '/dashboard';
+    if (window.location.pathname === '/' || window.location.pathname === '') {
+      window.history.replaceState({ module: activeModule }, '', initialPath);
+    }
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const canGoBack = navigationHistory.length > 0 || activeModule !== 'dashboard';
   
@@ -116,11 +195,18 @@ export const WorkspaceProvider = ({ children }) => {
     } catch (e) {}
   }, [activeWorkspaceId]);
 
-  // Sync workspaces from MongoDB Atlas Database on Page Load / Refresh
+  // Sync workspaces from MongoDB Atlas Database on Page Load / Refresh / User Login
   useEffect(() => {
     const fetchWorkspacesFromDb = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/workspace/list');
+        const email = user?.email || localStorage.getItem('aisa_user_email') || '';
+        const url = email 
+          ? `http://localhost:5000/api/workspace/list?userEmail=${encodeURIComponent(email)}`
+          : 'http://localhost:5000/api/workspace/list';
+
+        const res = await fetch(url, {
+          headers: email ? { 'x-user-email': email } : {}
+        });
         const data = await res.json();
         if (data.success && Array.isArray(data.workspaces)) {
           if (data.workspaces.length > 0) {
@@ -136,7 +222,7 @@ export const WorkspaceProvider = ({ children }) => {
               return exists ? prevId : (formatted[0].id || formatted[0]._id);
             });
           } else {
-            // DB is empty (user deleted all brands)
+            // DB is empty for this user account (user has created no brands yet)
             setWorkspaces([]);
             setActiveWorkspaceId('');
             try {
@@ -151,7 +237,7 @@ export const WorkspaceProvider = ({ children }) => {
     };
 
     fetchWorkspacesFromDb();
-  }, []);
+  }, [user]);
 
 
 
@@ -261,11 +347,17 @@ export const WorkspaceProvider = ({ children }) => {
 
   const addWorkspace = async (newWs) => {
     try {
+      const email = user?.email || localStorage.getItem('aisa_user_email') || '';
+      const payload = { ...newWs, userEmail: email };
+
       // Persist workspace to MongoDB Atlas ONLY when user clicks "Save & Lock Brand DNA Memory"
       const res = await fetch('http://localhost:5000/api/workspace/save-dna', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newWs)
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-email': email
+        },
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (data.success && data.workspace) {

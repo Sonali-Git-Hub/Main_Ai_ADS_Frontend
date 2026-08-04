@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 export const BrandDnaModule = () => {
-  const { activeWorkspace, updateWorkspace } = useWorkspace();
+  const { activeWorkspace, updateWorkspace, setActiveModule } = useWorkspace();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
@@ -169,9 +169,25 @@ export const BrandDnaModule = () => {
   const handleSaveProfile = async () => {
     if (!workspaceId || !effectiveProfile) return;
     try {
-      await brandAPI.updateProfile(workspaceId, effectiveProfile);
-      setSavedMsg('💾 Brand Profile saved successfully!');
-      setTimeout(() => setSavedMsg(''), 4000);
+      const cleanColor = (c) => typeof c === 'string' ? c : (c?.hex || c?.color || '#6366F1');
+      const sanitizedProfile = {
+        ...effectiveProfile,
+        brandColors: (effectiveProfile.brandColors || []).map(cleanColor),
+        structuredIdentity: {
+          ...effectiveProfile.structuredIdentity,
+          color_palette: (effectiveProfile.structuredIdentity?.color_palette || []).map(cleanColor)
+        }
+      };
+      await brandAPI.updateProfile(workspaceId, sanitizedProfile);
+      setSavedMsg('💾 Brand Profile saved successfully! Redirecting to Strategy...');
+
+      // Automatically navigate to Strategy page
+      setTimeout(() => {
+        setSavedMsg('');
+        if (setActiveModule) {
+          setActiveModule('strategy');
+        }
+      }, 600);
     } catch (err) {
       setError(err.message);
     }

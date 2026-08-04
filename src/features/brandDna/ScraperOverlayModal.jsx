@@ -86,7 +86,7 @@ export const ScraperOverlayModal = () => {
       // PERSISTS TO MONGO DB & WORKSPACE HISTORY UPON LOCK BUTTON CLICK
       await addWorkspace(result);
       if (setActiveModule) {
-        setActiveModule('brands');
+        setActiveModule('strategy');
       }
       setIsScraperOpen(false);
       setResult(null);
