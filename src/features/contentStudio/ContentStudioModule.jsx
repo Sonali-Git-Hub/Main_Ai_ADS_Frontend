@@ -6,6 +6,7 @@ import {
   Globe, Mail, CheckCircle2, RefreshCw, Loader2, AlertCircle, Layers,
   Newspaper, ArrowUpRight, ArrowLeft
 } from 'lucide-react';
+import { WebsiteBuilderStudio } from '../websiteBuilder/WebsiteBuilderStudio';
 
 export const ContentStudioModule = () => {
   const { activeWorkspace, setActiveModule, setApprovalsQueue } = useWorkspace();
@@ -233,7 +234,10 @@ export const ContentStudioModule = () => {
           </div>
 
           {/* Render Active Sub-Page parameters & editor canvas */}
-          {tab === 'BLOG' && (
+          {activeSubPage === 'WEBSITE' ? (
+            <WebsiteBuilderStudio onBack={closeSubPage} />
+          ) : (
+            <>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
             <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Blog Parameters</h2>

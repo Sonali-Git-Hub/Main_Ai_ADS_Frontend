@@ -54,6 +54,12 @@ export const strategyAPI = {
   save: (workspaceId, body) => apiFetch(`/workspace/${workspaceId}`, { method: 'PUT', body: { currentStrategy: body } }),
 };
 
+// ─── AI Website & App Builder API ──────────────────────────────────────────────
+export const builderAPI = {
+  generateSite: (body) => apiFetch('/builder/generate-site', { method: 'POST', body }),
+  submitLead: (body) => apiFetch('/builder/submit-lead', { method: 'POST', body }),
+};
+
 // ─── Campaign API ──────────────────────────────────────────────────────────────
 export const campaignAPI = {
   list: (params = {}) => {
