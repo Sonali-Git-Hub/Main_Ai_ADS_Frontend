@@ -296,11 +296,7 @@ export const WorkspaceProvider = ({ children }) => {
   ]);
 
   // Calendar State
-  const [calendarEvents, setCalendarEvents] = useState([
-    { id: 'cal_1', title: 'SEO Pillar Launch: Content Velocity', date: '2026-07-27', platform: 'Blog', pillar: 'Enterprise AI', status: 'SCHEDULED', owner: 'SEO Lead' },
-    { id: 'cal_2', title: 'LinkedIn Carousel: Brand DNA 101', date: '2026-07-28', platform: 'LinkedIn', pillar: 'Brand Governance', status: 'APPROVED', owner: 'Senior Copywriter' },
-    { id: 'cal_3', title: 'Reel Script: Stop Fragmentation', date: '2026-07-30', platform: 'Instagram', pillar: 'Social Studio Ops', status: 'DRAFT', owner: 'Content Writer' }
-  ]);
+  const [calendarEvents, setCalendarEvents] = useState([]);
 
   const [isQuickPostOpen, setIsQuickPostOpen] = useState(false);
   const [isScraperOpen, setIsScraperOpen] = useState(false);
@@ -461,7 +457,15 @@ export const WorkspaceProvider = ({ children }) => {
   };
 
   const addCalendarEvent = (event) => {
-    setCalendarEvents(prev => [{ id: `cal_${Date.now()}`, ...event }, ...prev]);
+    setCalendarEvents(prev => [{ id: `cal_${Date.now()}_${Math.random()}`, ...event }, ...prev]);
+  };
+
+  const bulkAddCalendarEvents = (events) => {
+    const newEvents = events.map((event, i) => ({
+      id: `cal_${Date.now()}_${i}_${Math.random()}`,
+      ...event
+    }));
+    setCalendarEvents(prev => [...newEvents, ...prev]);
   };
 
   return (
@@ -474,7 +478,7 @@ export const WorkspaceProvider = ({ children }) => {
 
       credits, deductVisualCredits, topUpCredits,
       approvalsQueue, setApprovalsQueue, updateApprovalStatus,
-      calendarEvents, addCalendarEvent,
+      calendarEvents, setCalendarEvents, addCalendarEvent, bulkAddCalendarEvents,
       isQuickPostOpen, setIsQuickPostOpen,
       isScraperOpen, setIsScraperOpen, scraperMode, setScraperMode, openScraperModal,
 

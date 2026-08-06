@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
-import { Target, Layers, Users, Zap, CheckCircle2, ArrowRight } from 'lucide-react';
+
+import { Target, Layers, Users, Zap, CheckCircle2, ArrowRight, Calendar as CalendarModule } from 'lucide-react';
 
 export const StrategyModule = () => {
   const { activeWorkspace, setActiveModule } = useWorkspace();
   const [businessGoal, setBusinessGoal] = useState('Scale Enterprise Organic Lead Pipeline by 250% in Q3');
   const [leadMagnet, setLeadMagnet] = useState('The 2026 Enterprise Content Operations Playbook (PDF)');
   const [generatedDoc, setGeneratedDoc] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+
+  const handleGenerateCalendar = () => setShowCalendar(true);
 
   const handleGenerateStrategy = () => {
     setGeneratedDoc(true);
@@ -26,13 +30,22 @@ export const StrategyModule = () => {
           </p>
         </div>
 
-        <button 
-          onClick={handleGenerateStrategy}
-          className="btn-primary text-xs"
-        >
-          <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
-          Generate Master Strategy Document
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={handleGenerateStrategy}
+            className="btn-primary text-xs"
+          >
+            <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
+            Generate Master Strategy Document
+          </button>
+          <button 
+            onClick={handleGenerateCalendar}
+            className="btn-primary text-xs"
+          >
+            <CalendarModule className="w-4 h-4" />
+            Generate Calendar
+          </button>
+        </div>
       </div>
 
       {/* Grid */}
@@ -138,6 +151,27 @@ export const StrategyModule = () => {
               <p className="text-xs text-slate-300 leading-relaxed">
                 Strategic blueprint generated for <strong>{activeWorkspace.brandName}</strong>. Standardized positioning, lead magnet offers, and funnel stages are ready to feed into SEO topic clustering and campaign operations.
               </p>
+            </div>
+          )}
+
+          {/* Calendar Generation */}
+          {showCalendar && (
+            <div className="p-6 rounded-3xl glass-card border border-slate-800 mt-4 animate-in fade-in">
+              <h3 className="text-sm font-bold text-white mb-2">30-Day Calendar</h3>
+              <div className="grid grid-cols-7 gap-2">
+                {Array.from({ length: 30 }, (_, i) => {
+                  const date = new Date();
+                  date.setDate(date.getDate() + i + 1);
+                  const day = date.getDate();
+                  const month = date.toLocaleString('default', { month: 'short' });
+                  return (
+                    <div key={i} className="bg-slate-800/60 rounded p-2 text-xs text-center">
+                      <div className="font-bold">{month} {day}</div>
+                      <div className="mt-1 text-slate-400">Task placeholder</div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
