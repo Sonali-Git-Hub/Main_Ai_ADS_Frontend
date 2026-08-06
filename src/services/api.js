@@ -48,6 +48,12 @@ export const brandAPI = {
   regenerateSection: (body) => apiFetch('/brand/regenerate-section', { method: 'POST', body }),
 };
 
+// ─── Strategy API ─────────────────────────────────────────────────────────────
+export const strategyAPI = {
+  generate: (workspaceId) => apiFetch(`/workspace/${workspaceId}/generate-strategy`, { method: 'POST' }),
+  save: (workspaceId, body) => apiFetch(`/workspace/${workspaceId}`, { method: 'PUT', body: { currentStrategy: body } }),
+};
+
 // ─── Campaign API ──────────────────────────────────────────────────────────────
 export const campaignAPI = {
   list: (params = {}) => {
