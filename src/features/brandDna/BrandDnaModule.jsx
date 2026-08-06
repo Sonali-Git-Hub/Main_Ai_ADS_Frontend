@@ -1,25 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { Dna, Globe, CheckCircle2, Save, RefreshCw } from 'lucide-react';
 
 export const BrandDnaModule = () => {
   const { activeWorkspace, setIsScraperOpen, openScraperModal, updateWorkspace } = useWorkspace();
-  const [positioning, setPositioning] = useState(activeWorkspace.positioningSummary || '');
+  const [positioning, setPositioning] = useState(activeWorkspace.positioningSummary || activeWorkspace.missionStatement || '');
   const [savedMsg, setSavedMsg] = useState('');
 
+  useEffect(() => {
+    if (activeWorkspace) {
+      setPositioning(activeWorkspace.positioningSummary || activeWorkspace.missionStatement || '');
+    }
+  }, [activeWorkspace?.id, activeWorkspace?._id, activeWorkspace?.positioningSummary, activeWorkspace?.missionStatement]);
+
   const handleSaveBrandDna = async () => {
-    if (updateWorkspace && (activeWorkspace.id || activeWorkspace._id)) {
-      await updateWorkspace(activeWorkspace.id || activeWorkspace._id, {
-        positioningSummary: positioning
+    const targetId = activeWorkspace._id || activeWorkspace.id;
+    if (updateWorkspace && targetId) {
+      await updateWorkspace(targetId, {
+        positioningSummary: positioning,
+        metaDescription: positioning,
+        brandName: activeWorkspace.brandName,
+        domainUrl: activeWorkspace.domainUrl,
+        brandColors: activeWorkspace.brandColors
       });
     }
     setSavedMsg('Brand DNA Memory successfully updated & saved to MongoDB Atlas workspaces collection!');
     setTimeout(() => setSavedMsg(''), 4000);
   };
 
-  const displayColors = (activeWorkspace.brandColors && activeWorkspace.brandColors.length > 0)
-    ? activeWorkspace.brandColors 
-    : ['#6366F1', '#4F46E5', '#818CF8', '#0F172A'];
+
+  const displayColors = activeWorkspace.brandColors || [];
+
 
 
   return (
@@ -72,7 +83,17 @@ export const BrandDnaModule = () => {
         </div>
         
         <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
-          <img src={activeWorkspace.logoUrl || activeWorkspace.faviconUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${activeWorkspace.brandName}`} alt={activeWorkspace.brandName} className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700 object-cover" />
+          <img 
+            src={activeWorkspace.logoUrl || activeWorkspace.faviconUrl || `https://www.google.com/s2/favicons?domain=${activeWorkspace.domainUrl || 'google.com'}&sz=128`} 
+            alt={activeWorkspace.brandName} 
+            onError={(e) => {
+              e.target.onerror = null;
+              const domain = (activeWorkspace.domainUrl || '').replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+              e.target.src = `https://www.google.com/s2/favicons?domain=${domain || 'google.com'}&sz=128`;
+            }}
+            className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 p-1.5 border border-slate-200 dark:border-slate-700 object-contain shadow-sm" 
+          />
+
           <div>
             <h3 className="font-extrabold text-slate-900 dark:text-white text-base">{activeWorkspace.brandName}</h3>
             <p className="text-xs text-brand-600 dark:text-brand-400 font-bold flex items-center gap-1">
@@ -92,18 +113,25 @@ export const BrandDnaModule = () => {
           <label className="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-2">Brand Palette Colors</label>
           <div className="flex gap-3">
             {displayColors && displayColors.length > 0 ? (
-              displayColors.map((color, i) => (
-                <div key={i} className="flex-1 text-center">
-                  <div className="h-10 rounded-xl border border-slate-300 dark:border-white/20 shadow-sm transition-transform hover:scale-105" style={{ backgroundColor: color }} />
-                  <span className="text-[10px] text-slate-600 dark:text-slate-400 font-mono uppercase mt-1.5 block font-bold">{color}</span>
-                </div>
-              ))
+              displayColors.map((col, i) => {
+                const hex = typeof col === 'string' ? col : col.hex;
+                const name = typeof col === 'object' ? col.name : '';
+                const role = typeof col === 'object' ? col.role : '';
+                return (
+                  <div key={i} className="flex-1 text-center">
+                    <div className="h-10 rounded-xl border border-slate-300 dark:border-white/20 shadow-sm transition-transform hover:scale-105" style={{ backgroundColor: hex }} />
+                    <span className="text-[10px] text-slate-900 dark:text-slate-100 font-mono uppercase mt-1.5 block font-bold">{hex}</span>
+                    {role && <span className="text-[9px] text-brand-600 dark:text-brand-400 font-bold block">{role}</span>}
+                  </div>
+                );
+              })
             ) : (
               <div className="text-xs text-slate-400 font-medium italic p-2 bg-slate-100 dark:bg-slate-800 rounded-xl w-full text-center">
                 No high-confidence official brand colors extracted
               </div>
             )}
           </div>
+
         </div>
 
         <div>

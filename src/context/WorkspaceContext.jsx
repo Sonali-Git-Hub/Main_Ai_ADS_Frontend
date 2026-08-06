@@ -245,16 +245,23 @@ export const WorkspaceProvider = ({ children }) => {
   const updateWorkspace = async (id, updatedData) => {
     if (!id) return;
     try {
-      await fetch(`http://localhost:5000/api/workspace/${id}`, {
+      const res = await fetch(`http://localhost:5000/api/workspace/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData)
       });
+      const data = await res.json();
+      if (data.success && data.workspace) {
+        const updatedDoc = { ...data.workspace, id: data.workspace._id || data.workspace.id || id };
+        setWorkspaces(prev => prev.map(w => (w.id === id || w._id === id) ? updatedDoc : w));
+        return;
+      }
     } catch (e) {
       console.log('Workspace Update Note:', e.message);
     }
     setWorkspaces(prev => prev.map(w => (w.id === id || w._id === id) ? { ...w, ...updatedData } : w));
   };
+
 
 
   const deleteWorkspace = async (idToDelete) => {
