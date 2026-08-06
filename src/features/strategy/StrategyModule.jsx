@@ -739,34 +739,6 @@ export const StrategyModule = () => {
             </>
           )}
 
-          {/* Empty state (Before Master Strategy Generation) */}
-          {thirtyDayPlan.length === 0 && (
-            <div className="text-center py-20 rounded-3xl glass-card border border-dashed border-slate-200 dark:border-slate-700">
-              <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-brand-500/20 to-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                <Rocket className="w-8 h-8 text-brand-500" />
-              </div>
-              <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mb-2">Generate Your 30-Day Plan</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
-                Click "Generate Master Strategy" to get an AI-powered 30-day content calendar with daily topics, platforms, and action items.
-              </p>
-              <button onClick={handleGenerate} disabled={isGenerating} className="btn-primary text-sm flex items-center gap-2 mx-auto px-6 py-2.5 rounded-xl disabled:opacity-50">
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
-                  : <><Zap className="w-4 h-4 text-amber-300 fill-amber-300" /> Generate Master Strategy</>
-                }
-              </button>
-            </div>
-          )}
-
-          {/* Empty state (After Master Strategy Generated, but Calendar not pushed yet) */}
-          {thirtyDayPlan.length > 0 && calendarEvents.length === 0 && (
-            <div className="text-center py-16 rounded-3xl glass-card border border-dashed border-slate-200 dark:border-slate-700">
-              <Calendar className="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto mb-3 opacity-50" />
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-white mb-2">30-Day Plan is Ready to Generate</h3>
-              <p className="text-sm text-slate-500 mb-4">Please click the 'Generate 30 Days Plan' button below to finalize and push these items to your calendar.</p>
-            </div>
-          )}
-
           {/* 30-Day Plan Grid (Only visible after clicking Generate 30 Days Plan) */}
           {filteredPlan.length > 0 && calendarEvents.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
