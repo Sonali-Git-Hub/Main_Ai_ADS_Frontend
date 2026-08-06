@@ -681,6 +681,7 @@ export const ContentStudioModule = () => {
             )}
           </div>
         </div>
+      </>
       )}
     </div>
   ) : (
