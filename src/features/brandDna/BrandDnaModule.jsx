@@ -303,8 +303,6 @@ export const BrandDnaModule = () => {
                   Confidence: {effectiveProfile.aiConfidence || 85}%
                 </span>
               </div>
-                </span>
-              </div>
 
               <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
                 <img
