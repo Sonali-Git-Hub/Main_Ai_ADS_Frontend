@@ -680,7 +680,6 @@ export const ContentStudioModule = () => {
             )}
           </div>
         </div>
-      </div>
       ) : (
     <div className="space-y-6">
           {/* MAIN CONTENT STUDIO HUB PAGE VIEW (when no channel card is selected) */}
