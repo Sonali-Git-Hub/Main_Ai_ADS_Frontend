@@ -16,7 +16,7 @@ export const ScraperOverlayModal = () => {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/workspace/create', {
+      const res = await fetch('http://localhost:5000/api/workspace/scrape-preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ domainUrl: url, brandName })
@@ -33,9 +33,9 @@ export const ScraperOverlayModal = () => {
   };
 
 
-  const confirmSaveWorkspace = () => {
+  const confirmSaveWorkspace = async () => {
     if (result) {
-      addWorkspace(result);
+      await addWorkspace(result);
       if (setActiveModule) {
         setActiveModule('brands');
       }

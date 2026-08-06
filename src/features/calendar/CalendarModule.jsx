@@ -72,37 +72,48 @@ export const CalendarModule = () => {
           <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
         </div>
 
-        {/* Calendar Grid Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filteredEvents.map((evt) => (
-            <div key={evt.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 hover:border-brand-500/40 transition-all space-y-2">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="font-bold text-brand-600 dark:text-brand-400 flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> {evt.date}
-                </span>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                  evt.status === 'SCHEDULED' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30' :
-                  evt.status === 'APPROVED' ? 'bg-brand-500/10 dark:bg-brand-500/20 text-brand-700 dark:text-brand-300 border border-brand-500/30' :
-                  'bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30'
-                }`}>
-                  {evt.status}
-                </span>
-              </div>
+        {/* Calendar Grid Cards or Empty State */}
+        {filteredEvents.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {filteredEvents.map((evt) => (
+              <div key={evt.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 hover:border-brand-500/40 transition-all space-y-2">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-bold text-brand-600 dark:text-brand-400 flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> {evt.date}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    evt.status === 'SCHEDULED' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30' :
+                    evt.status === 'APPROVED' ? 'bg-brand-500/10 dark:bg-brand-500/20 text-brand-700 dark:text-brand-300 border border-brand-500/30' :
+                    'bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30'
+                  }`}>
+                    {evt.status}
+                  </span>
+                </div>
 
-              <h3 className="font-bold text-slate-900 dark:text-white text-xs leading-snug">{evt.title}</h3>
+                <h3 className="font-bold text-slate-900 dark:text-white text-xs leading-snug">{evt.title}</h3>
 
-              <div className="flex items-center justify-between text-[10px] text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-800 font-medium">
-                <span>{evt.platform} • {evt.pillar}</span>
-                <button 
-                  onClick={() => setActiveModule('studio')}
-                  className="text-brand-600 dark:text-brand-400 hover:underline font-bold"
-                >
-                  Open Studio
-                </button>
+                <div className="flex items-center justify-between text-[10px] text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-800 font-medium">
+                  <span>{evt.platform} • {evt.pillar}</span>
+                  <button 
+                    onClick={() => setActiveModule('studio')}
+                    className="text-brand-600 dark:text-brand-400 hover:underline font-bold"
+                  >
+                    Open Studio
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 rounded-3xl glass-card border border-dashed border-slate-200 dark:border-slate-700">
+            <CalendarIcon className="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto mb-3 opacity-50" />
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white mb-2">No 30-Day Plan Generated Yet</h3>
+            <p className="text-sm text-slate-500 mb-4">Go to the Strategy section to generate your comprehensive 30-day marketing roadmap.</p>
+            <button onClick={() => setActiveModule('strategy')} className="btn-primary text-sm flex items-center gap-2 mx-auto px-5 py-2 rounded-xl">
+              Go to Strategy Module
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Add Event Modal */}

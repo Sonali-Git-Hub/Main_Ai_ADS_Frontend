@@ -2,15 +2,69 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const WorkspaceContext = createContext();
 
+const MODULE_TO_PATH = {
+  dashboard: '/dashboard',
+  brands: '/brand-dna',
+  strategy: '/strategy',
+  seo: '/seo-intelligence',
+  calendar: '/calendar',
+  studio: '/content-studio',
+  campaigns: '/campaigns',
+  creative: '/creative-studio',
+  repurpose: '/repurpose',
+  assets: '/asset-library',
+  approvals: '/approvals-desk',
+  analytics: '/analytics',
+  team: '/team-rbac',
+  settings: '/settings-billing',
+};
+
+const PATH_TO_MODULE = {
+  '/': 'dashboard',
+  '/dashboard': 'dashboard',
+  '/brand-dna': 'brands',
+  '/brands': 'brands',
+  '/strategy': 'strategy',
+  '/seo': 'seo',
+  '/seo-intelligence': 'seo',
+  '/calendar': 'calendar',
+  '/content-studio': 'studio',
+  '/studio': 'studio',
+  '/campaigns': 'campaigns',
+  '/creative-studio': 'creative',
+  '/creative': 'creative',
+  '/repurpose': 'repurpose',
+  '/asset-library': 'assets',
+  '/assets': 'assets',
+  '/approvals': 'approvals',
+  '/approvals-desk': 'approvals',
+  '/analytics': 'analytics',
+  '/team-rbac': 'team',
+  '/team': 'team',
+  '/settings-billing': 'settings',
+  '/settings': 'settings',
+};
+
+function getModuleFromLocation() {
+  if (typeof window === 'undefined') return 'dashboard';
+  const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+  return PATH_TO_MODULE[path] || 'dashboard';
+}
+
 export const WorkspaceProvider = ({ children }) => {
-  // Navigation & History Tracking
-  const [activeModule, setActiveModuleState] = useState('dashboard');
+  // Navigation & History Tracking (Synced with Browser URL Routes)
+  const [activeModule, setActiveModuleState] = useState(getModuleFromLocation);
   const [navigationHistory, setNavigationHistory] = useState([]);
 
   const setActiveModule = (newModule) => {
     if (newModule !== activeModule) {
       setNavigationHistory(prev => [...prev, activeModule]);
       setActiveModuleState(newModule);
+
+      const targetPath = MODULE_TO_PATH[newModule] || '/dashboard';
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ module: newModule }, '', targetPath);
+      }
     }
   };
 
@@ -19,10 +73,35 @@ export const WorkspaceProvider = ({ children }) => {
       const prevModule = navigationHistory[navigationHistory.length - 1];
       setNavigationHistory(prev => prev.slice(0, -1));
       setActiveModuleState(prevModule);
+      const targetPath = MODULE_TO_PATH[prevModule] || '/dashboard';
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ module: prevModule }, '', targetPath);
+      }
     } else if (activeModule !== 'dashboard') {
       setActiveModuleState('dashboard');
+      if (window.location.pathname !== '/dashboard') {
+        window.history.pushState({ module: 'dashboard' }, '', '/dashboard');
+      }
     }
   };
+
+  // Sync state on browser Back / Forward buttons (popstate)
+  useEffect(() => {
+    const handlePopState = () => {
+      const currentMod = getModuleFromLocation();
+      setActiveModuleState(currentMod);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    // Set clean URL on initial load if at root /
+    const initialPath = MODULE_TO_PATH[activeModule] || '/dashboard';
+    if (window.location.pathname === '/' || window.location.pathname === '') {
+      window.history.replaceState({ module: activeModule }, '', initialPath);
+    }
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const canGoBack = navigationHistory.length > 0 || activeModule !== 'dashboard';
   
@@ -35,7 +114,40 @@ export const WorkspaceProvider = ({ children }) => {
       return 'dark';
     }
   });
-  const [activeRole, setActiveRole] = useState('AgencyAdmin');
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aisa_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const [activeRole, setActiveRole] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aisa_user');
+      if (saved) {
+        const u = JSON.parse(saved);
+        return u.role || 'AgencyAdmin';
+      }
+    } catch (e) {}
+    return 'AgencyAdmin';
+  });
+
+  const loginUser = (userData) => {
+    setUser(userData);
+    localStorage.setItem('aisa_user', JSON.stringify(userData));
+    if (userData.role) {
+      setActiveRole(userData.role);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('aisa_user');
+    setActiveModuleState('dashboard');
+  };
+
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -83,11 +195,18 @@ export const WorkspaceProvider = ({ children }) => {
     } catch (e) {}
   }, [activeWorkspaceId]);
 
-  // Sync workspaces from MongoDB Atlas Database on Page Load / Refresh
+  // Sync workspaces from MongoDB Atlas Database on Page Load / Refresh / User Login
   useEffect(() => {
     const fetchWorkspacesFromDb = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/workspace/list');
+        const email = user?.email || localStorage.getItem('aisa_user_email') || '';
+        const url = email 
+          ? `http://localhost:5000/api/workspace/list?userEmail=${encodeURIComponent(email)}`
+          : 'http://localhost:5000/api/workspace/list';
+
+        const res = await fetch(url, {
+          headers: email ? { 'x-user-email': email } : {}
+        });
         const data = await res.json();
         if (data.success && Array.isArray(data.workspaces)) {
           if (data.workspaces.length > 0) {
@@ -103,7 +222,7 @@ export const WorkspaceProvider = ({ children }) => {
               return exists ? prevId : (formatted[0].id || formatted[0]._id);
             });
           } else {
-            // DB is empty (user deleted all brands)
+            // DB is empty for this user account (user has created no brands yet)
             setWorkspaces([]);
             setActiveWorkspaceId('');
             try {
@@ -118,7 +237,7 @@ export const WorkspaceProvider = ({ children }) => {
     };
 
     fetchWorkspacesFromDb();
-  }, []);
+  }, [user]);
 
 
 
@@ -177,11 +296,7 @@ export const WorkspaceProvider = ({ children }) => {
   ]);
 
   // Calendar State
-  const [calendarEvents, setCalendarEvents] = useState([
-    { id: 'cal_1', title: 'SEO Pillar Launch: Content Velocity', date: '2026-07-27', platform: 'Blog', pillar: 'Enterprise AI', status: 'SCHEDULED', owner: 'SEO Lead' },
-    { id: 'cal_2', title: 'LinkedIn Carousel: Brand DNA 101', date: '2026-07-28', platform: 'LinkedIn', pillar: 'Brand Governance', status: 'APPROVED', owner: 'Senior Copywriter' },
-    { id: 'cal_3', title: 'Reel Script: Stop Fragmentation', date: '2026-07-30', platform: 'Instagram', pillar: 'Social Studio Ops', status: 'DRAFT', owner: 'Content Writer' }
-  ]);
+  const [calendarEvents, setCalendarEvents] = useState([]);
 
   const [isQuickPostOpen, setIsQuickPostOpen] = useState(false);
   const [isScraperOpen, setIsScraperOpen] = useState(false);
@@ -226,12 +341,46 @@ export const WorkspaceProvider = ({ children }) => {
     localStorage.setItem('aisa_theme', nextTheme);
   };
 
-  const addWorkspace = (newWs) => {
+  const addWorkspace = async (newWs) => {
+    try {
+      const email = user?.email || localStorage.getItem('aisa_user_email') || '';
+      const payload = { ...newWs, userEmail: email };
+
+      // Persist workspace to MongoDB Atlas ONLY when user clicks "Save & Lock Brand DNA Memory"
+      const res = await fetch('http://localhost:5000/api/workspace/save-dna', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-email': email
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success && data.workspace) {
+        const savedDoc = {
+          ...data.workspace,
+          id: data.workspace._id || data.workspace.id || `ws_${Date.now()}`,
+          brandVoiceTone: data.workspace.brandVoiceTone || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative', 'Reliable'] },
+          voiceGuidelines: data.workspace.voiceGuidelines || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative'] }
+        };
+        setWorkspaces(prev => {
+          const exists = prev.some(w => (w.id === savedDoc.id || w._id === savedDoc.id));
+          if (exists) return prev.map(w => (w.id === savedDoc.id || w._id === savedDoc.id) ? savedDoc : w);
+          return [savedDoc, ...prev];
+        });
+        setActiveWorkspaceId(savedDoc.id);
+        return savedDoc;
+      }
+    } catch (e) {
+      console.log('Workspace Save DNA Error:', e.message);
+    }
+
+    // Local Fallback if offline
     const formatted = {
       ...newWs,
       id: newWs._id || newWs.id || `ws_${Date.now()}`,
       brandVoiceTone: newWs.brandVoiceTone || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative', 'Reliable'] },
-      voiceGuidelines: newWs.voiceGuidelines || { formalityScore: 4, toneKeywords: newWs.brandVoiceTone?.toneKeywords || ['Professional', 'Innovative'] }
+      voiceGuidelines: newWs.voiceGuidelines || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative'] }
     };
     setWorkspaces(prev => {
       const exists = prev.some(w => (w.id === formatted.id || w._id === formatted.id));
@@ -239,6 +388,7 @@ export const WorkspaceProvider = ({ children }) => {
       return [formatted, ...prev];
     });
     setActiveWorkspaceId(formatted.id);
+    return formatted;
   };
 
 
@@ -307,19 +457,28 @@ export const WorkspaceProvider = ({ children }) => {
   };
 
   const addCalendarEvent = (event) => {
-    setCalendarEvents(prev => [{ id: `cal_${Date.now()}`, ...event }, ...prev]);
+    setCalendarEvents(prev => [{ id: `cal_${Date.now()}_${Math.random()}`, ...event }, ...prev]);
+  };
+
+  const bulkAddCalendarEvents = (events) => {
+    const newEvents = events.map((event, i) => ({
+      id: `cal_${Date.now()}_${i}_${Math.random()}`,
+      ...event
+    }));
+    setCalendarEvents(prev => [...newEvents, ...prev]);
   };
 
   return (
     <WorkspaceContext.Provider value={{
       activeModule, setActiveModule, goBack, canGoBack, navigationHistory,
       theme, toggleTheme,
+      user, loginUser, logout,
       activeRole, setActiveRole,
       workspaces, activeWorkspaceId, setActiveWorkspaceId, activeWorkspace, addWorkspace, updateWorkspace, deleteWorkspace,
 
       credits, deductVisualCredits, topUpCredits,
       approvalsQueue, setApprovalsQueue, updateApprovalStatus,
-      calendarEvents, addCalendarEvent,
+      calendarEvents, setCalendarEvents, addCalendarEvent, bulkAddCalendarEvents,
       isQuickPostOpen, setIsQuickPostOpen,
       isScraperOpen, setIsScraperOpen, scraperMode, setScraperMode, openScraperModal,
 
