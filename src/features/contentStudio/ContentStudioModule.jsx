@@ -215,7 +215,9 @@ export const ContentStudioModule = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in max-w-7xl mx-auto p-6">
-      {activeSubPage ? (
+      {activeSubPage === 'WEBSITE' ? (
+        <WebsiteBuilderStudio onBack={closeSubPage} />
+      ) : activeSubPage ? (
         <div className="space-y-6">
           {/* DEDICATED CHANNEL SUB-PAGE VIEW */}
           <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
@@ -234,10 +236,7 @@ export const ContentStudioModule = () => {
           </div>
 
           {/* Render Active Sub-Page parameters & editor canvas */}
-          {activeSubPage === 'WEBSITE' ? (
-            <WebsiteBuilderStudio onBack={closeSubPage} />
-          ) : (
-            <>
+          {tab === 'BLOG' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
             <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Blog Parameters</h2>
@@ -681,10 +680,7 @@ export const ContentStudioModule = () => {
             )}
           </div>
         </div>
-      </>
-      )}
-    </div>
-  ) : (
+      ) : (
     <div className="space-y-6">
           {/* MAIN CONTENT STUDIO HUB PAGE VIEW (when no channel card is selected) */}
           {/* Header Bar */}
