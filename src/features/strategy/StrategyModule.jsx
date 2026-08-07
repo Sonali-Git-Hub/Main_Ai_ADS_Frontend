@@ -6,7 +6,7 @@ import {
   MousePointerClick, Edit3, Sparkles, PieChart, Calendar, DollarSign,
   Megaphone, BookOpen, Clock, ChevronRight, Star, Lightbulb, Rocket,
   Hash, Video, FileText, MessageSquare, Filter, Play, Award, BarChart2,
-  ArrowUpRight, Flame
+  ArrowUpRight, Flame, X
 } from 'lucide-react';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -116,6 +116,10 @@ export const StrategyModule = () => {
   const [editingField,  setEditingField]  = useState(null);
   const [activeTab,     setActiveTab]     = useState('overview'); // overview | plan | campaigns
 
+  // Schedule Modal State
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleDays, setScheduleDays] = useState('30');
+
   // ─── Init from workspace ─────────────────────────────────────────────────
   useEffect(() => {
     const strat = activeWorkspace.currentStrategy || {};
@@ -210,12 +214,21 @@ export const StrategyModule = () => {
   // ─── Generate Calendar Events ─────────────────────────────────────────────
   const handleGenerateCalendar = () => {
     if (!thirtyDayPlan || thirtyDayPlan.length === 0) {
-      alert("No 30-Day Plan generated yet.");
+      alert("No Plan generated yet.");
       return;
     }
+    setScheduleDays(String(Math.min(30, thirtyDayPlan.length)));
+    setShowScheduleModal(true);
+  };
 
+  const confirmGenerateCalendar = (numDays) => {
+    const daysToGen = Math.min(Number(numDays) || 30, thirtyDayPlan.length);
     const today = new Date();
-    const eventsToCreate = thirtyDayPlan.map(item => {
+    
+    // Filter plan to only generate up to daysToGen
+    const planToUse = thirtyDayPlan.filter(item => item.day <= daysToGen);
+
+    const eventsToCreate = planToUse.map(item => {
       const eventDate = new Date(today);
       eventDate.setDate(today.getDate() + item.day);
       
@@ -230,7 +243,8 @@ export const StrategyModule = () => {
     });
 
     bulkAddCalendarEvents(eventsToCreate);
-    setActiveTab('plan');
+    setShowScheduleModal(false);
+    setActiveModule('calendar'); // Transition to calendar view
   };
 
   // ─── Derived data ─────────────────────────────────────────────────────────
@@ -851,12 +865,17 @@ export const StrategyModule = () => {
             <div className="flex gap-2">
               {calendarEvents.length === 0 ? (
                 <button onClick={handleGenerateCalendar} className="btn-primary text-xs flex items-center gap-1.5 bg-violet-600 hover:bg-violet-700">
-                  <Calendar className="w-3.5 h-3.5" /> Generate 30 Days Plan
+                  <Calendar className="w-3.5 h-3.5" /> Generate Calendar Plan
                 </button>
               ) : (
-                <button onClick={() => setActiveModule('calendar')} className="btn-primary text-xs flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700">
-                  <Calendar className="w-3.5 h-3.5" /> View Calendar
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={handleGenerateCalendar} className="btn-secondary text-xs flex items-center gap-1.5 bg-slate-800 dark:bg-slate-800/80 border border-slate-700 text-white hover:bg-slate-700 transition-colors">
+                    <Calendar className="w-3.5 h-3.5" /> Re-Schedule Calendar
+                  </button>
+                  <button onClick={() => setActiveModule('calendar')} className="btn-primary text-xs flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700">
+                    <Calendar className="w-3.5 h-3.5" /> View Calendar
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -865,6 +884,76 @@ export const StrategyModule = () => {
           </p>
         </div>
       )}
+      {/* ─── Schedule Days Pop Up Modal ─── */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-md p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <h3 className="text-sm font-extrabold text-white uppercase tracking-widest flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-brand-400" />
+                Schedule Content Calendar
+              </h3>
+              <button 
+                onClick={() => setShowScheduleModal(false)}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="space-y-4 py-2">
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Enter the number of days you would like to generate and populate in your Content Calendar from your Strategy Hub.
+              </p>
+              
+              <div className="space-y-2">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  How many days to schedule?
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    max={thirtyDayPlan.length}
+                    value={scheduleDays}
+                    onChange={(e) => setScheduleDays(e.target.value)}
+                    className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-white font-extrabold text-sm focus:outline-none focus:border-brand-500 transition-colors"
+                    placeholder="e.g. 30"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 uppercase">
+                    Days
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-500">
+                  Maximum available days from your current strategy: <span className="font-extrabold text-slate-300">{thirtyDayPlan.length} Days</span>.
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setShowScheduleModal(false)}
+                className="px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => confirmGenerateCalendar(scheduleDays)}
+                disabled={!scheduleDays || Number(scheduleDays) < 1 || Number(scheduleDays) > thirtyDayPlan.length}
+                className="btn-primary text-xs flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed bg-brand-600 hover:bg-brand-500 text-white"
+              >
+                Confirm & Generate
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

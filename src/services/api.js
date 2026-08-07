@@ -137,6 +137,42 @@ export const remindersAPI = {
   delete: (id) => apiFetch(`/reminders/${id}`, { method: 'DELETE' }),
 };
 
+// ─── Auto-Pilot API (SSE Stream) ──────────────────────────────────────────────
+export const autopilotAPI = {
+  generate: (body, onMessage, onError, onComplete) => {
+    const controller = new AbortController();
+    fetch(`${BASE_URL}/autopilot/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    }).then(async (response) => {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) { onComplete?.(); break; }
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const payload = JSON.parse(line.slice(6));
+              onMessage?.(payload);
+              if (payload.status === 'complete') onComplete?.(payload);
+            } catch {}
+          }
+        }
+      }
+    }).catch((err) => {
+      if (err.name !== 'AbortError') onError?.(err);
+    });
+    return controller;
+  },
+};
+
 // ─── Health Check ─────────────────────────────────────────────────────────────
 export const healthAPI = {
   check: () => apiFetch('/health'),
@@ -155,5 +191,6 @@ export default {
   analytics: analyticsAPI,
   notifications: notificationsAPI,
   reminders: remindersAPI,
+  autopilot: autopilotAPI,
   health: healthAPI,
 };
