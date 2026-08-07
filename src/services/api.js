@@ -18,6 +18,12 @@ const apiFetch = async (path, options = {}) => {
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
 
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await res.text();
+    throw new Error(`Server returned status ${res.status}: ${text.slice(0, 80)}...`);
+  }
+
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.error || `API Error: ${res.status}`);
@@ -37,9 +43,21 @@ export const workspaceAPI = {
 // ─── Brand Intelligence API ────────────────────────────────────────────────────
 export const brandAPI = {
   analyze: (body) => apiFetch('/brand/analyze', { method: 'POST', body }),
-  getProfile: (workspaceId) => apiFetch(`/brand/${workspaceId}`),
-  updateProfile: (workspaceId, body) => apiFetch(`/brand/${workspaceId}`, { method: 'PUT', body }),
+  getProfile: (workspaceId) => apiFetch(`/brand/${workspaceId}`).catch(() => workspaceAPI.list().then(res => ({ profile: (res.workspaces || []).find(w => w._id === workspaceId || w.id === workspaceId) }))),
+  updateProfile: (workspaceId, body) => apiFetch(`/brand/${workspaceId}`, { method: 'PUT', body }).catch(() => workspaceAPI.update(workspaceId, body)),
   regenerateSection: (body) => apiFetch('/brand/regenerate-section', { method: 'POST', body }),
+};
+
+// ─── Strategy API ─────────────────────────────────────────────────────────────
+export const strategyAPI = {
+  generate: (workspaceId) => apiFetch(`/workspace/${workspaceId}/generate-strategy`, { method: 'POST' }),
+  save: (workspaceId, body) => apiFetch(`/workspace/${workspaceId}`, { method: 'PUT', body: { currentStrategy: body } }),
+};
+
+// ─── AI Website & App Builder API ──────────────────────────────────────────────
+export const builderAPI = {
+  generateSite: (body) => apiFetch('/builder/generate-site', { method: 'POST', body }),
+  submitLead: (body) => apiFetch('/builder/submit-lead', { method: 'POST', body }),
 };
 
 // ─── Campaign API ──────────────────────────────────────────────────────────────

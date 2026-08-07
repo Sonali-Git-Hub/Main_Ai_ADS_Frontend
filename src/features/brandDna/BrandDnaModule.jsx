@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 export const BrandDnaModule = () => {
-  const { activeWorkspace, updateWorkspace, setActiveModule } = useWorkspace();
+  const { activeWorkspace, updateWorkspace, setActiveModule, setIsScraperOpen, openScraperModal } = useWorkspace();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
@@ -178,7 +178,11 @@ export const BrandDnaModule = () => {
           color_palette: (effectiveProfile.structuredIdentity?.color_palette || []).map(cleanColor)
         }
       };
-      await brandAPI.updateProfile(workspaceId, sanitizedProfile);
+      if (updateWorkspace) {
+        await updateWorkspace(workspaceId, sanitizedProfile);
+      } else {
+        await brandAPI.updateProfile(workspaceId, sanitizedProfile);
+      }
       setSavedMsg('💾 Brand Profile saved successfully! Redirecting to Strategy...');
 
       // Automatically navigate to Strategy page
@@ -189,7 +193,7 @@ export const BrandDnaModule = () => {
         }
       }, 600);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to save Brand Profile');
     }
   };
 

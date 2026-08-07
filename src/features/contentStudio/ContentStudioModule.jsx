@@ -6,6 +6,7 @@ import {
   Globe, Mail, CheckCircle2, RefreshCw, Loader2, AlertCircle, Layers,
   Newspaper, ArrowUpRight, ArrowLeft
 } from 'lucide-react';
+import { WebsiteBuilderStudio } from '../websiteBuilder/WebsiteBuilderStudio';
 
 export const ContentStudioModule = () => {
   const { activeWorkspace, setActiveModule, setApprovalsQueue } = useWorkspace();
@@ -214,7 +215,9 @@ export const ContentStudioModule = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in max-w-7xl mx-auto p-6">
-      {activeSubPage ? (
+      {activeSubPage === 'WEBSITE' ? (
+        <WebsiteBuilderStudio onBack={closeSubPage} />
+      ) : activeSubPage ? (
         <div className="space-y-6">
           {/* DEDICATED CHANNEL SUB-PAGE VIEW */}
           <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
@@ -679,7 +682,7 @@ export const ContentStudioModule = () => {
         </div>
       )}
     </div>
-  ) : (
+    ) : (
     <div className="space-y-6">
           {/* MAIN CONTENT STUDIO HUB PAGE VIEW (when no channel card is selected) */}
           {/* Header Bar */}
