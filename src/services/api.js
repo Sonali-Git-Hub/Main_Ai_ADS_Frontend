@@ -54,12 +54,6 @@ export const strategyAPI = {
   save: (workspaceId, body) => apiFetch(`/workspace/${workspaceId}`, { method: 'PUT', body: { currentStrategy: body } }),
 };
 
-// ─── AI Website & App Builder API ──────────────────────────────────────────────
-export const builderAPI = {
-  generateSite: (body) => apiFetch('/builder/generate-site', { method: 'POST', body }),
-  submitLead: (body) => apiFetch('/builder/submit-lead', { method: 'POST', body }),
-};
-
 // ─── Campaign API ──────────────────────────────────────────────────────────────
 export const campaignAPI = {
   list: (params = {}) => {
@@ -155,9 +149,69 @@ export const remindersAPI = {
   delete: (id) => apiFetch(`/reminders/${id}`, { method: 'DELETE' }),
 };
 
-// ─── Health Check ─────────────────────────────────────────────────────────────
-export const healthAPI = {
-  check: () => apiFetch('/health'),
+// ─── AI Website Builder API ───────────────────────────────────────────────────
+export const websiteBuilderAPI = {
+  analyzeRequirement: (body) => {
+    const reqId = body.reqId || `wb_${Math.random().toString(36).substring(2, 9)}`;
+    console.log(`[WB:${reqId}] POST /api/website-builder/analyze sending request...`);
+    return apiFetch('/website-builder/analyze', {
+      method: 'POST',
+      headers: { 'x-correlation-id': reqId },
+      body: { ...body, reqId }
+    });
+  },
+  generateBlueprint: (body) => {
+    const reqId = body.reqId || `wb_${Math.random().toString(36).substring(2, 9)}`;
+    console.log(`[WB:${reqId}] POST /api/website-builder/blueprint sending request...`);
+    return apiFetch('/website-builder/blueprint', {
+      method: 'POST',
+      headers: { 'x-correlation-id': reqId },
+      body: { ...body, reqId }
+    });
+  },
+  generateWebsite: (body) => {
+    const reqId = body.reqId || `wb_${Math.random().toString(36).substring(2, 9)}`;
+    console.log(`[WB:${reqId}] POST /api/website-builder/generate sending request...`);
+    return apiFetch('/website-builder/generate', {
+      method: 'POST',
+      headers: { 'x-correlation-id': reqId },
+      body: { ...body, reqId }
+    });
+  },
+  buildWebsite: (body) => {
+    const reqId = body.reqId || `wb_${Math.random().toString(36).substring(2, 9)}`;
+    console.log(`[WB:${reqId}] POST /api/website-builder/build sending request...`);
+    return apiFetch('/website-builder/build', {
+      method: 'POST',
+      headers: { 'x-correlation-id': reqId },
+      body: { ...body, reqId }
+    });
+  },
+  clarifyRequirement: (body) => {
+    const reqId = body.reqId || `wb_${Math.random().toString(36).substring(2, 9)}`;
+    return apiFetch('/website-builder/clarify', {
+      method: 'POST',
+      headers: { 'x-correlation-id': reqId },
+      body: { ...body, reqId }
+    });
+  },
+  chatEditProject: (body) => {
+    const reqId = body.reqId || `wb_${Math.random().toString(36).substring(2, 9)}`;
+    return apiFetch('/website-builder/chat-edit', {
+      method: 'POST',
+      headers: { 'x-correlation-id': reqId },
+      body: { ...body, reqId }
+    });
+  },
+  getRuntimeStatus: (projectId) => apiFetch(`/website-builder/projects/${projectId}/runtime`),
+  stopRuntime: (projectId) => apiFetch(`/website-builder/projects/${projectId}/runtime/stop`, { method: 'POST' }),
+  listProjects: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return apiFetch(`/website-builder/projects${qs ? `?${qs}` : ''}`);
+  },
+  createProject: (body) => apiFetch('/website-builder/projects', { method: 'POST', body }),
+  getProject: (id) => apiFetch(`/website-builder/projects/${id}`),
+  deleteProject: (id) => apiFetch(`/website-builder/projects/${id}`, { method: 'DELETE' }),
 };
 
 export default {
@@ -173,5 +227,5 @@ export default {
   analytics: analyticsAPI,
   notifications: notificationsAPI,
   reminders: remindersAPI,
-  health: healthAPI,
+  websiteBuilder: websiteBuilderAPI,
 };

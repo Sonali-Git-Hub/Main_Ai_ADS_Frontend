@@ -9,6 +9,8 @@ const MODULE_TO_PATH = {
   seo: '/seo-intelligence',
   calendar: '/calendar',
   studio: '/content-studio',
+  websiteBuilder: '/website-builder',
+  builder: '/website-builder',
   campaigns: '/campaigns',
   creative: '/creative-studio',
   repurpose: '/repurpose',
@@ -30,6 +32,9 @@ const PATH_TO_MODULE = {
   '/calendar': 'calendar',
   '/content-studio': 'studio',
   '/studio': 'studio',
+  '/website-builder': 'websiteBuilder',
+  '/websitebuilder': 'websiteBuilder',
+  '/builder': 'websiteBuilder',
   '/campaigns': 'campaigns',
   '/creative-studio': 'creative',
   '/creative': 'creative',
@@ -47,8 +52,8 @@ const PATH_TO_MODULE = {
 
 function getModuleFromLocation() {
   if (typeof window === 'undefined') return 'dashboard';
-  const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
-  return PATH_TO_MODULE[path] || 'dashboard';
+  const cleanPath = window.location.pathname.split('?')[0].split('#')[0].toLowerCase().replace(/\/$/, '') || '/';
+  return PATH_TO_MODULE[cleanPath] || 'dashboard';
 }
 
 export const WorkspaceProvider = ({ children }) => {
@@ -57,14 +62,12 @@ export const WorkspaceProvider = ({ children }) => {
   const [navigationHistory, setNavigationHistory] = useState([]);
 
   const setActiveModule = (newModule) => {
-    if (newModule !== activeModule) {
-      setNavigationHistory(prev => [...prev, activeModule]);
-      setActiveModuleState(newModule);
+    setNavigationHistory(prev => [...prev, activeModule]);
+    setActiveModuleState(newModule);
 
-      const targetPath = MODULE_TO_PATH[newModule] || '/dashboard';
-      if (window.location.pathname !== targetPath) {
-        window.history.pushState({ module: newModule }, '', targetPath);
-      }
+    const targetPath = MODULE_TO_PATH[newModule] || '/dashboard';
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({ module: newModule }, '', targetPath);
     }
   };
 

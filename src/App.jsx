@@ -12,6 +12,7 @@ import { StrategyModule } from './features/strategy/StrategyModule';
 import { SeoModule } from './features/seo/SeoModule';
 import { CalendarModule } from './features/calendar/CalendarModule';
 import { ContentStudioModule } from './features/contentStudio/ContentStudioModule';
+import { AIWebsiteBuilderModule } from './features/websiteBuilder/AIWebsiteBuilderModule';
 import { QuickPostModal } from './features/contentStudio/QuickPostModal';
 import { CampaignBuilderModule } from './features/campaigns/CampaignBuilderModule';
 import { CreativeStudioModule } from './features/creativeStudio/CreativeStudioModule';
@@ -41,6 +42,10 @@ const MainContent = () => {
       case 'seo': return <SeoModule />;
       case 'calendar': return <CalendarModule />;
       case 'studio': return <ContentStudioModule />;
+      case 'websiteBuilder':
+      case 'websitebuilder':
+      case 'builder':
+        return <AIWebsiteBuilderModule />;
       case 'campaigns': return <CampaignBuilderModule />;
       case 'creative': return <CreativeStudioModule />;
       case 'repurpose': return <RepurposeModule />;

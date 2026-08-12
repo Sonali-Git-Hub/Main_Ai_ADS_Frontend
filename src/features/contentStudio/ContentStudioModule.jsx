@@ -6,17 +6,15 @@ import {
   Globe, Mail, CheckCircle2, RefreshCw, Loader2, AlertCircle, Layers,
   Newspaper, ArrowUpRight, ArrowLeft
 } from 'lucide-react';
-import { WebsiteBuilderStudio } from '../websiteBuilder/WebsiteBuilderStudio';
 
 export const ContentStudioModule = () => {
   const { activeWorkspace, setActiveModule, setApprovalsQueue } = useWorkspace();
-  const [activeSubPage, setActiveSubPage] = useState(null); // null = Main Hub, 'BLOG', 'SOCIAL', 'EMAIL', 'NEWSPAPER', 'WEBSITE'
+  const [activeSubPage, setActiveSubPage] = useState(null); // null = Main Hub, 'BLOG', 'SOCIAL', 'EMAIL', 'NEWSPAPER'
   const [tab, setTab] = useState('BLOG'); // BLOG, SOCIAL, EMAIL, AD_COPY
 
   const openSubPage = (channelId) => {
     setActiveSubPage(channelId);
-    if (channelId === 'WEBSITE') setTab('AD_COPY');
-    else if (channelId === 'NEWSPAPER') setTab('NEWSPAPER');
+    if (channelId === 'NEWSPAPER') setTab('NEWSPAPER');
     else setTab(channelId);
 
     const subRouteMap = {
@@ -24,7 +22,6 @@ export const ContentStudioModule = () => {
       SOCIAL: '/content-studio/social',
       EMAIL: '/content-studio/email',
       NEWSPAPER: '/content-studio/newspaper',
-      WEBSITE: '/content-studio/website',
     };
     if (subRouteMap[channelId]) {
       window.history.pushState({ subPage: channelId }, '', subRouteMap[channelId]);
@@ -209,15 +206,12 @@ export const ContentStudioModule = () => {
     BLOG: 'Blog & Article Studio',
     SOCIAL: 'Social Media Studio',
     EMAIL: 'Email & Letter Outreach Studio',
-    NEWSPAPER: 'Newspaper & Press Release Studio',
-    WEBSITE: 'Website & Ad Copy Studio'
+    NEWSPAPER: 'Newspaper & Press Release Studio'
   };
 
   return (
     <div className="space-y-6 animate-in fade-in max-w-7xl mx-auto p-6">
-      {activeSubPage === 'WEBSITE' ? (
-        <WebsiteBuilderStudio onBack={closeSubPage} />
-      ) : activeSubPage ? (
+      {activeSubPage ? (
         <div className="space-y-6">
           {/* DEDICATED CHANNEL SUB-PAGE VIEW */}
           <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
@@ -699,8 +693,8 @@ export const ContentStudioModule = () => {
             </div>
           </div>
 
-          {/* 5 Channel Grid Cards (Blog, Social Media, Email / Letter, Newspaper, Website) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* 4 Channel Grid Cards (Blog, Social Media, Email / Letter, Newspaper) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               {
                 id: 'BLOG',
@@ -741,16 +735,6 @@ export const ContentStudioModule = () => {
                 hoverBorder: 'hover:border-amber-400/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] dark:hover:border-amber-400/40',
                 badgeBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
                 iconColor: 'text-amber-500'
-              },
-              {
-                id: 'WEBSITE',
-                title: 'Website',
-                subtitle: 'Landing Pages & Ad Copy',
-                icon: Globe,
-                colorClass: 'from-rose-500/10 to-pink-500/5',
-                hoverBorder: 'hover:border-rose-400/50 hover:shadow-[0_0_20px_rgba(244,63,94,0.15)] dark:hover:border-rose-400/40',
-                badgeBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
-                iconColor: 'text-rose-500'
               }
             ].map((card) => {
               const Icon = card.icon;
@@ -792,7 +776,7 @@ export const ContentStudioModule = () => {
             </div>
             <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Select a Channel Studio to Begin</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-              Click on any channel card above (Blog, Social Media, Email, Newspaper, or Website) to open its dedicated studio drafting page.
+              Click on any channel card above (Blog, Social Media, Email, or Newspaper) to open its dedicated studio drafting page.
             </p>
           </div>
         </div>

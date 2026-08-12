@@ -4,9 +4,10 @@ import { X, Bot, Send, Sparkles, RefreshCw, Dna, Search, PenTool, CheckCircle2, 
 import { chatAPI } from '../../services/api';
 
 const MODELS = [
-  { id: 'gemini', label: 'Gemini' },
-  { id: 'gpt-4o', label: 'GPT-4o' },
-  { id: 'groq', label: 'Groq Llama' },
+  { id: 'gemini-3.5-flash', label: '✨ Gemini 3.5 Flash' },
+  { id: 'gemini-3.5-pro', label: '⚡ Gemini 3.5 Pro' },
+  { id: 'gpt-4o', label: '🤖 OpenAI GPT-4o' },
+  { id: 'groq', label: '⚡ Groq Llama 3' },
 ];
 
 export const AISAAssistantDrawer = () => {
@@ -22,7 +23,7 @@ export const AISAAssistantDrawer = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
-  const [selectedModel, setSelectedModel] = useState('gemini');
+  const [selectedModel, setSelectedModel] = useState('gemini-3.5-pro');
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
