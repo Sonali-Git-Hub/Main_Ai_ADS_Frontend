@@ -7,7 +7,7 @@ import {
   MousePointerClick, Edit3, Sparkles, PieChart, Calendar, DollarSign,
   Megaphone, BookOpen, Clock, ChevronRight, Star, Lightbulb, Rocket,
   Hash, Video, FileText, MessageSquare, Filter, Play, Award, BarChart2,
-  ArrowUpRight, Flame
+  ArrowUpRight, Flame, X
 } from 'lucide-react';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -116,6 +116,10 @@ export const StrategyModule = () => {
   const [isSaving,      setIsSaving]      = useState(false);
   const [editingField,  setEditingField]  = useState(null);
   const [activeTab,     setActiveTab]     = useState('overview'); // overview | plan | campaigns
+
+  // Schedule Modal State
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleDays, setScheduleDays] = useState('30');
 
   // ─── Init from workspace ─────────────────────────────────────────────────
   useEffect(() => {
@@ -262,12 +266,21 @@ export const StrategyModule = () => {
   // ─── Generate Calendar Events ─────────────────────────────────────────────
   const handleGenerateCalendar = () => {
     if (!thirtyDayPlan || thirtyDayPlan.length === 0) {
-      alert("No 30-Day Plan generated yet.");
+      alert("No Plan generated yet.");
       return;
     }
+    setScheduleDays(String(Math.min(30, thirtyDayPlan.length)));
+    setShowScheduleModal(true);
+  };
 
+  const confirmGenerateCalendar = (numDays) => {
+    const daysToGen = Math.min(Number(numDays) || 30, thirtyDayPlan.length);
     const today = new Date();
-    const eventsToCreate = thirtyDayPlan.map(item => {
+    
+    // Filter plan to only generate up to daysToGen
+    const planToUse = thirtyDayPlan.filter(item => item.day <= daysToGen);
+
+    const eventsToCreate = planToUse.map(item => {
       const eventDate = new Date(today);
       eventDate.setDate(today.getDate() + item.day);
       
@@ -282,7 +295,8 @@ export const StrategyModule = () => {
     });
 
     bulkAddCalendarEvents(eventsToCreate);
-    setActiveTab('plan');
+    setShowScheduleModal(false);
+    setActiveModule('calendar'); // Transition to calendar view
   };
 
   // ─── Derived data ─────────────────────────────────────────────────────────
@@ -661,6 +675,20 @@ export const StrategyModule = () => {
       {activeTab === 'plan' && (
         <div className="space-y-5">
 
+          {/* Empty state (After Master Strategy Generated, but Calendar not pushed yet) */}
+          {thirtyDayPlan.length > 0 && calendarEvents.length === 0 && (
+            <div className="text-center py-16 rounded-3xl glass-card border border-dashed border-slate-200 dark:border-slate-700">
+              <Calendar className="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto mb-3 opacity-50" />
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white mb-2">30-Day Strategy is Ready</h3>
+              <button onClick={handleGenerateCalendar} disabled={isGenerating} className="btn-primary text-sm flex items-center gap-2 mx-auto px-6 py-2.5 rounded-xl disabled:opacity-50">
+                {isGenerating
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
+                  : <><Zap className="w-4 h-4 text-amber-300 fill-amber-300" /> Generate Calendar</>
+                }
+              </button>
+            </div>
+          )}
+
           {/* Empty state (Before Master Strategy Generation) */}
           {thirtyDayPlan.length === 0 && (
             <div className="text-center py-20 rounded-3xl glass-card border border-dashed border-slate-200 dark:border-slate-700">
@@ -680,17 +708,10 @@ export const StrategyModule = () => {
             </div>
           )}
 
-          {/* Empty state (After Master Strategy Generated, but Calendar not pushed yet) */}
-          {thirtyDayPlan.length > 0 && calendarEvents.length === 0 && (
-            <div className="text-center py-16 rounded-3xl glass-card border border-dashed border-slate-200 dark:border-slate-700">
-              <Calendar className="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto mb-3 opacity-50" />
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-white mb-2">30-Day Plan is Ready to Generate</h3>
-              <p className="text-sm text-slate-500 mb-4">Please click the 'Generate 30 Days Plan' button below to finalize and view your calendar.</p>
-            </div>
-          )}
+
 
           {/* Week Summary Cards */}
-          {thirtyDayPlan.length > 0 && calendarEvents.length > 0 && (
+          {thirtyDayPlan.length > 0 && (
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {weekStats.map(ws => (
@@ -739,8 +760,8 @@ export const StrategyModule = () => {
             </>
           )}
 
-          {/* 30-Day Plan Grid (Only visible after clicking Generate 30 Days Plan) */}
-          {filteredPlan.length > 0 && calendarEvents.length > 0 && (
+          {/* 30-Day Plan Grid */}
+          {filteredPlan.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredPlan.map(item => {
                 const PIcon = getPlatformIcon(item.platform);
@@ -783,6 +804,19 @@ export const StrategyModule = () => {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Generate Calendar Button at bottom of 30-Day Plan */}
+          {filteredPlan.length > 0 && (
+            <div className="flex justify-center mt-6">
+              <button 
+                onClick={handleGenerateCalendar}
+                className="btn-primary text-sm flex items-center gap-2 px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-extrabold transition-all duration-200 shadow-lg hover:shadow-brand-500/25 hover:-translate-y-0.5"
+              >
+                <Calendar className="w-5 h-5" />
+                Generate Calendar
+              </button>
             </div>
           )}
         </div>
@@ -864,31 +898,98 @@ export const StrategyModule = () => {
         </div>
       )}
 
-      {/* ══════════ SUCCESS BANNER ══════════ */}
-      {generatedDoc && (
-        <div className="p-6 rounded-3xl bg-gradient-to-r from-brand-500/10 via-purple-500/5 to-emerald-500/10 dark:from-brand-500/20 dark:via-purple-500/10 dark:to-emerald-500/20 border border-brand-500/30 space-y-3 animate-in fade-in">
+      {/* ══════════ WORKFLOW ACTION BANNER ══════════ */}
+      {!generatedDoc && (
+        <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 animate-in fade-in">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <h3 className="font-extrabold text-slate-900 dark:text-white text-sm flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-              30-Day Master Strategy Ready — {activeWorkspace.brandName}
+              <Layers className="w-5 h-5 text-brand-500" />
+              Overview Ready — {activeWorkspace.brandName}
             </h3>
-            <div className="flex gap-2">
-              {calendarEvents.length === 0 ? (
-                <button onClick={handleGenerateCalendar} className="btn-primary text-xs flex items-center gap-1.5 bg-violet-600 hover:bg-violet-700">
-                  <Calendar className="w-3.5 h-3.5" /> Generate 30 Days Plan
-                </button>
-              ) : (
-                <button onClick={() => setActiveModule('calendar')} className="btn-primary text-xs flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700">
-                  <Calendar className="w-3.5 h-3.5" /> View Calendar
-                </button>
-              )}
-            </div>
+            <button 
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              className="btn-primary text-xs flex items-center gap-1.5 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold transition-colors"
+            >
+              {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-amber-300 text-amber-300" />}
+              {isGenerating ? 'Generating...' : 'Generate 30 Days Plan'}
+            </button>
           </div>
-          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-            Your complete 30-day marketing roadmap is ready with daily action items, campaign ideas, platform mix, and funnel architecture for <strong className="text-slate-900 dark:text-white">{activeWorkspace.brandName}</strong>.
+          <p className="text-xs text-slate-500">
+            Review your brand's AI-mapped objectives and channel mix above, then click generate to build a day-by-day actionable marketing strategy.
           </p>
         </div>
       )}
+      {/* ─── Schedule Days Pop Up Modal ─── */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-md p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <h3 className="text-sm font-extrabold text-white uppercase tracking-widest flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-brand-400" />
+                Schedule Content Calendar
+              </h3>
+              <button 
+                onClick={() => setShowScheduleModal(false)}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="space-y-4 py-2">
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Enter the number of days you would like to generate and populate in your Content Calendar from your Strategy Hub.
+              </p>
+              
+              <div className="space-y-2">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  How many days to schedule?
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    max={thirtyDayPlan.length}
+                    value={scheduleDays}
+                    onChange={(e) => setScheduleDays(e.target.value)}
+                    className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-white font-extrabold text-sm focus:outline-none focus:border-brand-500 transition-colors"
+                    placeholder="e.g. 30"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 uppercase">
+                    Days
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-500">
+                  Maximum available days from your current strategy: <span className="font-extrabold text-slate-300">{thirtyDayPlan.length} Days</span>.
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setShowScheduleModal(false)}
+                className="px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => confirmGenerateCalendar(scheduleDays)}
+                disabled={!scheduleDays || Number(scheduleDays) < 1 || Number(scheduleDays) > thirtyDayPlan.length}
+                className="btn-primary text-xs flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed bg-brand-600 hover:bg-brand-500 text-white"
+              >
+                Confirm & Generate
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

@@ -3,7 +3,25 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { Settings, CreditCard, Key, Sparkles, Check, ShieldCheck, Globe, Zap, User, Mail, Phone, Lock, Camera, LogOut, Save, Image, Trash2, ChevronDown, Eye, EyeOff } from 'lucide-react';
 
 export const SettingsBillingModule = () => {
-  const { credits, setIsCreditModalOpen, userAvatar, setUserAvatar, setActiveModule, user } = useWorkspace();
+  const { 
+    credits, 
+    setIsCreditModalOpen, 
+    userAvatar, 
+    setUserAvatar, 
+    setActiveModule, 
+    user,
+    appearance,
+    setAppearance,
+    accentColor,
+    setAccentColor,
+    region,
+    setRegion,
+    language,
+    setLanguage,
+    multiScheduleReminder,
+    setMultiScheduleReminder,
+    setIsSettingsModalOpen
+  } = useWorkspace();
   const [activeTier, setActiveTier] = useState(credits.tier || 'Agency');
   const [apiKey, setApiKey] = useState('aisa_live_pk_9948271038571029481');
   const [copiedKey, setCopiedKey] = useState(false);
@@ -146,9 +164,14 @@ export const SettingsBillingModule = () => {
           </p>
         </div>
 
-        <button onClick={() => setIsCreditModalOpen(true)} className="btn-primary text-xs">
-          <Sparkles className="w-4 h-4" /> Top Up Visual Credits
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={() => setIsSettingsModalOpen(true)} className="btn-secondary text-xs">
+            <Settings className="w-4 h-4" /> Open Settings Popup
+          </button>
+          <button onClick={() => setIsCreditModalOpen(true)} className="btn-primary text-xs">
+            <Sparkles className="w-4 h-4" /> Top Up Visual Credits
+          </button>
+        </div>
       </div>
 
       {/* Profile Section */}

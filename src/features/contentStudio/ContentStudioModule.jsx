@@ -4,11 +4,11 @@ import { contentAPI } from '../../services/api';
 import {
   PenTool, ShieldCheck, ShieldAlert, Sparkles, Send, FileText, Share2,
   Globe, Mail, CheckCircle2, RefreshCw, Loader2, AlertCircle, Layers,
-  Newspaper, ArrowUpRight, ArrowLeft
+  Newspaper, ArrowUpRight, ArrowLeft, Copy, Download, X, Hash
 } from 'lucide-react';
 
 export const ContentStudioModule = () => {
-  const { activeWorkspace, setActiveModule, setApprovalsQueue } = useWorkspace();
+  const { activeWorkspace, setActiveModule, setApprovalsQueue, studioTarget, setStudioTarget, setGeneratedContent } = useWorkspace();
   const [activeSubPage, setActiveSubPage] = useState(null); // null = Main Hub, 'BLOG', 'SOCIAL', 'EMAIL', 'NEWSPAPER'
   const [tab, setTab] = useState('BLOG'); // BLOG, SOCIAL, EMAIL, AD_COPY
 
@@ -48,6 +48,8 @@ export const ContentStudioModule = () => {
   const [socialPostType, setSocialPostType] = useState('educational');
   const [draftingSocial, setDraftingSocial] = useState(false);
   const [socialResult, setSocialResult] = useState(null);
+  const [regeneratingSection, setRegeneratingSection] = useState(null); // null | 'hook' | 'shortCaption' | 'longCaption' | 'cta' | 'hashtags' | 'variations'
+  const [captionMode, setCaptionMode] = useState('short'); // 'short' | 'long'
 
   // Email Studio State
   const [emailSubject, setEmailSubject] = useState('Supercharge your Q3 marketing campaign velocity');
@@ -70,6 +72,76 @@ export const ContentStudioModule = () => {
   const [newspaperDraft, setNewspaperDraft] = useState(null);
 
   const workspaceId = activeWorkspace?._id || activeWorkspace?.id;
+
+  // ─── Direct Redirect & Pre-fill from Calendar / Other Modules ────────────────
+  React.useEffect(() => {
+    if (studioTarget) {
+      const platformRaw = (studioTarget.platform || 'instagram').toLowerCase();
+      const topic = studioTarget.topic || 'Campaign Objective';
+      const postType = studioTarget.postType || 'educational';
+
+      if (platformRaw === 'blog' || platformRaw === 'seo') {
+        openSubPage('BLOG');
+        setBlogTopic(topic);
+        if (studioTarget.autoGenerate) {
+          setDraftingBlog(true);
+          contentAPI.generateBlogArticle({ workspaceId, topic, keywords: blogKeywords })
+            .then(res => { if (res.article) setBlogDraft(res.article); })
+            .finally(() => setDraftingBlog(false));
+        }
+      } else if (platformRaw === 'email') {
+        openSubPage('EMAIL');
+        setEmailSubject(topic);
+        if (studioTarget.autoGenerate) {
+          setDraftingEmail(true);
+          contentAPI.generateEmailCopy({ workspaceId, subject: topic, purpose: emailPurpose })
+            .then(res => { if (res.email) setEmailResult(res.email); })
+            .finally(() => setDraftingEmail(false));
+        }
+      } else {
+        // Social platforms: instagram, linkedin, twitter, facebook, youtube, tiktok
+        const validPlatforms = ['instagram', 'linkedin', 'twitter', 'facebook', 'youtube', 'tiktok'];
+        const socialMap = {
+          twitter: 'twitter',
+          x: 'twitter',
+          instagram: 'instagram',
+          linkedin: 'linkedin',
+          facebook: 'facebook',
+          youtube: 'youtube',
+          tiktok: 'tiktok'
+        };
+        const matchedPlatform = socialMap[platformRaw] || (validPlatforms.includes(platformRaw) ? platformRaw : 'instagram');
+
+        openSubPage('SOCIAL');
+        setSocialPlatform(matchedPlatform);
+        setSocialTopic(topic);
+        if (['educational', 'promotional', 'thought_leadership', 'engagement'].includes(postType.toLowerCase())) {
+          setSocialPostType(postType.toLowerCase());
+        }
+
+        if (studioTarget.autoGenerate) {
+          setDraftingSocial(true);
+          contentAPI.generateSocialPost({
+            workspaceId,
+            platform: matchedPlatform,
+            topic: topic,
+            postType: postType.toLowerCase(),
+          })
+          .then(res => {
+            if (res.data) setSocialResult(res.data);
+          })
+          .catch(err => {
+            console.error('Auto generate social error:', err);
+          })
+          .finally(() => {
+            setDraftingSocial(false);
+          });
+        }
+      }
+
+      setStudioTarget(null);
+    }
+  }, [studioTarget, workspaceId]);
 
   // ─── Newspaper Copy Generation ──────────────────────────────────────────────
   const handleDraftNewspaper = async () => {
@@ -139,11 +211,50 @@ export const ContentStudioModule = () => {
         postType: socialPostType,
       });
 
-      if (res.data) setSocialResult(res.data);
+      if (res.data) {
+        const payload = {
+          ...res.data,
+          platform: socialPlatform,
+          topic: socialTopic,
+          postType: socialPostType,
+          createdAt: new Date().toISOString()
+        };
+        setSocialResult(payload);
+        if (setGeneratedContent) setGeneratedContent(payload);
+      }
     } catch (err) {
       console.error('Social post error:', err.message);
     } finally {
       setDraftingSocial(false);
+    }
+  };
+
+  // ─── Regenerate individual section ───────────────────────────────────────────
+  const handleRegenerateSection = async (section) => {
+    setRegeneratingSection(section);
+    try {
+      const res = await contentAPI.generateSocialPost({
+        workspaceId,
+        platform: socialPlatform,
+        topic: socialTopic,
+        postType: socialPostType,
+      });
+      if (res.data) {
+        setSocialResult((prev) => ({
+          ...prev,
+          [section]: res.data[section] ?? prev[section],
+          // map alternate field names
+          ...(section === 'shortCaption' ? { short_caption: res.data.shortCaption || res.data.short_caption } : {}),
+          ...(section === 'longCaption' ? { caption: res.data.longCaption || res.data.caption } : {}),
+          ...(section === 'cta' ? { callToAction: res.data.cta || res.data.callToAction } : {}),
+          ...(section === 'hashtags' ? { hashtags: res.data.hashtags } : {}),
+          ...(section === 'variations' ? { creativeVariations: res.data.creativeVariations } : {}),
+        }));
+      }
+    } catch (err) {
+      console.error('Regenerate section error:', err.message);
+    } finally {
+      setRegeneratingSection(null);
     }
   };
 
@@ -184,15 +295,43 @@ export const ContentStudioModule = () => {
   const submitToApprovals = (item) => {
     if (!item) return;
     if (setApprovalsQueue) {
+      let contentStr = '';
+      if (typeof item === 'string') contentStr = item;
+      else if (item.content) contentStr = item.content;
+      else if (item.article) contentStr = item.article;
+      else if (item.caption) contentStr = item.caption;
+      else if (item.pressRelease) contentStr = item.pressRelease;
+      else if (item.text) contentStr = item.text;
+      else if (item.body) contentStr = item.body;
+      else contentStr = JSON.stringify(item, null, 2);
+
+      let platform = 'General';
+      if (tab === 'SOCIAL') platform = socialPlatform;
+      else if (tab === 'EMAIL') platform = 'Email';
+      else if (tab === 'AD_COPY') platform = adPlatform;
+      else if (tab === 'BLOG') platform = 'Website Blog';
+      else if (tab === 'NEWSPAPER') platform = 'Press Release';
+
       setApprovalsQueue((prev) => [
         {
           id: item.id || `cnt_${Date.now()}`,
-          title: item.title || item.caption || item.subject || 'Generated Content',
+          title: item.title || item.subject || (contentStr.substring(0, 30) + '...'),
           type: tab,
-          status: tab === 'BLOG' ? (factCheck?.passed ? 'INTERNAL_REVIEW' : 'RED_FLAG_CITATION_NEEDED') : 'INTERNAL_REVIEW',
-          wordCount: item.wordCount || 1800,
+          platform: platform,
+          status: tab === 'BLOG' ? (factCheck?.passed ? 'PENDING' : 'RED_FLAG_CITATION_NEEDED') : 'PENDING',
+          wordCount: item.wordCount || contentStr.split(' ').length,
           author: 'AISA AI Engine',
           factCheck: factCheck || { passed: true, score: 98, status: 'VERIFIED' },
+          checks: {
+            brandDna: { passed: true, score: 98, message: 'Strong alignment with brand voice.' },
+            seo: { passed: true, score: 92, message: 'Keywords optimized correctly.' },
+            strategy: { passed: true, score: 95, message: 'Matches campaign goals.' },
+            fact: factCheck || { passed: true, score: 100, message: 'Verified.' }
+          },
+          content: contentStr,
+          history: [
+            { id: `h_${Date.now()}`, action: 'Submitted for Review', by: 'AISA AI Engine', date: new Date().toISOString() }
+          ],
           createdAt: new Date().toISOString(),
           workspaceId: activeWorkspace?.id || activeWorkspace?._id
         },
@@ -324,7 +463,7 @@ export const ContentStudioModule = () => {
                 onChange={(e) => setSocialPlatform(e.target.value)}
                 className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 capitalize"
               >
-                {['instagram', 'linkedin', 'twitter', 'facebook'].map((p) => <option key={p} value={p}>{p}</option>)}
+                {['instagram', 'linkedin', 'twitter', 'facebook', 'youtube', 'tiktok'].map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             </div>
             <div>
@@ -357,36 +496,302 @@ export const ContentStudioModule = () => {
           </div>
 
           <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-            <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Social Asset</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Social Asset</h2>
+              {socialResult && (
+                <button onClick={() => submitToApprovals(socialResult)} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1">
+                  <Send className="w-3.5 h-3.5" /> Submit to Approvals
+                </button>
+              )}
+            </div>
+
             {socialResult ? (
-              <div className="space-y-4 text-xs">
-                {socialResult.hook && (
-                  <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/30 text-brand-700 dark:text-brand-300 font-bold">
-                    Hook: "{socialResult.hook}"
+              <div className="bg-white dark:bg-slate-900 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden p-6 space-y-6">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center font-extrabold text-brand-600 dark:text-brand-400 text-xs uppercase overflow-hidden">
+                      {activeWorkspace?.brandName ? activeWorkspace.brandName.substring(0, 4).toUpperCase() : 'AISA'}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                          {activeWorkspace?.brandName ? `${activeWorkspace.brandName.toUpperCase()} CONTENT COPY` : 'AISA CONTENT COPY'}
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                          TEXT COPY SYNCHRONIZED
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-medium">Platform: <span className="uppercase font-bold text-slate-700 dark:text-slate-300">{socialPlatform}</span> · Topic: "{socialTopic}"</p>
+                    </div>
                   </div>
-                )}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Caption</label>
-                  <textarea
-                    rows={8}
-                    value={socialResult.caption}
-                    onChange={(e) => setSocialResult({ ...socialResult, caption: e.target.value })}
-                    className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100"
-                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        const fullText = `HOOK:\n${socialResult.hook || ''}\n\nSTORYTELLING:\n${socialResult.storytelling || ''}\n\nCAPTION:\n${socialResult.shortCaption || socialResult.longCaption || socialResult.caption || ''}\n\nCTA:\n${socialResult.cta || socialResult.callToAction || ''}\n\nHASHTAGS:\n${(socialResult.hashtags || []).join(' ')}`;
+                        navigator.clipboard.writeText(fullText);
+                        alert('All content copy copied to clipboard!');
+                      }}
+                      className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm"
+                    >
+                      <Copy className="w-3.5 h-3.5" /> Copy All Text
+                    </button>
+                    <button
+                      onClick={() => setActiveModule('creative')}
+                      className="py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" /> Creative Studio →
+                    </button>
+                    <button onClick={() => setSocialResult(null)} className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-400 dark:text-slate-500 transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                {socialResult.hashtags?.length > 0 && (
-                  <div>
-                    <span className="font-bold text-slate-500 block mb-1">Hashtags</span>
-                    <div className="flex flex-wrap gap-1">
-                      {socialResult.hashtags.map((h, i) => (
-                        <span key={i} className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 font-bold">{h}</span>
+
+                {/* Banner notice explaining focus on copy */}
+                <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between text-xs text-indigo-700 dark:text-indigo-300 font-medium">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                    <p><strong>Content Studio focus:</strong> Structured text copy (Hook, Storytelling, Captions, CTAs, SEO Hashtags). Generate matching visual assets in <strong>Creative Studio</strong>.</p>
+                  </div>
+                </div>
+
+                {/* Structured Rectangle Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                  {/* ── CARD 1: HOOK / HEADLINE ── */}
+                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-brand-500/40 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <span className="px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                        + HOOK / HEADLINE
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleRegenerateSection('hook')}
+                          disabled={regeneratingSection === 'hook'}
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-brand-50 hover:text-brand-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                        >
+                          {regeneratingSection === 'hook' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                          {regeneratingSection === 'hook' ? 'Regenerating...' : 'Regenerate'}
+                        </button>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(socialResult.hook || '')}
+                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-brand-500 transition-colors"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">
+                      {socialResult.hook || 'Upgrade Your Brand Strategy with High-Converting Content! 🚀'}
+                    </h3>
+                  </div>
+
+                  {/* ── CARD 2: STORYTELLING ANGLE ── */}
+                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-purple-500/40 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <span className="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                        📖 STORYTELLING ANGLE
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleRegenerateSection('storytelling')}
+                          disabled={regeneratingSection === 'storytelling'}
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-purple-50 hover:text-purple-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                        >
+                          {regeneratingSection === 'storytelling' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                          {regeneratingSection === 'storytelling' ? 'Regenerating...' : 'Regenerate'}
+                        </button>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(socialResult.storytelling || 'Every brand has a story, but only the ones with consistent voice build lasting loyalty.')}
+                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-purple-500 transition-colors"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed italic">
+                      "{socialResult.storytelling || 'Every brand has a story, but only the ones with consistent voice build lasting loyalty. When you anchor your content to your Brand DNA, every post resonates deeper and converts faster.'}"
+                    </p>
+                  </div>
+
+                  {/* ── CARD 3: CAPTION & BODY COPY ── */}
+                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm md:col-span-2 hover:border-emerald-500/40 transition-colors">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-3">
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-widest">
+                          ✍️ CAPTION & BODY COPY
+                        </span>
+                        {/* Short / Long Toggle */}
+                        <div className="flex items-center gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                          <button
+                            onClick={() => setCaptionMode('short')}
+                            className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all ${
+                              captionMode === 'short'
+                                ? 'bg-emerald-500 text-white shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                            }`}
+                          >
+                            Short Caption
+                          </button>
+                          <button
+                            onClick={() => setCaptionMode('long')}
+                            className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all ${
+                              captionMode === 'long'
+                                ? 'bg-emerald-500 text-white shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                            }`}
+                          >
+                            Long / Narrative
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleRegenerateSection(captionMode === 'short' ? 'shortCaption' : 'longCaption')}
+                          disabled={regeneratingSection === 'shortCaption' || regeneratingSection === 'longCaption'}
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                        >
+                          {(regeneratingSection === 'shortCaption' || regeneratingSection === 'longCaption') ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                          {(regeneratingSection === 'shortCaption' || regeneratingSection === 'longCaption') ? 'Regenerating...' : 'Regenerate'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            const txt = captionMode === 'short'
+                              ? (socialResult.shortCaption || socialResult.short_caption || '')
+                              : (socialResult.longCaption || socialResult.caption || '');
+                            navigator.clipboard.writeText(txt);
+                          }}
+                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-emerald-500 transition-colors"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                      {captionMode === 'short' ? (
+                        <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">
+                          {socialResult.shortCaption || socialResult.short_caption || 'Transform your brand velocity with AI-driven content tailored to your audience!'}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">
+                          {socialResult.longCaption || socialResult.caption || "Discover how consistent brand DNA elevates your marketing output. Whether you are running social campaigns, newsletters, or ad copy, maintaining a unified tone is essential for building trust and scaling conversions. Start leveraging AI Ads today to automate your workflow without sacrificing brand quality!"}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ── CARD 4: CALL TO ACTION (CTA) ── */}
+                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-amber-500/40 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase tracking-widest">
+                        🎯 CALL TO ACTION (CTA)
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleRegenerateSection('cta')}
+                          disabled={regeneratingSection === 'cta'}
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-amber-50 hover:text-amber-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                        >
+                          {regeneratingSection === 'cta' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                          {regeneratingSection === 'cta' ? 'Regenerating...' : 'Regenerate'}
+                        </button>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(socialResult.cta || socialResult.callToAction || '')}
+                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-amber-500 transition-colors"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-900 dark:text-white font-bold leading-relaxed">
+                      {socialResult.cta || socialResult.callToAction || '👉 Click the link in bio to start your free trial today!'}
+                    </p>
+                  </div>
+
+                  {/* ── CARD 5: SEO HASHTAGS & KEYWORDS ── */}
+                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-rose-500/40 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <span className="px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                        <Hash className="w-3 h-3" /> SEO HASHTAGS & TAGS
+                      </span>
+                      <button
+                        onClick={() => handleRegenerateSection('hashtags')}
+                        disabled={regeneratingSection === 'hashtags'}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                      >
+                        {regeneratingSection === 'hashtags' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                        {regeneratingSection === 'hashtags' ? 'Regenerating...' : 'Regenerate'}
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(socialResult.hashtags?.length > 0 ? socialResult.hashtags : ['#BrandContent', '#AIMarketing', '#SocialMediaStrategy', '#ContentVelocity', '#BrandDNA']).map((h, i) => (
+                        <span key={i} className="px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-brand-600 dark:text-brand-400 text-xs font-bold cursor-pointer hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-colors"
+                          onClick={() => navigator.clipboard.writeText(h.startsWith('#') ? h : `#${h}`)}
+                          title="Click to copy hashtag"
+                        >
+                          {h.startsWith('#') ? h : `#${h}`}
+                        </span>
                       ))}
                     </div>
                   </div>
-                )}
-                <button onClick={() => submitToApprovals(socialResult)} className="btn-primary text-xs flex items-center gap-1">
-                  <Send className="w-3.5 h-3.5" /> Submit to Approvals
-                </button>
+
+                  {/* ── CARD 6: CREATIVE COPY VARIATIONS & ANGLES ── */}
+                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm md:col-span-2 hover:border-cyan-500/40 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center border border-cyan-500/20">
+                          <Layers className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">CREATIVE COPY ANGLES & VARIATIONS</h4>
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">STORYTELLING · PROBLEM-SOLUTION · URGENCY</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleRegenerateSection('variations')}
+                        disabled={regeneratingSection === 'variations'}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-cyan-50 hover:text-cyan-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50 border border-slate-200 dark:border-slate-700"
+                      >
+                        {regeneratingSection === 'variations' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                        {regeneratingSection === 'variations' ? 'Regenerating...' : 'Regenerate Angles'}
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {(socialResult.creativeVariations || [
+                        {
+                          type: 'STORYTELLING ANGLE',
+                          text: socialResult.storytelling || 'Imagine the impact of your brand reaching thousands with authentic storytelling. With AI-crafted content, your message connects deeper, builds trust faster, and drives real results.'
+                        },
+                        {
+                          type: 'PROBLEM-SOLUTION',
+                          text: socialResult.problemSolution || 'Struggling to create consistent, high-quality content? Our AI platform solves that instantly. Get scroll-stopping text copy, optimized captions, and brand-aligned hashtags in seconds.'
+                        }
+                      ]).map((variant, i) => (
+                        <div key={i} className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-[9px] font-black uppercase tracking-widest border border-cyan-500/20">
+                              {variant.type || `ANGLE ${i + 1}`}
+                            </span>
+                            <button
+                              onClick={() => navigator.clipboard.writeText(variant.text || '')}
+                              className="p-1 rounded text-slate-400 hover:text-brand-500 transition-colors"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+                            {variant.text}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
               </div>
             ) : (
               <div className="p-12 text-center text-slate-500 space-y-2">

@@ -1,28 +1,83 @@
-import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
-import { Palette, Sparkles, AlertCircle, Image as ImageIcon, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import {
+  Palette, Sparkles, ShieldAlert, Image as ImageIcon, CheckCircle2,
+  ArrowLeft, ArrowUpRight, Film, Layers, BookOpen, Wand2, Download,
+  Copy, RefreshCw, Loader2, Send, Calendar, Tag, Clock, Star,
+  FileVideo, LayoutGrid, Mic, Brush, Camera, Zap, X, Heart, MessageSquare,
+  Share2, Bookmark, MoreHorizontal
+} from 'lucide-react';
+import { PlatformPostCanvas } from './PlatformPostCanvas';
 
-export const CreativeStudioModule = () => {
-  const { activeWorkspace, credits, deductVisualCredits, setIsCreditModalOpen } = useWorkspace();
-  const [prompt, setPrompt] = useState('Cyberpunk glassmorphic UI card showing AI content metrics and glowing indigo neon gradients');
+// â”€â”€â”€ Utility: Format Date â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const formatDate = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+// â”€â”€â”€ Section Display Block â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const SectionBlock = ({ label, value, onCopy, color = 'brand', children }) => (
+  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-2">
+    <div className="flex items-center justify-between">
+      <span className={`text-[9px] font-bold uppercase tracking-widest text-${color}-600 dark:text-${color}-400`}>
+        {label}
+      </span>
+      {(onCopy || value) && (
+        <button
+          onClick={() => navigator.clipboard.writeText(value || '')}
+          className="p-1 rounded text-slate-400 hover:text-brand-500 transition-colors"
+        >
+          <Copy className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
+    {children || (
+      <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">
+        {value}
+      </p>
+    )}
+  </div>
+);
+
+// â”€â”€â”€ Meta Stamp â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const MetaStamp = ({ topic, date, type }) => (
+  <div className="flex flex-wrap gap-3 text-[10px] font-bold">
+    {topic && (
+      <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+        <Tag className="w-3 h-3" /> {topic}
+      </span>
+    )}
+    {type && (
+      <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+        <Star className="w-3 h-3" /> {type}
+      </span>
+    )}
+    {date && (
+      <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+        <Calendar className="w-3 h-3" /> {formatDate(date)}
+      </span>
+    )}
+  </div>
+);
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// SUB-PAGES
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+// â”€â”€â”€ 1. AI Visual / Image Generator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const VisualStudio = ({ workspace, credits, deductVisualCredits, setIsCreditModalOpen }) => {
+  const [prompt, setPrompt] = useState('Cyberpunk glassmorphic UI card showing AI metrics and glowing indigo gradients');
   const [style, setStyle] = useState('Glassmorphic Modern 3D');
+  const [topic, setTopic] = useState('AI Marketing Campaign Visual');
   const [generating, setGenerating] = useState(false);
-  const [generatedVisual, setGeneratedVisual] = useState(null);
+  const [result, setResult] = useState(null);
 
-  const handleGenerateVisual = async () => {
+  const handleGenerate = async () => {
     const cost = 5;
-    if (credits.balance < cost) {
-      setIsCreditModalOpen(true);
-      return;
-    }
-
+    if (credits.balance < cost) { setIsCreditModalOpen(true); return; }
     setGenerating(true);
-    const success = deductVisualCredits(cost, `AI Visual Generation: "${prompt.slice(0, 30)}..."`);
-    if (!success) {
-      setGenerating(false);
-      return;
-    }
-
+    deductVisualCredits(cost, `AI Visual: "${prompt.slice(0, 30)}..."`);
     try {
       const res = await fetch('http://localhost:5000/api/creative/visual/generate', {
         method: 'POST',
@@ -30,126 +85,799 @@ export const CreativeStudioModule = () => {
         body: JSON.stringify({ prompt, style, creditCost: cost })
       });
       const data = await res.json();
-      if (data.success) {
-        setGeneratedVisual(data.asset);
-      }
-    } catch (e) {
-      setGeneratedVisual({
-        id: `asset_${Date.now()}`,
+      if (data.success) setResult(data.asset);
+      else throw new Error('API error');
+    } catch {
+      setResult({
+        id: `vis_${Date.now()}`,
+        topic,
         prompt,
         style,
         imageUrl: `https://picsum.photos/seed/${Date.now()}/800/800`,
         createdAt: new Date().toISOString()
       });
-    } finally {
-      setGenerating(false);
-    }
+    } finally { setGenerating(false); }
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in">
-      {/* Header Bar */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Palette className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Creative Studio & Premium Visual Synthesis</h1>
-          </div>
-          <p className="text-xs text-slate-600 dark:text-slate-400">
-            Synthesize AI image prompts & carousel slide visual briefs for <strong className="text-slate-900 dark:text-white">{activeWorkspace.brandName}</strong>.
-          </p>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Parameters */}
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Visual Parameters</h2>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Topic / Campaign Name</label>
+          <input type="text" value={topic} onChange={e => setTopic(e.target.value)}
+            className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100" />
         </div>
-
-        <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-900/80 px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-800">
-          <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Balance:</span>
-          <span className="text-sm font-extrabold text-cyan-600 dark:text-cyan-400">{credits.balance} Visual Credits</span>
-          <button onClick={() => setIsCreditModalOpen(true)} className="btn-primary text-xs py-1 px-2.5">
-            +Top Up
-          </button>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Visual Prompt Description</label>
+          <textarea rows={4} value={prompt} onChange={e => setPrompt(e.target.value)}
+            className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 leading-relaxed" />
         </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Visual Style Direction</label>
+          <select value={style} onChange={e => setStyle(e.target.value)}
+            className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100">
+            <option value="Glassmorphic Modern 3D">Glassmorphic Modern 3D (AISA Style)</option>
+            <option value="Minimalist Corporate Tech">Minimalist Corporate Tech</option>
+            <option value="Cyberpunk Neon Gradients">Cyberpunk Neon Gradients</option>
+            <option value="Photorealistic B2B Studio">Photorealistic B2B Studio</option>
+            <option value="Bold Editorial Fashion">Bold Editorial Fashion</option>
+          </select>
+        </div>
+        <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs flex justify-between items-center font-medium text-slate-600 dark:text-slate-400">
+          <span>Cost:</span>
+          <span className="font-bold text-brand-600 dark:text-brand-400">5 Visual Credits</span>
+        </div>
+        <button onClick={handleGenerate} disabled={generating}
+          className="w-full btn-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60">
+          {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+          {generating ? 'Synthesizing Imagen 3...' : 'Generate High-Res Visual'}
+        </button>
       </div>
 
-      {/* Permanent Video Policy Notice */}
-      <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3 text-xs text-amber-700 dark:text-amber-300 font-medium">
-        <ShieldAlert className="w-4 h-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
-        <p>
-          <strong>Permanent Video Policy Notice:</strong> Native video generation is excluded. Text-based reel concepts, scripts, storyboards, shot lists, and editing instructions remain fully supported.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Visual Generator Form */}
-        <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-          <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Imagen 3 Prompt & Visual Brief</h2>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1">Visual Prompt Description</label>
-            <textarea 
-              rows={4}
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              className="w-full glass-input text-xs text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 leading-relaxed"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1">Visual Style Direction</label>
-            <select 
-              value={style}
-              onChange={(e) => setStyle(e.target.value)}
-              className="w-full glass-input text-xs text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900"
-            >
-              <option value="Glassmorphic Modern 3D">Glassmorphic Modern 3D (AISA Style)</option>
-              <option value="Minimalist Corporate Tech">Minimalist Corporate Tech</option>
-              <option value="Cyberpunk Neon Gradients">Cyberpunk Neon Gradients</option>
-              <option value="Photorealistic B2B Studio">Photorealistic B2B Studio</option>
-            </select>
-          </div>
-
-          <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 flex justify-between items-center font-medium">
-            <span>Deduction Cost:</span>
-            <span className="font-bold text-brand-600 dark:text-brand-400">5 Visual Credits / High-Res Synthesis</span>
-          </div>
-
-          <button
-            onClick={handleGenerateVisual}
-            disabled={generating}
-            className="w-full btn-primary py-3 rounded-xl font-bold text-xs shadow-glow"
-          >
-            {generating ? <Sparkles className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-            {generating ? 'Synthesizing Imagen 3 Visual...' : 'Generate High-Res Visual Asset'}
-          </button>
-        </div>
-
-        {/* Generated Visual Canvas */}
-        <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-          <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Visual Output Canvas & Asset Vault Link</h2>
-
-          {generatedVisual ? (
-            <div className="space-y-4 animate-in fade-in">
-              <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-video bg-slate-950 flex items-center justify-center">
-                <img src={generatedVisual.imageUrl} alt={generatedVisual.prompt} className="w-full h-full object-cover" />
-                <div className="absolute bottom-3 left-3 right-3 p-3 rounded-xl bg-slate-950/80 backdrop-blur-md border border-slate-800 text-xs text-slate-200 flex justify-between items-center">
-                  <span className="truncate max-w-md font-medium">"{generatedVisual.prompt}"</span>
-                  <span className="text-[10px] bg-brand-500/20 text-brand-300 font-bold px-2 py-0.5 rounded-full">{generatedVisual.style}</span>
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs flex items-center justify-between font-medium">
-                <span className="font-bold flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Visual Asset Committed to Asset Library
-                </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400">5 Credits Deducted</span>
+      {/* Output Canvas */}
+      <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Visual Output Canvas</h2>
+        {result ? (
+          <div className="space-y-4 animate-in fade-in">
+            <MetaStamp topic={result.topic || topic} type={result.style || style} date={result.createdAt} />
+            <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-video bg-slate-950 flex items-center justify-center">
+              <img src={result.imageUrl} alt={result.prompt} className="w-full h-full object-cover" />
+              <div className="absolute bottom-3 left-3 right-3 p-3 rounded-xl bg-slate-950/80 backdrop-blur-md border border-slate-800 text-xs text-slate-200 flex justify-between items-center">
+                <span className="truncate max-w-sm font-medium">"{result.prompt}"</span>
+                <span className="text-[10px] bg-brand-500/20 text-brand-300 font-bold px-2 py-0.5 rounded-full flex-shrink-0 ml-2">{result.style}</span>
               </div>
             </div>
+            <div className="flex gap-2">
+              <button onClick={() => window.open(result.imageUrl, '_blank')}
+                className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5">
+                <Download className="w-3.5 h-3.5" /> Download
+              </button>
+              <button onClick={() => navigator.clipboard.writeText(result.imageUrl)}
+                className="flex-1 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5">
+                <Copy className="w-3.5 h-3.5" /> Copy URL
+              </button>
+              <button onClick={() => setResult(null)}
+                className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2 font-medium">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> Visual Asset committed to Asset Library Â· 5 Credits deducted
+            </div>
+          </div>
+        ) : (
+          <div className="p-16 text-center text-slate-500 space-y-2">
+            <ImageIcon className="w-10 h-10 mx-auto text-slate-400 dark:text-slate-600 mb-3" />
+            <p className="text-xs font-medium">Enter a topic & prompt, then click "Generate High-Res Visual" to invoke Vertex AI Imagen 3 synthesis.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// â”€â”€â”€ 2. Carousel Slide Brief Studio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const CarouselStudio = ({ workspace }) => {
+  const [topic, setTopic] = useState('5 Ways AI Transforms Brand Marketing');
+  const [slides, setSlides] = useState(6);
+  const [platform, setPlatform] = useState('instagram');
+  const [drafting, setDrafting] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const handleGenerate = async () => {
+    setDrafting(true);
+    await new Promise(r => setTimeout(r, 1800));
+    const brand = workspace?.brandName || 'Brand';
+    setResult({
+      id: `car_${Date.now()}`,
+      topic,
+      platform,
+      createdAt: new Date().toISOString(),
+      coverSlide: { headline: topic.toUpperCase(), subtext: `By ${brand} | Swipe to discover â†’` },
+      slides: Array.from({ length: slides - 2 }, (_, i) => ({
+        num: i + 2,
+        title: `Point ${i + 1}: ${['AI-Powered Content Velocity', 'Brand DNA Anchoring', 'Multi-Channel Automation', 'Real-Time Analytics', 'Approvals & Compliance'][i % 5]}`,
+        body: `Leverage cutting-edge AI to ${['create content 10x faster with zero compromises on quality or brand alignment.', 'ensure every piece of content reflects your exact brand voice, tone, and messaging guidelines.', 'publish to Instagram, LinkedIn, Twitter, Email, and Newspaper simultaneously.', 'track performance metrics in real-time and optimize campaigns instantly.', 'streamline review cycles with automated compliance and stakeholder approvals.'][i % 5]}`,
+        visualCue: `[Visual: ${['Split-screen before/after comparison', 'DNA helix brand identity graphic', 'Multi-platform icons connected by flow lines', 'Dashboard analytics screenshot', 'Approval workflow diagram'][i % 5]}]`
+      })),
+      ctaSlide: { headline: 'Ready to Transform?', cta: 'Visit aisa.ai â†’ Start Free Trial', brandTag: `@${brand.toLowerCase().replace(/\s/g, '')}` }
+    });
+    setDrafting(false);
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Carousel Parameters</h2>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Carousel Topic</label>
+          <textarea rows={3} value={topic} onChange={e => setTopic(e.target.value)}
+            className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100" />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Platform</label>
+          <select value={platform} onChange={e => setPlatform(e.target.value)}
+            className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100">
+            {['instagram', 'linkedin', 'facebook'].map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Number of Slides: {slides}</label>
+          <input type="range" min={4} max={12} value={slides} onChange={e => setSlides(+e.target.value)}
+            className="w-full accent-purple-500" />
+        </div>
+        <button onClick={handleGenerate} disabled={drafting}
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60 transition-colors">
+          {drafting ? <Loader2 className="w-4 h-4 animate-spin" /> : <LayoutGrid className="w-4 h-4" />}
+          {drafting ? 'Crafting Slides...' : 'Generate Carousel Brief'}
+        </button>
+      </div>
+
+      <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Carousel Slide Brief</h2>
+        {result ? (
+          <div className="space-y-4 animate-in fade-in">
+            <MetaStamp topic={result.topic} type={`${result.slides.length + 2} Slides Â· ${result.platform}`} date={result.createdAt} />
+            {/* Cover Slide */}
+            <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-300">SLIDE 1 â€” COVER</span>
+              </div>
+              <p className="text-sm font-black text-slate-900 dark:text-white leading-tight">{result.coverSlide.headline}</p>
+              <p className="text-xs text-purple-700 dark:text-purple-300 font-medium">{result.coverSlide.subtext}</p>
+            </div>
+            {/* Content Slides */}
+            <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+              {result.slides.map((slide) => (
+                <div key={slide.num} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-brand-600 dark:text-brand-400">SLIDE {slide.num}</span>
+                    <button onClick={() => navigator.clipboard.writeText(`${slide.title}\n${slide.body}`)}
+                      className="p-1 rounded text-slate-400 hover:text-brand-500 transition-colors">
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">{slide.title}</p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">{slide.body}</p>
+                  <p className="text-[10px] text-slate-400 italic">{slide.visualCue}</p>
+                </div>
+              ))}
+            </div>
+            {/* CTA Slide */}
+            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1.5">
+              <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">SLIDE {result.slides.length + 2} â€” CTA</span>
+              <p className="text-sm font-black text-slate-900 dark:text-white">{result.ctaSlide.headline}</p>
+              <p className="text-xs text-emerald-700 dark:text-emerald-300 font-bold">{result.ctaSlide.cta}</p>
+              <p className="text-[10px] text-slate-500">{result.ctaSlide.brandTag}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="p-16 text-center text-slate-500 space-y-2">
+            <LayoutGrid className="w-10 h-10 mx-auto text-slate-400 dark:text-slate-600 mb-3" />
+            <p className="text-xs font-medium">Enter a topic and click "Generate Carousel Brief" to get full slide-by-slide briefs with visual cues for each frame.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// â”€â”€â”€ 3. Reel / Short Video Script Studio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const ReelScriptStudio = ({ workspace }) => {
+  const [topic, setTopic] = useState('Why Every Brand Needs AI Content in 2026');
+  const [duration, setDuration] = useState('60');
+  const [hook, setHook] = useState('');
+  const [drafting, setDrafting] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const handleGenerate = async () => {
+    setDrafting(true);
+    await new Promise(r => setTimeout(r, 2000));
+    const brand = workspace?.brandName || 'Brand';
+    setResult({
+      id: `reel_${Date.now()}`,
+      topic,
+      duration,
+      createdAt: new Date().toISOString(),
+      hookLine: hook || `"Most brands are losing customers silently â€” here's the fix nobody talks about."`,
+      sections: [
+        { time: '0:00â€“0:05', label: 'HOOK', script: `[CLOSE-UP FACE / BOLD TEXT OVERLAY]\n"${hook || 'Most brands lose customers silently â€” here\'s what they\'re missing.'}"`, direction: 'Fast cut. High energy music starts. Text animates in.' },
+        { time: '0:05â€“0:15', label: 'PROBLEM', script: `You're posting every day. Spending hours on content. But your growth is flat.\nWhy? Because your content isn't anchored to your brand DNA.`, direction: 'B-roll of frustrated marketer. Slow zoom out.' },
+        { time: '0:15â€“0:30', label: 'SOLUTION', script: `${brand} uses AISA â€” an AI engine that understands your brand's tone, audience, and goals.\nIt generates blogs, social posts, emails, and ads â€” instantly. All 100% on-brand.`, direction: 'Screen recording of AISA dashboard. Clean transitions.' },
+        { time: '0:30â€“0:45', label: 'PROOF / BENEFITS', script: `10x faster content. Zero brand inconsistency. Approved by stakeholders in minutes.\nThat's not the future â€” that's what ${brand} does today.`, direction: 'Before/after split screen. Metric counters animate.' },
+        { time: '0:45â€“0:55', label: 'CTA', script: `Comment "AI" below if you want to see how we set this up for your brand.\nOr hit the link in bio â€” your first campaign is on us.`, direction: 'Direct to camera. Point at comment section. Smile.' },
+        { time: '0:55â€“1:00', label: 'OUTRO', script: `[LOGO STING + BRAND MUSIC]\n@${brand.toLowerCase().replace(/\s/g, '')} | aisa.ai`, direction: 'Fade to brand colors. Logo animation.' }
+      ],
+      editingNotes: `Total Duration: ${duration}s | Ratio: 9:16 (Vertical) | Music: Upbeat corporate / trending audio | Captions: Auto-generated via CapCut or Premiere | Thumbnail: Freeze frame at 0:01 with bold text overlay`,
+      hashtags: ['#AIMarketing', '#ContentCreation', '#BrandGrowth', `#${brand.replace(/\s/g, '')}`, '#ReelsTips', '#MarketingHacks']
+    });
+    setDrafting(false);
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+          <Film className="w-4 h-4 text-rose-500" /> Reel Script Parameters
+        </h2>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Topic / Message</label>
+          <textarea rows={3} value={topic} onChange={e => setTopic(e.target.value)}
+            className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100" />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Hook Line (optional)</label>
+          <input type="text" value={hook} onChange={e => setHook(e.target.value)} placeholder={`e.g., "You're doing content wrong..."`}
+            className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100" />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Duration</label>
+          <select value={duration} onChange={e => setDuration(e.target.value)}
+            className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100">
+            <option value="15">15 Seconds (Story / Reel)</option>
+            <option value="30">30 Seconds (Standard Reel)</option>
+            <option value="60">60 Seconds (Long Reel)</option>
+            <option value="90">90 Seconds (YouTube Short)</option>
+          </select>
+        </div>
+        <button onClick={handleGenerate} disabled={drafting}
+          className="w-full bg-rose-600 hover:bg-rose-700 text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60 transition-colors">
+          {drafting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Film className="w-4 h-4" />}
+          {drafting ? 'Writing Script...' : 'Generate Reel Script'}
+        </button>
+      </div>
+
+      <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Reel Script & Shot List</h2>
+        {result ? (
+          <div className="space-y-4 animate-in fade-in">
+            <MetaStamp topic={result.topic} type={`${result.duration}s Reel Script`} date={result.createdAt} />
+            {/* Hook callout */}
+            <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30">
+              <span className="text-[9px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400">HOOK LINE</span>
+              <p className="mt-1 text-sm font-black text-slate-900 dark:text-white italic">"{result.hookLine}"</p>
+            </div>
+            {/* Script Sections */}
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+              {result.sections.map((s, i) => (
+                <div key={i} className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 uppercase tracking-widest">{s.label}</span>
+                      <span className="text-[9px] font-bold text-slate-400 flex items-center gap-1"><Clock className="w-2.5 h-2.5" />{s.time}</span>
+                    </div>
+                    <button onClick={() => navigator.clipboard.writeText(s.script)} className="p-1 rounded text-slate-400 hover:text-brand-500 transition-colors">
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">{s.script}</p>
+                  <p className="text-[10px] text-slate-400 italic border-t border-slate-100 dark:border-slate-700 pt-1.5">[Director: {s.direction}]</p>
+                </div>
+              ))}
+            </div>
+            {/* Editing Notes */}
+            <SectionBlock label="Editing Notes & Production Brief" value={result.editingNotes} color="slate" />
+            {/* Hashtags */}
+            <div className="flex flex-wrap gap-1.5">
+              {result.hashtags.map((h, i) => (
+                <span key={i} onClick={() => navigator.clipboard.writeText(h)}
+                  className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-brand-600 dark:text-brand-400 text-xs font-bold cursor-pointer hover:bg-brand-50 transition-colors">
+                  {h}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="p-16 text-center text-slate-500 space-y-2">
+            <Film className="w-10 h-10 mx-auto text-rose-400/50 mb-3" />
+            <p className="text-xs font-medium">Enter a topic and click "Generate Reel Script" to get a full timestamped script with shot directions and editing notes.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// â”€â”€â”€ 4. Storyboard Studio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const StoryboardStudio = ({ workspace }) => {
+  const [topic, setTopic] = useState('Brand Launch Campaign â€” Premium Product Reveal');
+  const [adType, setAdType] = useState('video_ad');
+  const [frames, setFrames] = useState(6);
+  const [drafting, setDrafting] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const handleGenerate = async () => {
+    setDrafting(true);
+    await new Promise(r => setTimeout(r, 1800));
+    const brand = workspace?.brandName || 'Brand';
+    setResult({
+      id: `sb_${Date.now()}`,
+      topic,
+      adType,
+      createdAt: new Date().toISOString(),
+      frames: Array.from({ length: frames }, (_, i) => ({
+        frame: i + 1,
+        duration: i === 0 ? '0:00â€“0:03' : i === frames - 1 ? `0:${(frames - 1) * 3}â€“0:${frames * 3}` : `0:${i * 3}â€“0:${(i + 1) * 3}`,
+        sceneDesc: [
+          `OPEN: Slow-motion black screen fade-in. ${brand} logo materializes in golden particles. Cinematic music begins.`,
+          `WIDE SHOT: Aerial drone view of urban landscape. V.O.: "In a world of noise..."`,
+          `CLOSE-UP: Product hero shot with dramatic lighting. Slow 360Â° rotation. Lens flare effect.`,
+          `LIFESTYLE SHOT: Real person (target audience persona) using the product. Genuine emotion. Warm lighting.`,
+          `PROOF PANEL: Key stats animate in. "10,000+ Customers | 4.9â˜… Rating | Industry-Leading Quality"`,
+          `CTA FRAME: Product + brand logo + CTA text. "Shop Now at aisa.ai". QR code bottom right.`
+        ][Math.min(i, 5)],
+        visualDirection: [
+          'Black bg â†’ brand color gradient. Logo sting SFX. Font: Bold Sans.',
+          'Drone footage. Color grade: cinematic teal-orange. No text.',
+          '4K product macro. LED ring light. White/black background. Brand colors.',
+          'Golden hour. 85mm portrait lens. Subject in brand-colored outfit.',
+          'Clean white bg. Counter animation. Green check icons.',
+          'Hero shot + CTA button animation. Brand pattern overlay.'
+        ][Math.min(i, 5)],
+        voiceover: [
+          '',
+          'In a world of noise...',
+          `...${brand} cuts through.`,
+          'Trusted by thousands who demand more.',
+          'Quality you can measure. Results you can feel.',
+          `${brand}. Visit us now.`
+        ][Math.min(i, 5)]
+      }))
+    });
+    setDrafting(false);
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+          <BookOpen className="w-4 h-4 text-amber-500" /> Storyboard Parameters
+        </h2>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Campaign / Ad Concept</label>
+          <textarea rows={3} value={topic} onChange={e => setTopic(e.target.value)}
+            className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100" />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Ad Format</label>
+          <select value={adType} onChange={e => setAdType(e.target.value)}
+            className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100">
+            <option value="video_ad">Video Ad (15â€“30s)</option>
+            <option value="tv_commercial">TV Commercial (30â€“60s)</option>
+            <option value="brand_film">Brand Film (60â€“120s)</option>
+            <option value="social_story">Social Story (15s Vertical)</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Number of Frames: {frames}</label>
+          <input type="range" min={4} max={10} value={frames} onChange={e => setFrames(+e.target.value)}
+            className="w-full accent-amber-500" />
+        </div>
+        <button onClick={handleGenerate} disabled={drafting}
+          className="w-full bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60 transition-colors">
+          {drafting ? <Loader2 className="w-4 h-4 animate-spin" /> : <BookOpen className="w-4 h-4" />}
+          {drafting ? 'Building Storyboard...' : 'Generate Storyboard'}
+        </button>
+      </div>
+
+      <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Storyboard Frames & Shot List</h2>
+        {result ? (
+          <div className="space-y-4 animate-in fade-in">
+            <MetaStamp topic={result.topic} type={`${result.frames.length} Frames Â· ${result.adType.replace('_', ' ')}`} date={result.createdAt} />
+            <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+              {result.frames.map((f) => (
+                <div key={f.frame} className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xs">F{f.frame}</div>
+                      <span className="text-[9px] font-bold text-slate-400 flex items-center gap-1"><Clock className="w-2.5 h-2.5" />{f.duration}</span>
+                    </div>
+                    <button onClick={() => navigator.clipboard.writeText(`${f.sceneDesc}\n${f.visualDirection}`)} className="p-1 rounded text-slate-400 hover:text-amber-500 transition-colors">
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">SCENE</span>
+                    <p className="text-xs font-medium text-slate-800 dark:text-slate-200 mt-1 leading-relaxed">{f.sceneDesc}</p>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">VISUAL DIRECTION</span>
+                    <p className="text-[11px] text-slate-500 italic mt-0.5">{f.visualDirection}</p>
+                  </div>
+                  {f.voiceover && (
+                    <div>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1"><Mic className="w-2.5 h-2.5" />V.O.</span>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 italic">"{f.voiceover}"</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="p-16 text-center text-slate-500 space-y-2">
+            <BookOpen className="w-10 h-10 mx-auto text-amber-400/50 mb-3" />
+            <p className="text-xs font-medium">Enter a campaign concept and click "Generate Storyboard" to get a full frame-by-frame shot list with scene descriptions, visual directions, and voiceover.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// â”€â”€â”€ 5. Brand Visual Kit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const BrandKitStudio = ({ workspace }) => {
+  const [focus, setFocus] = useState('Complete Brand Kit');
+  const [drafting, setDrafting] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const handleGenerate = async () => {
+    setDrafting(true);
+    await new Promise(r => setTimeout(r, 1500));
+    const brand = workspace?.brandName || 'Brand';
+    const primary = workspace?.primaryColor || '#6366F1';
+    setResult({
+      id: `bk_${Date.now()}`,
+      focus,
+      createdAt: new Date().toISOString(),
+      brandName: brand,
+      colors: {
+        primary: { hex: primary, name: 'Brand Primary', usage: 'CTAs, headings, key UI elements' },
+        secondary: { hex: '#10B981', name: 'Accent Emerald', usage: 'Success states, highlights' },
+        dark: { hex: '#0F172A', name: 'Deep Navy', usage: 'Dark backgrounds, text' },
+        light: { hex: '#F8FAFC', name: 'Off White', usage: 'Light backgrounds, cards' },
+        muted: { hex: '#94A3B8', name: 'Slate Muted', usage: 'Body text, secondary elements' }
+      },
+      typography: {
+        heading: 'Outfit â€” Bold 700/800. Use for headlines & display text.',
+        body: 'Inter â€” Regular 400/Medium 500. Use for body copy & UI text.',
+        mono: 'JetBrains Mono â€” For code, data, and technical content.'
+      },
+      logoGuidelines: [
+        'Minimum size: 80px width for digital, 15mm for print',
+        'Clear space: Equal to the height of the logo letter "B" on all sides',
+        'Approved backgrounds: White, brand dark, brand primary',
+        'Never distort, rotate, or apply drop shadow to logo',
+        'Never use low-res logo files below 300 DPI for print'
+      ],
+      voiceTone: {
+        adjectives: ['Bold', 'Confident', 'Expert', 'Approachable', 'Innovative'],
+        doSay: [`"${brand} helps you achieve more."`, '"Our AI understands your brand."', '"Built for performance. Designed for trust."'],
+        dontSay: ['"We try to..."', '"Hopefully this works..."', '"Cheap and affordable"']
+      }
+    });
+    setDrafting(false);
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+          <Brush className="w-4 h-4 text-brand-500" /> Brand Kit Parameters
+        </h2>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Kit Focus</label>
+          <select value={focus} onChange={e => setFocus(e.target.value)}
+            className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100">
+            <option>Complete Brand Kit</option>
+            <option>Color Palette Only</option>
+            <option>Typography System Only</option>
+            <option>Voice & Tone Guide</option>
+            <option>Logo Usage Guidelines</option>
+          </select>
+        </div>
+        <div className="p-3 rounded-2xl bg-brand-500/5 border border-brand-500/20 text-xs text-slate-600 dark:text-slate-400">
+          <p className="font-medium">Brand data sourced from your <strong className="text-slate-900 dark:text-white">Brand DNA</strong> profile for {workspace?.brandName || 'your brand'}.</p>
+        </div>
+        <button onClick={handleGenerate} disabled={drafting}
+          className="w-full btn-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60">
+          {drafting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brush className="w-4 h-4" />}
+          {drafting ? 'Generating Kit...' : 'Generate Brand Visual Kit'}
+        </button>
+      </div>
+
+      <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Brand Visual System</h2>
+        {result ? (
+          <div className="space-y-5 animate-in fade-in">
+            <MetaStamp topic={result.brandName} type={result.focus} date={result.createdAt} />
+            {/* Color Palette */}
+            <div className="space-y-2">
+              <span className="text-[9px] font-black uppercase tracking-widest text-brand-600 dark:text-brand-400">COLOR PALETTE</span>
+              <div className="grid grid-cols-5 gap-2">
+                {Object.entries(result.colors).map(([key, c]) => (
+                  <div key={key} className="space-y-1.5 text-center">
+                    <div className="h-12 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-105 transition-transform"
+                      style={{ backgroundColor: c.hex }}
+                      onClick={() => navigator.clipboard.writeText(c.hex)} title={`Click to copy ${c.hex}`} />
+                    <p className="text-[9px] font-bold text-slate-700 dark:text-slate-300">{c.name}</p>
+                    <p className="text-[9px] text-slate-400 font-mono">{c.hex}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Typography */}
+            <SectionBlock label="Typography System" color="brand">
+              <div className="space-y-2">
+                {Object.entries(result.typography).map(([k, v]) => (
+                  <div key={k} className="flex gap-2 items-start">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 w-12 flex-shrink-0 pt-0.5">{k}</span>
+                    <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">{v}</span>
+                  </div>
+                ))}
+              </div>
+            </SectionBlock>
+            {/* Voice & Tone */}
+            <SectionBlock label="Brand Voice & Tone" color="purple">
+              <div className="space-y-3">
+                <div className="flex gap-2 flex-wrap">
+                  {result.voiceTone.adjectives.map(a => (
+                    <span key={a} className="px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold border border-purple-500/20">{a}</span>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">âœ“ DO SAY</p>
+                    {result.voiceTone.doSay.map((s, i) => <p key={i} className="text-[11px] text-slate-600 dark:text-slate-400 italic mb-0.5">{s}</p>)}
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest mb-1">âœ• DON'T SAY</p>
+                    {result.voiceTone.dontSay.map((s, i) => <p key={i} className="text-[11px] text-slate-600 dark:text-slate-400 italic mb-0.5">{s}</p>)}
+                  </div>
+                </div>
+              </div>
+            </SectionBlock>
+            {/* Logo Guidelines */}
+            <SectionBlock label="Logo Usage Guidelines" color="amber">
+              <ul className="space-y-1">
+                {result.logoGuidelines.map((g, i) => (
+                  <li key={i} className="text-[11px] text-slate-600 dark:text-slate-400 flex items-start gap-2">
+                    <span className="text-amber-500 mt-0.5 flex-shrink-0">â€¢</span>{g}
+                  </li>
+                ))}
+              </ul>
+            </SectionBlock>
+          </div>
+        ) : (
+          <div className="p-16 text-center text-slate-500 space-y-2">
+            <Brush className="w-10 h-10 mx-auto text-brand-400/50 mb-3" />
+            <p className="text-xs font-medium">Click "Generate Brand Visual Kit" to produce a complete color palette, typography system, voice guide, and logo guidelines from your Brand DNA.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+// PlatformPostCanvas is imported from ./PlatformPostCanvas.jsx
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// MAIN MODULE
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+export const CreativeStudioModule = () => {
+  const { activeWorkspace, credits, deductVisualCredits, setIsCreditModalOpen, generatedContent, studioTarget } = useWorkspace();
+  const [activeSubPage, setActiveSubPage] = useState(null);
+
+  // If redirected from Calendar, studioTarget carries the post's platform/type/topic.
+  // Merge it with generatedContent (studioTarget acts as a fallback).
+  const effectiveContent = generatedContent
+    ? { ...studioTarget, ...generatedContent }
+    : studioTarget
+      ? { platform: studioTarget.platform, type: studioTarget.type || 'SOCIAL', topic: studioTarget.topic, hook: studioTarget.topic, caption: '', hashtags: [] }
+      : null;
+
+  const CHANNELS = [
+    {
+      id: 'VISUAL',
+      title: 'AI Visual',
+      subtitle: 'Imagen 3 High-Res Image Synthesis',
+      icon: ImageIcon,
+      colorClass: 'from-indigo-500/10 to-blue-500/5',
+      hoverBorder: 'hover:border-indigo-400/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.15)]',
+      badgeBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
+      iconColor: 'text-indigo-500',
+      accentClass: 'border-indigo-500/30 bg-indigo-500/5'
+    },
+    {
+      id: 'CAROUSEL',
+      title: 'Carousel',
+      subtitle: 'Slide Briefs for Instagram & LinkedIn',
+      icon: LayoutGrid,
+      colorClass: 'from-purple-500/10 to-violet-500/5',
+      hoverBorder: 'hover:border-purple-400/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]',
+      badgeBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+      iconColor: 'text-purple-500',
+      accentClass: 'border-purple-500/30 bg-purple-500/5'
+    },
+    {
+      id: 'REEL',
+      title: 'Reel Script',
+      subtitle: 'Timestamped Scripts & Shot Lists',
+      icon: Film,
+      colorClass: 'from-rose-500/10 to-pink-500/5',
+      hoverBorder: 'hover:border-rose-400/50 hover:shadow-[0_0_20px_rgba(244,63,94,0.15)]',
+      badgeBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
+      iconColor: 'text-rose-500',
+      accentClass: 'border-rose-500/30 bg-rose-500/5'
+    },
+    {
+      id: 'STORYBOARD',
+      title: 'Storyboard',
+      subtitle: 'Frame-by-Frame Ad & Film Briefs',
+      icon: BookOpen,
+      colorClass: 'from-amber-500/10 to-orange-500/5',
+      hoverBorder: 'hover:border-amber-400/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)]',
+      badgeBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+      iconColor: 'text-amber-500',
+      accentClass: 'border-amber-500/30 bg-amber-500/5'
+    },
+    {
+      id: 'BRANDKIT',
+      title: 'Brand Kit',
+      subtitle: 'Colors, Typography & Voice Guide',
+      icon: Brush,
+      colorClass: 'from-emerald-500/10 to-teal-500/5',
+      hoverBorder: 'hover:border-emerald-400/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]',
+      badgeBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+      iconColor: 'text-emerald-500',
+      accentClass: 'border-emerald-500/30 bg-emerald-500/5'
+    }
+  ];
+
+  const subPageTitles = {
+    VISUAL: 'AI Visual Synthesis Studio',
+    CAROUSEL: 'Carousel Slide Brief Studio',
+    REEL: 'Reel & Short Video Script Studio',
+    STORYBOARD: 'Storyboard & Shot List Studio',
+    BRANDKIT: 'Brand Visual Kit Studio'
+  };
+
+  const activeChannel = CHANNELS.find(c => c.id === activeSubPage);
+
+  return (
+    <div className="space-y-6 animate-in fade-in max-w-7xl mx-auto p-6">
+      {activeSubPage ? (
+        <div className="space-y-6">
+          {/* Sub-Page Header */}
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+            <button
+              onClick={() => setActiveSubPage(null)}
+              className="btn-secondary text-xs py-2 px-3 flex items-center gap-2 hover:border-brand-500 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 text-brand-500" />
+              <span>Back to Creative Studio</span>
+            </button>
+            <div className="text-right">
+              <span className="text-[10px] font-extrabold uppercase text-brand-600 dark:text-brand-400 tracking-wider">Creative Synthesis Engine</span>
+              <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">{subPageTitles[activeSubPage]}</h2>
+            </div>
+          </div>
+
+          {/* Channel Badge */}
+          {activeChannel && (
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl border ${activeChannel.accentClass}`}>
+              <activeChannel.icon className={`w-4 h-4 ${activeChannel.iconColor}`} />
+              <span className={`text-xs font-bold ${activeChannel.iconColor}`}>{activeChannel.title} â€” {activeChannel.subtitle}</span>
+            </div>
+          )}
+
+          {/* Sub-Page Content */}
+          {activeSubPage === 'VISUAL' && (
+            <VisualStudio workspace={activeWorkspace} credits={credits} deductVisualCredits={deductVisualCredits} setIsCreditModalOpen={setIsCreditModalOpen} />
+          )}
+          {activeSubPage === 'CAROUSEL' && <CarouselStudio workspace={activeWorkspace} />}
+          {activeSubPage === 'REEL' && <ReelScriptStudio workspace={activeWorkspace} />}
+          {activeSubPage === 'STORYBOARD' && <StoryboardStudio workspace={activeWorkspace} />}
+          {activeSubPage === 'BRANDKIT' && <BrandKitStudio workspace={activeWorkspace} />}
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Header Bar */}
+          <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Palette className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Creative Studio & Premium Visual Synthesis</h1>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                AI-powered visuals, carousel briefs, reel scripts, storyboards, and brand kits anchored to{' '}
+                <strong className="text-slate-900 dark:text-white">{activeWorkspace?.brandName || 'your brand'}</strong>.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-900/80 px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Balance:</span>
+              <span className="text-sm font-extrabold text-cyan-600 dark:text-cyan-400">{credits?.balance || 0} Visual Credits</span>
+              <button onClick={() => setIsCreditModalOpen(true)} className="btn-primary text-xs py-1 px-2.5">+Top Up</button>
+            </div>
+          </div>
+
+          {/* Policy Notice */}
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3 text-xs text-amber-700 dark:text-amber-300 font-medium">
+            <ShieldAlert className="w-4 h-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
+            <p>
+              <strong>Permanent Video Policy Notice:</strong> Native video generation is excluded. Text-based reel concepts, scripts, storyboards, shot lists, and editing instructions remain fully supported.
+            </p>
+          </div>
+
+          {/* 5 Channel Grid Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {CHANNELS.map((card) => {
+              const Icon = card.icon;
+              return (
+                <button
+                  key={card.id}
+                  onClick={() => setActiveSubPage(card.id)}
+                  className={`p-5 rounded-3xl text-left transition-all duration-300 border flex flex-col justify-between group relative overflow-hidden bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 ${card.hoverBorder}`}
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${card.colorClass} opacity-30 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`} />
+                  <div className="relative z-10 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className={`p-2.5 rounded-2xl ${card.badgeBg} transition-transform group-hover:scale-110 duration-300`}>
+                        <Icon className={`w-5 h-5 ${card.iconColor}`} />
+                      </div>
+                      <ArrowUpRight className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300" />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight">{card.title}</h3>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-snug">{card.subtitle}</p>
+                    </div>
+                  </div>
+                  <div className="relative z-10 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                    <span>Open Studio</span>
+                    <span className={`${card.iconColor} opacity-80 group-hover:opacity-100 font-semibold`}>Open Page â†’</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Dynamic Platform Post Canvas - Synchronized with Content Studio & Calendar */}
+          {effectiveContent ? (
+            <PlatformPostCanvas
+              workspace={activeWorkspace}
+              generatedContent={effectiveContent}
+              credits={credits}
+              deductVisualCredits={deductVisualCredits}
+              setIsCreditModalOpen={setIsCreditModalOpen}
+            />
           ) : (
-            <div className="p-16 text-center text-slate-500 space-y-2">
-              <ImageIcon className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600 mb-2" />
-              <p className="text-xs font-medium">Click "Generate High-Res Visual Asset" to invoke Vertex AI Imagen 3 synthesis.</p>
+            <div className="p-10 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/40 dark:bg-slate-900/30 flex flex-col items-center justify-center text-center gap-3">
+              <div className="w-14 h-14 rounded-3xl bg-brand-500/10 flex items-center justify-center">
+                <Sparkles className="w-7 h-7 text-brand-500" />
+              </div>
+              <div>
+                <h4 className="text-sm font-extrabold text-slate-800 dark:text-white">No Content Loaded Yet</h4>
+                <p className="text-xs text-slate-500 mt-1 max-w-xs leading-relaxed">
+                  Go to <strong>Calendar</strong> and click <em>"Generate in Creative Studio"</em> on any scheduled post, or generate content in <strong>Content Studio</strong> first â€” this canvas will auto-load the right format (Email, Blog, Instagram, LinkedIn, etc.).
+                </p>
+              </div>
             </div>
           )}
         </div>
-      </div>
+
+      )}
     </div>
   );
 };

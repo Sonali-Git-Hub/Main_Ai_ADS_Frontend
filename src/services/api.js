@@ -70,6 +70,7 @@ export const campaignAPI = {
   },
   generatePlan: (id, body = {}) => apiFetch(`/campaigns/${id}/generate-plan`, { method: 'POST', body }),
   generatePostContent: (postId, body = {}) => apiFetch(`/campaigns/posts/${postId}/generate-content`, { method: 'POST', body }),
+  updatePost: (postId, body) => apiFetch(`/campaigns/posts/${postId}`, { method: 'PUT', body }),
   updatePostStatus: (postId, body) => apiFetch(`/campaigns/posts/${postId}/status`, { method: 'PATCH', body }),
   calculateDates: (body) => apiFetch('/campaigns/dates/calculate', { method: 'POST', body }),
 };
@@ -214,6 +215,47 @@ export const websiteBuilderAPI = {
   deleteProject: (id) => apiFetch(`/website-builder/projects/${id}`, { method: 'DELETE' }),
 };
 
+// ─── Auto-Pilot API (SSE Stream) ──────────────────────────────────────────────
+export const autopilotAPI = {
+  generate: (body, onMessage, onError, onComplete) => {
+    const controller = new AbortController();
+    fetch(`${BASE_URL}/autopilot/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    }).then(async (response) => {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) { onComplete?.(); break; }
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const payload = JSON.parse(line.slice(6));
+              onMessage?.(payload);
+              if (payload.status === 'complete') onComplete?.(payload);
+            } catch {}
+          }
+        }
+      }
+    }).catch((err) => {
+      if (err.name !== 'AbortError') onError?.(err);
+    });
+    return controller;
+  },
+};
+
+// ─── Health Check ─────────────────────────────────────────────────────────────
+export const healthAPI = {
+  check: () => apiFetch('/health'),
+};
+
 export default {
   workspace: workspaceAPI,
   brand: brandAPI,
@@ -228,4 +270,6 @@ export default {
   notifications: notificationsAPI,
   reminders: remindersAPI,
   websiteBuilder: websiteBuilderAPI,
+  autopilot: autopilotAPI,
+  health: healthAPI,
 };

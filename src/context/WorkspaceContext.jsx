@@ -108,6 +108,146 @@ export const WorkspaceProvider = ({ children }) => {
 
   const canGoBack = navigationHistory.length > 0 || activeModule !== 'dashboard';
   
+  // Settings Modal & Personalization Preferences State
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [activeSettingsTab, setActiveSettingsTab] = useState('personalization');
+
+  const [appearance, setAppearanceState] = useState(() => {
+    try {
+      return localStorage.getItem('aisa_appearance') || 'dark';
+    } catch (e) {
+      return 'dark';
+    }
+  });
+
+  const [accentColor, setAccentColorState] = useState(() => {
+    try {
+      return localStorage.getItem('aisa_accent_color') || 'default';
+    } catch (e) {
+      return 'default';
+    }
+  });
+
+  const [region, setRegionState] = useState(() => {
+    try {
+      return localStorage.getItem('aisa_region') || 'India';
+    } catch (e) {
+      return 'India';
+    }
+  });
+
+  const [language, setLanguageState] = useState(() => {
+    try {
+      return localStorage.getItem('aisa_language') || 'English';
+    } catch (e) {
+      return 'English';
+    }
+  });
+
+  const [multiScheduleReminder, setMultiScheduleReminderState] = useState(() => {
+    try {
+      return localStorage.getItem('aisa_multi_schedule_reminder') || 'Enabled';
+    } catch (e) {
+      return 'Enabled';
+    }
+  });
+
+  // Target data for redirecting from Calendar or other modules directly into Content Studio
+  const [studioTarget, setStudioTarget] = useState(null);
+
+  // Pipeline Shared States
+  const [brandDnaData, setBrandDnaData] = useState(null);
+  const [seoSearchData, setSeoSearchData] = useState(null);
+  const [generatedStrategy, setGeneratedStrategy] = useState(null);
+
+  // Active Generated Content payload shared between Content Studio and Creative Studio
+  const [generatedContent, setGeneratedContentState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aisa_last_generated_content');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const setGeneratedContent = (data) => {
+    setGeneratedContentState(data);
+    try {
+      if (data) localStorage.setItem('aisa_last_generated_content', JSON.stringify(data));
+      else localStorage.removeItem('aisa_last_generated_content');
+    } catch (e) {}
+  };
+
+  const [notificationPreferences, setNotificationPreferences] = useState({
+    emailDigest: true,
+    desktopPush: true,
+    soundEffects: true,
+    productUpdates: false,
+  });
+
+  const [dataControlPreferences, setDataControlPreferences] = useState({
+    saveChatHistory: true,
+    shareWorkspaceLinks: true,
+    allowAnalytics: true,
+  });
+
+  const setAppearance = (val) => {
+    setAppearanceState(val);
+    try {
+      localStorage.setItem('aisa_appearance', val);
+    } catch (e) {}
+  };
+
+  const setAccentColor = (val) => {
+    setAccentColorState(val);
+    try {
+      localStorage.setItem('aisa_accent_color', val);
+    } catch (e) {}
+  };
+
+  const setRegion = (val) => {
+    setRegionState(val);
+    try {
+      localStorage.setItem('aisa_region', val);
+    } catch (e) {}
+  };
+
+  const setLanguage = (val) => {
+    setLanguageState(val);
+    try {
+      localStorage.setItem('aisa_language', val);
+    } catch (e) {}
+  };
+
+  const setMultiScheduleReminder = (val) => {
+    setMultiScheduleReminderState(val);
+    try {
+      localStorage.setItem('aisa_multi_schedule_reminder', val);
+    } catch (e) {}
+  };
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    setAppearance(nextTheme);
+  };
+
+  useEffect(() => {
+    let effectiveTheme = appearance;
+    if (appearance === 'system') {
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      effectiveTheme = prefersDark ? 'dark' : 'light';
+    }
+
+    if (effectiveTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    }
+  }, [appearance]);
+
   // Theme & Role
   const [theme, setTheme] = useState(() => {
     try {
@@ -148,6 +288,7 @@ export const WorkspaceProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('aisa_user');
+    setIsSettingsModalOpen(false);
     setActiveModuleState('dashboard');
   };
 
@@ -260,11 +401,23 @@ export const WorkspaceProvider = ({ children }) => {
       workspaceId: 'ws_001',
       title: 'How AI Ads Transforms Agency Content Production Velocity',
       type: 'BLOG',
+      platform: 'Website Blog',
       status: 'APPROVED',
       wordCount: 2150,
       author: 'Senior Copywriter',
       approver: 'Client Marketing Director',
       factCheck: { passed: true, score: 100, status: 'VERIFIED', flags: [] },
+      checks: {
+        brandDna: { passed: true, score: 98, message: 'Strong alignment with brand voice.' },
+        seo: { passed: true, score: 92, message: 'Keywords optimized correctly.' },
+        strategy: { passed: true, score: 95, message: 'Matches Q3 campaign goals.' },
+        fact: { passed: true, score: 100, message: 'All claims verified.' }
+      },
+      content: `# How AI Ads Transforms Agency Content Production Velocity\n\nIn today's fast-paced digital ecosystem, agencies are under immense pressure to deliver high-quality content at unprecedented speeds. Enter AI Ads, a game-changing platform designed to supercharge your content production workflow...\n\nBy leveraging advanced machine learning algorithms, AI Ads not only automates repetitive tasks but also ensures that every piece of content remains perfectly aligned with your unique Brand DNA.`,
+      history: [
+        { id: 'h1', action: 'Submitted for Review', by: 'Senior Copywriter', date: '2026-07-22T09:00:00Z' },
+        { id: 'h2', action: 'Approved', by: 'Client Marketing Director', date: '2026-07-22T10:00:00Z', note: 'Looks great, ready to publish.' }
+      ],
       createdAt: '2026-07-22T10:00:00Z',
       scheduledDate: '2026-07-28'
     },
@@ -274,9 +427,19 @@ export const WorkspaceProvider = ({ children }) => {
       title: '5 Steps to Build Bulletproof Brand DNA in 2026',
       type: 'SOCIAL',
       platform: 'LinkedIn',
-      status: 'INTERNAL_REVIEW',
+      status: 'PENDING',
       author: 'Brand Strategist',
       factCheck: { passed: true, score: 95, status: 'VERIFIED', flags: [] },
+      checks: {
+        brandDna: { passed: true, score: 95, message: 'Tone is professional and engaging.' },
+        seo: { passed: true, score: 88, message: 'Good use of hashtags.' },
+        strategy: { passed: false, score: 70, message: 'Missing CTA for the upcoming webinar.' },
+        fact: { passed: true, score: 100, message: 'No factual claims made.' }
+      },
+      content: `Is your Brand DNA ready for the challenges of 2026? 🚀\n\nBuilding a bulletproof brand identity requires more than just a logo and a color palette. It demands a deep understanding of your core values, your target audience's evolving needs, and a consistent voice across all channels.\n\nHere are 5 actionable steps you can take today to fortify your brand's foundation:\n1. Revisit your core mission statement...\n\nSwipe through our latest carousel to learn more!`,
+      history: [
+        { id: 'h1', action: 'Submitted for Review', by: 'Brand Strategist', date: '2026-07-24T14:30:00Z' }
+      ],
       createdAt: '2026-07-24T14:30:00Z',
       scheduledDate: '2026-07-29'
     },
@@ -285,6 +448,7 @@ export const WorkspaceProvider = ({ children }) => {
       workspaceId: 'ws_001',
       title: 'Unlocking 400% ROI With Multi-Tenant Campaign Operations',
       type: 'BLOG',
+      platform: 'Medium',
       status: 'RED_FLAG_CITATION_NEEDED',
       wordCount: 1800,
       author: 'Gemini 3.5 Editorial Engine',
@@ -294,7 +458,19 @@ export const WorkspaceProvider = ({ children }) => {
         status: 'RED_FLAG_CITATION_NEEDED',
         flags: [{ type: 'UNSUPPORTED_STATISTIC', severity: 'HIGH', message: 'Unverified statistical claim found: "400% ROI". Requires verified source citation.' }]
       },
-      createdAt: '2026-07-25T09:15:00Z'
+      checks: {
+        brandDna: { passed: true, score: 90, message: 'Tone is authoritative.' },
+        seo: { passed: true, score: 96, message: 'Excellent keyword density.' },
+        strategy: { passed: true, score: 94, message: 'Matches ROI focus.' },
+        fact: { passed: false, score: 60, message: 'Unverified statistic: "400% ROI".' }
+      },
+      content: `# Unlocking 400% ROI With Multi-Tenant Campaign Operations\n\nManaging multiple client campaigns simultaneously has traditionally been a logistical nightmare for large-scale agencies. However, recent data suggests that adopting a multi-tenant operational model can increase your overall return on investment by a staggering 400%.\n\nThis article explores the architectural shifts required to achieve such unprecedented growth, focusing on unified dashboards, centralized asset management, and AI-driven automation.`,
+      history: [
+        { id: 'h1', action: 'Generated via AI', by: 'Gemini 3.5', date: '2026-07-25T08:00:00Z' },
+        { id: 'h2', action: 'Requested Revision', by: 'Agency Admin', date: '2026-07-25T09:15:00Z', note: 'We need to cite the source for the 400% ROI claim before publishing.' }
+      ],
+      createdAt: '2026-07-25T09:15:00Z',
+      scheduledDate: '2026-08-05'
     }
   ]);
 
@@ -335,13 +511,6 @@ export const WorkspaceProvider = ({ children }) => {
     tagline: '',
     approvedClaims: [],
     restrictedClaims: []
-  };
-
-
-  const toggleTheme = () => {
-    const nextTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(nextTheme);
-    localStorage.setItem('aisa_theme', nextTheme);
   };
 
   const addWorkspace = async (newWs) => {
@@ -488,7 +657,70 @@ export const WorkspaceProvider = ({ children }) => {
       isCreditModalOpen, setIsCreditModalOpen,
       isAISAAssistantOpen, setIsAISAAssistantOpen,
       notifications, setNotifications,
-      userAvatar, setUserAvatar
+      userAvatar, setUserAvatar,
+
+      // New Account Settings Modal & Personalization
+      isSettingsModalOpen, setIsSettingsModalOpen,
+      activeSettingsTab, setActiveSettingsTab,
+      appearance, setAppearance,
+      accentColor, setAccentColor,
+      region, setRegion,
+      language, setLanguage,
+      multiScheduleReminder, setMultiScheduleReminder,
+      notificationPreferences, setNotificationPreferences,
+      dataControlPreferences, setDataControlPreferences,
+      studioTarget, setStudioTarget,
+      generatedContent, setGeneratedContent,
+
+      // End-to-End Pipeline State & Actions
+      brandDnaData, setBrandDnaData,
+      seoSearchData, setSeoSearchData,
+      generatedStrategy, setGeneratedStrategy,
+      sendContentToApprovals: (payload) => {
+        const newItem = {
+          id: `cnt_${Date.now()}`,
+          workspaceId: activeWorkspaceId || 'ws_001',
+          title: payload.topic || payload.title || payload.subject || payload.headline || 'Generated Marketing Post',
+          type: (payload.type || payload.postType || 'SOCIAL').toUpperCase(),
+          platform: payload.platform || 'instagram',
+          status: 'PENDING',
+          author: 'Content Studio AI',
+          content: payload.caption || payload.longCaption || payload.body || payload.leadParagraph || '',
+          payload: payload,
+          createdAt: new Date().toISOString(),
+          scheduledDate: payload.scheduledDate || new Date().toISOString().split('T')[0],
+          checks: {
+            brandDna: { passed: true, score: 98, message: 'Aligned with Brand DNA.' },
+            seo: { passed: true, score: 95, message: 'Optimized keywords.' },
+            strategy: { passed: true, score: 96, message: 'Campaign goal matched.' },
+            fact: { passed: true, score: 100, message: 'No citations needed.' }
+          }
+        };
+        setApprovalsQueue(prev => [newItem, ...prev]);
+        setActiveModule('approvals');
+      },
+      approveAndSendToCreative: (item) => {
+        const updatedQueue = approvalsQueue.map(i =>
+          (i.id === item.id || i._id === item._id) ? { ...i, status: 'APPROVED' } : i
+        );
+        setApprovalsQueue(updatedQueue);
+
+        const contentPayload = item.payload || {
+          topic: item.title,
+          type: item.type,
+          platform: item.platform,
+          hook: item.title,
+          caption: item.content,
+          shortCaption: item.content?.slice(0, 100),
+          longCaption: item.content,
+          cta: 'Click link to learn more!',
+          hashtags: ['#AIMarketing', '#BrandDNA', '#Growth']
+        };
+
+        setGeneratedContent(contentPayload);
+        setStudioTarget(contentPayload);
+        setActiveModule('creative');
+      }
     }}>
       {children}
     </WorkspaceContext.Provider>

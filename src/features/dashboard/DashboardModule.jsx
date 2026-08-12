@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { analyticsAPI, approvalsAPI } from '../../services/api';
+
 import {
   Dna, Search, PenTool, CheckCircle2, ArrowUpRight, TrendingUp, Clock,
-  ShieldCheck, Layers, Zap, Repeat, Loader2, RefreshCw, AlertCircle
+  ShieldCheck, Layers, Zap, Repeat, Loader2, RefreshCw, AlertCircle, Rocket
 } from 'lucide-react';
 
 export const DashboardModule = () => {
@@ -11,6 +12,7 @@ export const DashboardModule = () => {
   const [analytics, setAnalytics] = useState(null);
   const [approvalsQueue, setApprovalsQueue] = useState([]);
   const [loading, setLoading] = useState(true);
+
 
   const workspaceId = activeWorkspace?._id || activeWorkspace?.id;
 
@@ -106,11 +108,12 @@ export const DashboardModule = () => {
           </button>
           <button
             onClick={() => setIsQuickPostOpen(true)}
-            className="btn-primary text-xs flex items-center gap-1.5"
+            className="btn-secondary text-xs flex items-center gap-1.5"
           >
-            <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
+            <Zap className="w-4 h-4 text-amber-500" />
             Quick Post
           </button>
+
         </div>
       </div>
 

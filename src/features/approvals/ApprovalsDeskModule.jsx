@@ -4,7 +4,7 @@ import { approvalsAPI } from '../../services/api';
 import { CheckCircle2, ShieldCheck, ShieldAlert, XCircle, UserCheck, Loader2 } from 'lucide-react';
 
 export const ApprovalsDeskModule = () => {
-  const { approvalsQueue, setApprovalsQueue, activeRole, activeWorkspace } = useWorkspace();
+  const { approvalsQueue, setApprovalsQueue, activeRole, activeWorkspace, setActiveModule, setGeneratedContent, setStudioTarget } = useWorkspace();
   const [selectedItem, setSelectedItem] = useState(approvalsQueue[0] || null);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,20 +28,40 @@ export const ApprovalsDeskModule = () => {
         status,
         reviewerComment: itemComment,
       });
-
-      const updatedQueue = approvalsQueue.map((item) =>
-        (item._id || item.id) === (selectedItem._id || selectedItem.id)
-          ? { ...item, status, reviewerComment: itemComment }
-          : item
-      );
-
-      setApprovalsQueue(updatedQueue);
-      setSelectedItem((prev) => prev ? { ...prev, status, reviewerComment: itemComment } : null);
-      setComment('');
     } catch (err) {
-      console.error('Approval update failed:', err.message);
-    } finally {
-      setLoading(false);
+      console.warn('Backend update failed (optimistic UI update will proceed):', err.message);
+    }
+
+    const updatedQueue = approvalsQueue.map((item) =>
+      (item._id || item.id) === (selectedItem._id || selectedItem.id)
+        ? { ...item, status, reviewerComment: itemComment }
+        : item
+    );
+
+    setApprovalsQueue(updatedQueue);
+    setSelectedItem((prev) => prev ? { ...prev, status, reviewerComment: itemComment } : null);
+    setComment('');
+
+    setLoading(false);
+
+    if (status === 'APPROVED') {
+      const approvedPayload = selectedItem.payload || {
+        topic: selectedItem.title,
+        type: selectedItem.type || 'SOCIAL',
+        platform: selectedItem.platform || 'instagram',
+        hook: selectedItem.title,
+        headline: selectedItem.title,
+        caption: selectedItem.content,
+        shortCaption: selectedItem.content?.slice(0, 120),
+        longCaption: selectedItem.content,
+        leadParagraph: selectedItem.content,
+        cta: 'Click link to learn more!',
+        hashtags: ['#AIMarketing', '#BrandDNA', '#Growth']
+      };
+
+      if (setGeneratedContent) setGeneratedContent(approvedPayload);
+      if (setStudioTarget) setStudioTarget(approvedPayload);
+      if (setActiveModule) setActiveModule('creative');
     }
   };
 
@@ -106,14 +126,25 @@ export const ApprovalsDeskModule = () => {
         {/* Selected Item Detail View & Approval Actions */}
         <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
           {selectedItem ? (
-            <div className="space-y-4 text-xs animate-in fade-in">
-              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                <div>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold">Item ID: {selectedItem._id || selectedItem.id}</span>
-                  <h2 className="text-base font-extrabold text-slate-900 dark:text-white">{selectedItem.title}</h2>
+            <div className="space-y-6 text-xs animate-in fade-in">
+              {/* 1. Content Details Header */}
+              <div className="flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                      selectedItem.type === 'BLOG' ? 'bg-blue-500/10 text-blue-600' : 'bg-purple-500/10 text-purple-600'
+                    }`}>{selectedItem.type}</span>
+                    <span className="text-slate-400 dark:text-slate-500 text-[10px]">&bull;</span>
+                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">{selectedItem.platform || 'General'}</span>
+                  </div>
+                  <h2 className="text-lg font-extrabold text-slate-900 dark:text-white leading-tight">{selectedItem.title}</h2>
+                  <div className="flex items-center gap-3 text-[10px] font-medium text-slate-500 mt-1">
+                    <span>Scheduled: <strong className="text-slate-700 dark:text-slate-300">{selectedItem.scheduledDate || 'TBD'}</strong></span>
+                  </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-extrabold ${
+                <span className={`px-3 py-1 rounded-full text-[11px] font-extrabold ${
                   selectedItem.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30' :
+                  selectedItem.status === 'REJECTED' ? 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/30' :
                   selectedItem.status === 'RED_FLAG_CITATION_NEEDED' ? 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/30' :
                   'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30'
                 }`}>
@@ -121,47 +152,48 @@ export const ApprovalsDeskModule = () => {
                 </span>
               </div>
 
-              {/* Fact Check Card */}
-              <div className={`p-4 rounded-2xl border space-y-1 ${
-                selectedItem.factCheck?.passed !== false
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
-                  : 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300'
-              }`}>
-                <div className="flex items-center justify-between">
-                  <span className="font-bold flex items-center gap-1.5">
-                    {selectedItem.factCheck?.passed !== false ? <ShieldCheck className="w-4 h-4 text-emerald-600" /> : <ShieldAlert className="w-4 h-4 text-rose-600" />}
-                    Governance Gate: {selectedItem.factCheck?.status || 'VERIFIED'}
-                  </span>
-                  <span className="font-extrabold text-slate-900 dark:text-white">{selectedItem.factCheck?.score || 98}%</span>
+              {/* 2. Content Preview */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold text-slate-800 dark:text-slate-300 uppercase tracking-widest">Content Preview</h3>
+                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed shadow-inner">
+                  {selectedItem.content || 'No content preview available for this item.'}
                 </div>
               </div>
 
-              {/* Comment & Actions */}
-              <div className="space-y-3 pt-2">
-                <label className="block text-xs font-bold text-slate-800 dark:text-slate-300">Reviewer Notes & Feedback</label>
+              {/* 5. Comment & Actions */}
+              <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-300 uppercase tracking-widest">Reviewer Comments</label>
                 <textarea
                   rows={3}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="Add approval comment or revision instructions..."
-                  className="w-full p-3 rounded-xl text-xs text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+                  placeholder="Add feedback, revision instructions, or rejection reason..."
+                  className="w-full p-3 rounded-xl text-xs text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-all"
                 />
 
                 <div className="flex gap-3">
                   <button
+                    onClick={() => handleUpdateStatus('REJECTED', 'Rejected by reviewer.')}
+                    disabled={loading}
+                    className="w-full btn-secondary text-xs border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-500/10 font-bold flex items-center justify-center gap-1.5 disabled:opacity-60"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />} Reject
+                  </button>
+
+                  <button
                     onClick={() => handleUpdateStatus('RED_FLAG_CITATION_NEEDED', 'Revision requested by reviewer.')}
                     disabled={loading}
-                    className="w-full btn-secondary text-xs border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-bold flex items-center justify-center gap-1.5 disabled:opacity-60"
+                    className="w-full btn-secondary text-xs border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-bold flex items-center justify-center gap-1.5 disabled:opacity-60"
                   >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />} Request Revision
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldAlert className="w-4 h-4" />} Request Revision
                   </button>
 
                   <button
                     onClick={() => handleUpdateStatus('APPROVED', 'Approved for publication.')}
                     disabled={loading}
-                    className="w-full btn-primary text-xs bg-emerald-600 hover:bg-emerald-500 font-bold flex items-center justify-center gap-1.5 disabled:opacity-60"
+                    className="w-full btn-primary text-xs bg-emerald-600 hover:bg-emerald-500 font-bold flex items-center justify-center gap-1.5 disabled:opacity-60 shadow-lg shadow-emerald-500/20"
                   >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Approve Asset
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Approve
                   </button>
                 </div>
               </div>

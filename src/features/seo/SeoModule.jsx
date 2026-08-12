@@ -55,7 +55,7 @@ const getKdColor = (kd) => {
 
 
 export const SeoModule = () => {
-  const { activeWorkspace, setActiveModule } = useWorkspace();
+  const { activeWorkspace, setActiveModule, setSeoSearchData, brandDnaData } = useWorkspace();
   const [seedKeyword, setSeedKeyword] = useState('');
   const [intent, setIntent] = useState('Commercial');
   const [loading, setLoading] = useState(false);
@@ -185,17 +185,35 @@ export const SeoModule = () => {
             )}
           </p>
         </div>
-        <div className="p-3 rounded-2xl bg-amber-500/8 border border-amber-500/20 flex items-start gap-2 text-[11px] text-amber-700 dark:text-amber-300 font-medium max-w-md">
-          <ShieldAlert className="w-3.5 h-3.5 shrink-0 text-amber-500 mt-0.5" />
-          <span>AI Ads™ does not guarantee search rankings, indexing speed, or backlinks. Focus is on factual accuracy & schema readiness.</span>
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-amber-500/8 border border-amber-500/20 flex items-start gap-2 text-[11px] text-amber-700 dark:text-amber-300 font-medium max-w-sm hidden xl:flex">
+            <ShieldAlert className="w-3.5 h-3.5 shrink-0 text-amber-500 mt-0.5" />
+            <span>AI Ads™ schema & keyword intelligence pipeline.</span>
+          </div>
+          <button
+            onClick={() => {
+              if (setSeoSearchData) {
+                setSeoSearchData({
+                  seedKeyword,
+                  keywordsList,
+                  brief,
+                  brandName: activeWorkspace.brandName
+                });
+              }
+              if (setActiveModule) setActiveModule('strategy');
+            }}
+            className="btn-primary py-2 px-4 text-xs font-bold flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md flex-shrink-0"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Generate Campaign Strategy from SEO →
+          </button>
         </div>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      {/* Main Container */}
+      <div className="flex flex-col gap-5">
 
-        {/* Left Col: Keyword Input + Cluster */}
-        <div className="space-y-5">
+        {/* Top Section: Keyword Input + Cluster */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Keyword Workspace */}
           <div className="p-5 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
             <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
@@ -312,17 +330,17 @@ export const SeoModule = () => {
           </div>
         </div>
 
-        {/* Right 2 Cols: Brief Output */}
-        <div className="lg:col-span-2 p-5 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        {/* Brief Output */}
+        <div className="p-5 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
             <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
               <FileText className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
               Structured 8-Step SEO Brief Output
             </h2>
             {brief && (
-              <button onClick={() => setActiveModule('studio')} className="btn-primary text-xs">
+              <button onClick={() => setActiveModule('strategy')} className="btn-primary text-xs">
                 <Send className="w-3.5 h-3.5" />
-                Send to Editorial Studio
+                Generate 30 Days Plan
               </button>
             )}
           </div>
@@ -472,6 +490,20 @@ export const SeoModule = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Proceed to Strategy CTA */}
+      <div className="mt-8 flex justify-end">
+        <button
+          onClick={() => setActiveModule('strategy')}
+          className="flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 transition-all hover:scale-105 active:scale-95"
+        >
+          <div className="flex flex-col items-start text-left">
+            <span className="text-sm font-bold leading-tight">Proceed to Strategy</span>
+            <span className="text-[10px] font-normal opacity-75 leading-tight">Build your full content & campaign plan</span>
+          </div>
+          <ChevronRight className="w-4 h-4 shrink-0" />
+        </button>
       </div>
     </div>
   );
