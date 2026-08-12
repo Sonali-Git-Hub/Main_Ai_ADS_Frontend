@@ -22,6 +22,7 @@ import { ApprovalsDeskModule } from './features/approvals/ApprovalsDeskModule';
 import { AnalyticsModule } from './features/analytics/AnalyticsModule';
 import { TeamRbacModule } from './features/teamRbac/TeamRbacModule';
 import { SettingsBillingModule } from './features/settingsBilling/SettingsBillingModule';
+import { SettingsModal } from './features/settingsBilling/SettingsModal';
 import { AISAAssistantDrawer } from './features/aisaAssistant/AISAAssistantDrawer';
 import { Login } from './features/auth/Login';
 
@@ -68,6 +69,7 @@ const MainContent = () => {
       <ScraperOverlayModal />
       <CreditTopupModal />
       <AISAAssistantDrawer />
+      <SettingsModal />
 
       {/* Floating AISA Assistant Toggle Button */}
       <button

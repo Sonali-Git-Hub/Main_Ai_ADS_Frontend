@@ -76,6 +76,7 @@ export const campaignAPI = {
   },
   generatePlan: (id, body = {}) => apiFetch(`/campaigns/${id}/generate-plan`, { method: 'POST', body }),
   generatePostContent: (postId, body = {}) => apiFetch(`/campaigns/posts/${postId}/generate-content`, { method: 'POST', body }),
+  updatePost: (postId, body) => apiFetch(`/campaigns/posts/${postId}`, { method: 'PUT', body }),
   updatePostStatus: (postId, body) => apiFetch(`/campaigns/posts/${postId}/status`, { method: 'PATCH', body }),
   calculateDates: (body) => apiFetch('/campaigns/dates/calculate', { method: 'POST', body }),
 };
