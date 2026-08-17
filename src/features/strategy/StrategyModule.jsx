@@ -93,7 +93,7 @@ const getWeekLabel = (day) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export const StrategyModule = () => {
-  const { activeWorkspace, setActiveModule, updateWorkspace, bulkAddCalendarEvents, calendarEvents } = useWorkspace();
+  const { activeWorkspace, setActiveModule, updateWorkspace, bulkAddCalendarEvents, calendarEvents, setGeneratedStrategy } = useWorkspace();
 
   // Core strategy fields
   const [businessGoal,      setBusinessGoal]      = useState('');
@@ -186,7 +186,7 @@ export const StrategyModule = () => {
       try {
         const data = await strategyAPI.generate(id);
         if (data && data.strategy) {
-          strategy = data.strategy;
+          strategy = data.strategy.data || (typeof data.strategy === 'object' && !data.strategy.data ? data.strategy : null);
         }
       } catch (apiErr) {
         console.log('Strategy API notice:', apiErr.message);
@@ -254,6 +254,7 @@ export const StrategyModule = () => {
       if (updateWorkspace && id) {
         await updateWorkspace(id, { currentStrategy: strategy });
       }
+      if (setGeneratedStrategy) setGeneratedStrategy(strategy);
       setGeneratedDoc(true);
       setActiveTab('plan');
     } catch (err) {
@@ -675,19 +676,6 @@ export const StrategyModule = () => {
       {activeTab === 'plan' && (
         <div className="space-y-5">
 
-          {/* Empty state (After Master Strategy Generated, but Calendar not pushed yet) */}
-          {thirtyDayPlan.length > 0 && calendarEvents.length === 0 && (
-            <div className="text-center py-16 rounded-3xl glass-card border border-dashed border-slate-200 dark:border-slate-700">
-              <Calendar className="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto mb-3 opacity-50" />
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-white mb-2">30-Day Strategy is Ready</h3>
-              <button onClick={handleGenerateCalendar} disabled={isGenerating} className="btn-primary text-sm flex items-center gap-2 mx-auto px-6 py-2.5 rounded-xl disabled:opacity-50">
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
-                  : <><Zap className="w-4 h-4 text-amber-300 fill-amber-300" /> Generate Calendar</>
-                }
-              </button>
-            </div>
-          )}
 
           {/* Empty state (Before Master Strategy Generation) */}
           {thirtyDayPlan.length === 0 && (
