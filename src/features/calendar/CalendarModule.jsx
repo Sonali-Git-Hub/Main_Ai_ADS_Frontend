@@ -8,11 +8,11 @@ import {
 } from 'lucide-react';
 
 export const CalendarModule = () => {
-  const { activeWorkspace, setActiveModule, calendarEvents, setStudioTarget, setGeneratedContent } = useWorkspace();
-  const workspaceId = activeWorkspace?._id || activeWorkspace?.id;
+  const { activeWorkspace, setActiveModule, calendarEvents, setStudioTarget, setGeneratedContent, generatedStrategy } = useWorkspace();
+  const workspaceId = activeWorkspace?._id || activeWorkspace?.id || 'ws_001';
 
-  // Read 30-day strategy plan from workspace
-  const strategyPlan = activeWorkspace?.currentStrategy?.thirtyDayPlan || [];
+  // Read 30-day strategy plan from workspace or context
+  const strategyPlan = activeWorkspace?.currentStrategy?.thirtyDayPlan || generatedStrategy?.thirtyDayPlan || [];
   const hasStrategyPlan = strategyPlan.length > 0;
 
   // Derive unique platforms from strategy plan (for pre-filling)
@@ -42,6 +42,23 @@ export const CalendarModule = () => {
     startDate: '',
     endDate: '',
   });
+
+  // Auto-fill dates and name if not set
+  useEffect(() => {
+    if (!campaignConfig.startDate) {
+      const today = new Date();
+      const end = new Date(today);
+      end.setDate(today.getDate() + 29); // 30-day span
+
+      const brandName = activeWorkspace?.brandName || 'Brand';
+      setCampaignConfig(prev => ({
+        ...prev,
+        campaignName: prev.campaignName || `${brandName} 30-Day Campaign`,
+        startDate: today.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0],
+      }));
+    }
+  }, [activeWorkspace, campaignConfig.startDate]);
 
   // Calendar UI states
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
@@ -879,13 +896,13 @@ export const CalendarModule = () => {
                       });
 
                       setStudioTarget({ platform, topic, postType, type, autoGenerate: true });
-                      // Go straight to Creative Studio — not Content Studio
-                      setActiveModule('creative');
+                      // Route to Content Studio to generate the content first
+                      setActiveModule('content');
                     }}
                     className="w-full py-3 bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2 transition-all active:scale-98"
                   >
                     <Sparkles className="w-4 h-4 text-amber-300" />
-                    GENERATE IN CREATIVE STUDIO
+                    GENERATE IN CONTENT STUDIO
                   </button>
                 </div>
               </div>

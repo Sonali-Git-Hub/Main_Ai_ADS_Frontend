@@ -2,6 +2,7 @@ import React from 'react';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
+import { NoBrandGate } from './components/layout/NoBrandGate';
 import { Bot } from 'lucide-react';
 
 // Feature Modules (Modular Architecture)
@@ -47,18 +48,81 @@ const MainContent = () => {
 
   const renderModule = () => {
     switch (activeModule) {
-      case 'dashboard': return <DashboardModule />;
+      case 'dashboard':
+        return (
+          <NoBrandGate moduleName="Dashboard">
+            <DashboardModule />
+          </NoBrandGate>
+        );
       case 'brands': return <BrandDnaModule />;
-      case 'strategy': return <StrategyModule />;
-      case 'seo': return <SeoModule />;
-      case 'calendar': return <CalendarModule />;
-      case 'studio': return <ContentStudioModule />;
-      case 'campaigns': return <CampaignBuilderModule />;
-      case 'creative': return <CreativeStudioModule />;
-      case 'repurpose': return <RepurposeModule />;
-      case 'assets': return <AssetLibraryModule />;
-      case 'approvals': return <ApprovalsDeskModule />;
-      case 'analytics': return <AnalyticsModule />;
+      case 'strategy':
+        return (
+          <NoBrandGate moduleName="Marketing Strategy & Roadmap">
+            <StrategyModule />
+          </NoBrandGate>
+        );
+      case 'seo':
+        return (
+          <NoBrandGate moduleName="SEO Intelligence & Brief Builder">
+            <SeoModule />
+          </NoBrandGate>
+        );
+      case 'calendar':
+        return (
+          <NoBrandGate moduleName="Content Calendar">
+            <CalendarModule />
+          </NoBrandGate>
+        );
+      case 'studio':
+        return (
+          <NoBrandGate moduleName="Content Studio">
+            <ContentStudioModule />
+          </NoBrandGate>
+        );
+      case 'websiteBuilder':
+      case 'websitebuilder':
+      case 'builder':
+        return (
+          <NoBrandGate moduleName="AI Website Builder">
+            <AIWebsiteBuilderModule />
+          </NoBrandGate>
+        );
+      case 'campaigns':
+        return (
+          <NoBrandGate moduleName="Campaign Builder">
+            <CampaignBuilderModule />
+          </NoBrandGate>
+        );
+      case 'creative':
+        return (
+          <NoBrandGate moduleName="Creative Studio">
+            <CreativeStudioModule />
+          </NoBrandGate>
+        );
+      case 'repurpose':
+        return (
+          <NoBrandGate moduleName="Content Repurposer">
+            <RepurposeModule />
+          </NoBrandGate>
+        );
+      case 'assets':
+        return (
+          <NoBrandGate moduleName="Asset Library">
+            <AssetLibraryModule />
+          </NoBrandGate>
+        );
+      case 'approvals':
+        return (
+          <NoBrandGate moduleName="Approvals Desk">
+            <ApprovalsDeskModule />
+          </NoBrandGate>
+        );
+      case 'analytics':
+        return (
+          <NoBrandGate moduleName="Analytics">
+            <AnalyticsModule />
+          </NoBrandGate>
+        );
       case 'team': return <TeamRbacModule />;
       case 'settings': return <SettingsBillingModule />;
       default: return <DashboardModule />;

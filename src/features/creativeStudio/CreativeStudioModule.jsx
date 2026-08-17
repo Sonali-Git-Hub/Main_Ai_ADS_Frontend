@@ -1,11 +1,11 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import {
   Palette, Sparkles, ShieldAlert, Image as ImageIcon, CheckCircle2,
   ArrowLeft, ArrowUpRight, Film, Layers, BookOpen, Wand2, Download,
   Copy, RefreshCw, Loader2, Send, Calendar, Tag, Clock, Star,
   FileVideo, LayoutGrid, Mic, Brush, Camera, Zap, X, Heart, MessageSquare,
-  Share2, Bookmark, MoreHorizontal
+  Share2, Bookmark, MoreHorizontal, Mail, FileText, Newspaper
 } from 'lucide-react';
 import { PlatformPostCanvas } from './PlatformPostCanvas';
 
@@ -678,22 +678,40 @@ const BrandKitStudio = ({ workspace }) => {
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export const CreativeStudioModule = () => {
   const { activeWorkspace, credits, deductVisualCredits, setIsCreditModalOpen, generatedContent, studioTarget } = useWorkspace();
-  const [activeSubPage, setActiveSubPage] = useState(null);
+  const [selectedFormat, setSelectedFormat] = useState(null);
 
-  // If redirected from Calendar, studioTarget carries the post's platform/type/topic.
-  // Merge it with generatedContent (studioTarget acts as a fallback).
+  // If redirected from Calendar or Content Studio, studioTarget carries the post's platform/type/topic.
   const effectiveContent = generatedContent
     ? { ...studioTarget, ...generatedContent }
     : studioTarget
       ? { platform: studioTarget.platform, type: studioTarget.type || 'SOCIAL', topic: studioTarget.topic, hook: studioTarget.topic, caption: '', hashtags: [] }
       : null;
 
-  const CHANNELS = [
+  // Auto-select the correct format card when content arrives from Content Studio or Calendar
+  useEffect(() => {
+    if (!effectiveContent) return;
+    const type = (effectiveContent.type || effectiveContent.postType || '').toUpperCase();
+    const plat = (effectiveContent.platform || '').toLowerCase();
+
+    if (type === 'EMAIL' || plat === 'email' || plat === 'newsletter') {
+      setSelectedFormat('EMAIL');
+    } else if (type === 'NEWSPAPER' || plat === 'press' || plat === 'press_release' || plat === 'newspaper') {
+      setSelectedFormat('NEWSPAPER');
+    } else if (type === 'BLOG' || plat === 'blog' || plat === 'seo' || plat === 'website') {
+      setSelectedFormat('BLOG');
+    } else if (type === 'SOCIAL' || ['instagram', 'linkedin', 'twitter', 'facebook', 'youtube', 'tiktok'].includes(plat)) {
+      setSelectedFormat('SOCIAL');
+    }
+  }, [effectiveContent?.type, effectiveContent?.platform, effectiveContent?.postType]);
+
+  const FORMAT_SECTIONS = [
     {
-      id: 'VISUAL',
-      title: 'AI Visual',
-      subtitle: 'Imagen 3 High-Res Image Synthesis',
-      icon: ImageIcon,
+      id: 'EMAIL',
+      type: 'EMAIL',
+      platform: 'email',
+      title: 'Email / Letter',
+      subtitle: 'Drip Sequences, Newsletters & Executive Copy',
+      icon: Mail,
       colorClass: 'from-indigo-500/10 to-blue-500/5',
       hoverBorder: 'hover:border-indigo-400/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.15)]',
       badgeBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
@@ -701,10 +719,12 @@ export const CreativeStudioModule = () => {
       accentClass: 'border-indigo-500/30 bg-indigo-500/5'
     },
     {
-      id: 'CAROUSEL',
-      title: 'Carousel',
-      subtitle: 'Slide Briefs for Instagram & LinkedIn',
-      icon: LayoutGrid,
+      id: 'SOCIAL',
+      type: 'SOCIAL',
+      platform: 'instagram',
+      title: 'Social Media',
+      subtitle: 'Instagram, LinkedIn, Facebook & Twitter Copy',
+      icon: Share2,
       colorClass: 'from-purple-500/10 to-violet-500/5',
       hoverBorder: 'hover:border-purple-400/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]',
       badgeBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
@@ -712,20 +732,11 @@ export const CreativeStudioModule = () => {
       accentClass: 'border-purple-500/30 bg-purple-500/5'
     },
     {
-      id: 'REEL',
-      title: 'Reel Script',
-      subtitle: 'Timestamped Scripts & Shot Lists',
-      icon: Film,
-      colorClass: 'from-rose-500/10 to-pink-500/5',
-      hoverBorder: 'hover:border-rose-400/50 hover:shadow-[0_0_20px_rgba(244,63,94,0.15)]',
-      badgeBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
-      iconColor: 'text-rose-500',
-      accentClass: 'border-rose-500/30 bg-rose-500/5'
-    },
-    {
-      id: 'STORYBOARD',
-      title: 'Storyboard',
-      subtitle: 'Frame-by-Frame Ad & Film Briefs',
+      id: 'BLOG',
+      type: 'BLOG',
+      platform: 'website',
+      title: 'Blog',
+      subtitle: 'SEO Long-Form Articles & Authority Guides',
       icon: BookOpen,
       colorClass: 'from-amber-500/10 to-orange-500/5',
       hoverBorder: 'hover:border-amber-400/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)]',
@@ -734,10 +745,12 @@ export const CreativeStudioModule = () => {
       accentClass: 'border-amber-500/30 bg-amber-500/5'
     },
     {
-      id: 'BRANDKIT',
-      title: 'Brand Kit',
-      subtitle: 'Colors, Typography & Voice Guide',
-      icon: Brush,
+      id: 'NEWSPAPER',
+      type: 'BLOG',
+      platform: 'press',
+      title: 'Newspaper',
+      subtitle: 'Press Releases, Print Copy & Announcements',
+      icon: Newspaper,
       colorClass: 'from-emerald-500/10 to-teal-500/5',
       hoverBorder: 'hover:border-emerald-400/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]',
       badgeBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -746,138 +759,124 @@ export const CreativeStudioModule = () => {
     }
   ];
 
-  const subPageTitles = {
-    VISUAL: 'AI Visual Synthesis Studio',
-    CAROUSEL: 'Carousel Slide Brief Studio',
-    REEL: 'Reel & Short Video Script Studio',
-    STORYBOARD: 'Storyboard & Shot List Studio',
-    BRANDKIT: 'Brand Visual Kit Studio'
+  const formatPayloads = {
+    SOCIAL: {
+      type: 'SOCIAL',
+      platform: 'instagram',
+      topic: `${activeWorkspace?.brandName || 'Brand'} Social Media Showcase`,
+      headline: `Transforming Marketing Velocity with ${activeWorkspace?.brandName || 'AI Ads'} 🚀`,
+      hook: `Are you ready to scale your social presence in 2026?`,
+      caption: `Building a consistent brand voice across all social media channels has never been easier. Check out these actionable tips to elevate your presence today!`,
+      cta: 'Double tap if you agree & tag a colleague below!',
+      hashtags: ['#SocialMediaStrategy', '#BrandDNA', '#GrowthMarketing']
+    },
+    BLOG: {
+      type: 'BLOG',
+      platform: 'website',
+      topic: `${activeWorkspace?.brandName || 'Brand'} SEO Blog Article`,
+      headline: `The Ultimate Guide to Scaling ${activeWorkspace?.brandName || 'Brand'} Strategy in 2026`,
+      hook: `Complete 8-step breakdown to maximize organic growth and authority.`,
+      caption: `In today's fast-evolving landscape, establishing domain authority requires a structured content strategy. Here is our comprehensive guide...`,
+      cta: 'Read full 2,000-word SEO article',
+      hashtags: ['#SEO', '#ContentStrategy', '#B2BGrowth']
+    },
+    NEWSPAPER: {
+      type: 'BLOG',
+      platform: 'press',
+      topic: `${activeWorkspace?.brandName || 'Brand'} Newspaper & Press Release`,
+      headline: `PRESS RELEASE: ${activeWorkspace?.brandName || 'Brand'} Announces Major Milestone`,
+      hook: `FOR IMMEDIATE RELEASE — Official Media Statement`,
+      caption: `MUMBAI / NEW DELHI — ${activeWorkspace?.brandName || 'The Company'} today announced a milestone expansion in its digital operations, setting new standards for industry performance...`,
+      cta: 'Media Contact & Press Kit available upon request',
+      hashtags: ['#PressRelease', '#MediaCoverage', '#BrandNews']
+    }
   };
 
-  const activeChannel = CHANNELS.find(c => c.id === activeSubPage);
+  const activeContent = effectiveContent || (selectedFormat ? formatPayloads[selectedFormat] : null);
 
   return (
     <div className="space-y-6 animate-in fade-in max-w-7xl mx-auto p-6">
-      {activeSubPage ? (
-        <div className="space-y-6">
-          {/* Sub-Page Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
-            <button
-              onClick={() => setActiveSubPage(null)}
-              className="btn-secondary text-xs py-2 px-3 flex items-center gap-2 hover:border-brand-500 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 text-brand-500" />
-              <span>Back to Creative Studio</span>
-            </button>
-            <div className="text-right">
-              <span className="text-[10px] font-extrabold uppercase text-brand-600 dark:text-brand-400 tracking-wider">Creative Synthesis Engine</span>
-              <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">{subPageTitles[activeSubPage]}</h2>
+      <div className="space-y-6">
+        {/* Header Bar */}
+        <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Palette className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Creative Studio & Format Synthesis</h1>
             </div>
-          </div>
-
-          {/* Channel Badge */}
-          {activeChannel && (
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl border ${activeChannel.accentClass}`}>
-              <activeChannel.icon className={`w-4 h-4 ${activeChannel.iconColor}`} />
-              <span className={`text-xs font-bold ${activeChannel.iconColor}`}>{activeChannel.title} â€” {activeChannel.subtitle}</span>
-            </div>
-          )}
-
-          {/* Sub-Page Content */}
-          {activeSubPage === 'VISUAL' && (
-            <VisualStudio workspace={activeWorkspace} credits={credits} deductVisualCredits={deductVisualCredits} setIsCreditModalOpen={setIsCreditModalOpen} />
-          )}
-          {activeSubPage === 'CAROUSEL' && <CarouselStudio workspace={activeWorkspace} />}
-          {activeSubPage === 'REEL' && <ReelScriptStudio workspace={activeWorkspace} />}
-          {activeSubPage === 'STORYBOARD' && <StoryboardStudio workspace={activeWorkspace} />}
-          {activeSubPage === 'BRANDKIT' && <BrandKitStudio workspace={activeWorkspace} />}
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {/* Header Bar */}
-          <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Palette className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Creative Studio & Premium Visual Synthesis</h1>
-              </div>
-              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                AI-powered visuals, carousel briefs, reel scripts, storyboards, and brand kits anchored to{' '}
-                <strong className="text-slate-900 dark:text-white">{activeWorkspace?.brandName || 'your brand'}</strong>.
-              </p>
-            </div>
-            <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-900/80 px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-800">
-              <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Balance:</span>
-              <span className="text-sm font-extrabold text-cyan-600 dark:text-cyan-400">{credits?.balance || 0} Visual Credits</span>
-              <button onClick={() => setIsCreditModalOpen(true)} className="btn-primary text-xs py-1 px-2.5">+Top Up</button>
-            </div>
-          </div>
-
-          {/* Policy Notice */}
-          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3 text-xs text-amber-700 dark:text-amber-300 font-medium">
-            <ShieldAlert className="w-4 h-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
-            <p>
-              <strong>Permanent Video Policy Notice:</strong> Native video generation is excluded. Text-based reel concepts, scripts, storyboards, shot lists, and editing instructions remain fully supported.
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+              Multi-channel creative synthesis for{' '}
+              <strong className="text-slate-900 dark:text-white">{activeWorkspace?.brandName || 'your brand'}</strong> — Email / Letter, Social Media, Blog, and Newspaper.
             </p>
           </div>
-
-          {/* 5 Channel Grid Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {CHANNELS.map((card) => {
-              const Icon = card.icon;
-              return (
-                <button
-                  key={card.id}
-                  onClick={() => setActiveSubPage(card.id)}
-                  className={`p-5 rounded-3xl text-left transition-all duration-300 border flex flex-col justify-between group relative overflow-hidden bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 ${card.hoverBorder}`}
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${card.colorClass} opacity-30 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`} />
-                  <div className="relative z-10 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className={`p-2.5 rounded-2xl ${card.badgeBg} transition-transform group-hover:scale-110 duration-300`}>
-                        <Icon className={`w-5 h-5 ${card.iconColor}`} />
-                      </div>
-                      <ArrowUpRight className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300" />
-                    </div>
-                    <div>
-                      <h3 className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight">{card.title}</h3>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-snug">{card.subtitle}</p>
-                    </div>
-                  </div>
-                  <div className="relative z-10 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                    <span>Open Studio</span>
-                    <span className={`${card.iconColor} opacity-80 group-hover:opacity-100 font-semibold`}>Open Page â†’</span>
-                  </div>
-                </button>
-              );
-            })}
+          <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-900/80 px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Balance:</span>
+            <span className="text-sm font-extrabold text-cyan-600 dark:text-cyan-400">{credits?.balance || 0} Visual Credits</span>
+            <button onClick={() => setIsCreditModalOpen(true)} className="btn-primary text-xs py-1 px-2.5">+Top Up</button>
           </div>
-
-          {/* Dynamic Platform Post Canvas - Synchronized with Content Studio & Calendar */}
-          {effectiveContent ? (
-            <PlatformPostCanvas
-              workspace={activeWorkspace}
-              generatedContent={effectiveContent}
-              credits={credits}
-              deductVisualCredits={deductVisualCredits}
-              setIsCreditModalOpen={setIsCreditModalOpen}
-            />
-          ) : (
-            <div className="p-10 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/40 dark:bg-slate-900/30 flex flex-col items-center justify-center text-center gap-3">
-              <div className="w-14 h-14 rounded-3xl bg-brand-500/10 flex items-center justify-center">
-                <Sparkles className="w-7 h-7 text-brand-500" />
-              </div>
-              <div>
-                <h4 className="text-sm font-extrabold text-slate-800 dark:text-white">No Content Loaded Yet</h4>
-                <p className="text-xs text-slate-500 mt-1 max-w-xs leading-relaxed">
-                  Go to <strong>Calendar</strong> and click <em>"Generate in Creative Studio"</em> on any scheduled post, or generate content in <strong>Content Studio</strong> first â€” this canvas will auto-load the right format (Email, Blog, Instagram, LinkedIn, etc.).
-                </p>
-              </div>
-            </div>
-          )}
         </div>
 
-      )}
+        {/* 4 Format Section Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {FORMAT_SECTIONS.map((sec) => {
+            const Icon = sec.icon;
+            const isSelected = selectedFormat === sec.id;
+            return (
+              <button
+                key={sec.id}
+                onClick={() => setSelectedFormat(sec.id)}
+                className={`p-5 rounded-3xl text-left transition-all duration-300 border flex flex-col justify-between group relative overflow-hidden bg-white/80 dark:bg-slate-900/60 ${
+                  isSelected
+                    ? 'border-brand-500 dark:border-brand-500 ring-2 ring-brand-500/20 bg-brand-500/5 dark:bg-brand-500/10 shadow-lg'
+                    : `border-slate-200 dark:border-slate-800 ${sec.hoverBorder}`
+                }`}
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${sec.colorClass} opacity-30 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`} />
+                <div className="relative z-10 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className={`p-2.5 rounded-2xl ${sec.badgeBg} transition-transform group-hover:scale-110 duration-300`}>
+                      <Icon className={`w-5 h-5 ${sec.iconColor}`} />
+                    </div>
+                    <ArrowUpRight className={`w-4 h-4 transition-all duration-300 ${isSelected ? 'text-brand-500 opacity-100' : 'text-slate-400 opacity-0 group-hover:opacity-100'}`} />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight">{sec.title}</h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-snug">{sec.subtitle}</p>
+                  </div>
+                </div>
+                <div className="relative z-10 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                  <span>{isSelected ? 'Active Mode' : 'Select Format'}</span>
+                  <span className={`${sec.iconColor} opacity-80 group-hover:opacity-100 font-semibold`}>Open →</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Dynamic Platform Post Canvas */}
+        {activeContent ? (
+          <PlatformPostCanvas
+            workspace={activeWorkspace}
+            generatedContent={activeContent}
+            credits={credits}
+            deductVisualCredits={deductVisualCredits}
+            setIsCreditModalOpen={setIsCreditModalOpen}
+          />
+        ) : (
+          <div className="p-10 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/40 dark:bg-slate-900/30 flex flex-col items-center justify-center text-center gap-3">
+            <div className="w-14 h-14 rounded-3xl bg-brand-500/10 flex items-center justify-center">
+              <Sparkles className="w-7 h-7 text-brand-500" />
+            </div>
+            <div>
+              <h4 className="text-sm font-extrabold text-slate-800 dark:text-white">Select a Format to Synthesize</h4>
+              <p className="text-xs text-slate-500 mt-1 max-w-xs leading-relaxed">
+                Click any section card above (<strong>Email / Letter</strong>, <strong>Social Media</strong>, <strong>Blog</strong>, or <strong>Newspaper</strong>) to load the canvas, or generate content in <strong>Content Studio</strong> & <strong>Calendar</strong>.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
+

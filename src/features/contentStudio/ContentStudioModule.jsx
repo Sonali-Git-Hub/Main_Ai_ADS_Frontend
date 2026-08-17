@@ -52,8 +52,20 @@ export const ContentStudioModule = () => {
   const [captionMode, setCaptionMode] = useState('short'); // 'short' | 'long'
 
   // Email Studio State
-  const [emailSubject, setEmailSubject] = useState('Supercharge your Q3 marketing campaign velocity');
-  const [emailPurpose, setEmailPurpose] = useState('newsletter');
+  const [emailForm, setEmailForm] = useState({
+    purpose: 'newsletter',
+    recipient: 'Subscribers & Email List',
+    context: '',
+    tone: 'professional',
+    keyPoints: '',
+    cta: '',
+    senderName: activeWorkspace?.brandName || '',
+    senderDesignation: 'Marketing Team',
+    senderCompany: activeWorkspace?.brandName || '',
+    lengthFormat: 'detailed',
+    subject: ''
+  });
+  const updateEmailField = (field, value) => setEmailForm(prev => ({ ...prev, [field]: value }));
   const [draftingEmail, setDraftingEmail] = useState(false);
   const [emailResult, setEmailResult] = useState(null);
 
@@ -91,13 +103,8 @@ export const ContentStudioModule = () => {
         }
       } else if (platformRaw === 'email') {
         openSubPage('EMAIL');
-        setEmailSubject(topic);
-        if (studioTarget.autoGenerate) {
-          setDraftingEmail(true);
-          contentAPI.generateEmailCopy({ workspaceId, subject: topic, purpose: emailPurpose })
-            .then(res => { if (res.email) setEmailResult(res.email); })
-            .finally(() => setDraftingEmail(false));
-        }
+        setEmailForm(prev => ({ ...prev, subject: topic }));
+        // Do not auto-generate email immediately if the user needs to fill out the form
       } else {
         // Social platforms: instagram, linkedin, twitter, facebook, youtube, tiktok
         const validPlatforms = ['instagram', 'linkedin', 'twitter', 'facebook', 'youtube', 'tiktok'];
@@ -168,6 +175,7 @@ export const ContentStudioModule = () => {
       };
 
       setNewspaperDraft(mockNewspaperDraft);
+      if (setGeneratedContent) setGeneratedContent({ ...mockNewspaperDraft, type: 'NEWSPAPER', platform: 'press' });
     } catch (err) {
       console.error('Newspaper draft error:', err.message);
     } finally {
@@ -189,6 +197,7 @@ export const ContentStudioModule = () => {
 
       if (res.draft) {
         setBlogDraft(res.draft);
+        if (setGeneratedContent) setGeneratedContent({ ...res.draft, type: 'BLOG', platform: 'website', topic: blogTopic });
         // Run fact-check on generated draft
         const fcRes = await contentAPI.factCheck({ content: res.draft.content });
         setFactCheck(fcRes.factCheck);
@@ -214,6 +223,7 @@ export const ContentStudioModule = () => {
       if (res.data) {
         const payload = {
           ...res.data,
+          type: 'SOCIAL',
           platform: socialPlatform,
           topic: socialTopic,
           postType: socialPostType,
@@ -260,14 +270,35 @@ export const ContentStudioModule = () => {
 
   // ─── Email Copy Generation ───────────────────────────────────────────────────
   const handleGenerateEmail = async () => {
+    if (!emailForm.subject && !emailForm.purpose) return;
     setDraftingEmail(true);
     try {
       const res = await contentAPI.generateEmailCopy({
         workspaceId,
-        subject: emailSubject,
-        purpose: emailPurpose,
+        subject: emailForm.subject || `${activeWorkspace?.brandName || 'Brand'} — ${emailForm.purpose}`,
+        purpose: emailForm.purpose,
+        recipientType: emailForm.recipient,
+        context: emailForm.context,
+        tone: emailForm.tone,
+        keyPoints: emailForm.keyPoints,
+        cta: emailForm.cta,
+        senderName: emailForm.senderName,
+        senderDesignation: emailForm.senderDesignation,
+        senderCompany: emailForm.senderCompany,
+        lengthFormat: emailForm.lengthFormat
       });
-      if (res.email) setEmailResult(res.email);
+      if (res.email) {
+        setEmailResult(res.email);
+        if (setGeneratedContent) setGeneratedContent({ 
+          ...res.email, 
+          type: 'EMAIL', 
+          platform: 'email', 
+          topic: emailForm.subject || emailForm.purpose,
+          hook: res.email.subject || res.email.headline || emailForm.subject,
+          caption: res.email.body || '',
+          hashtags: [] 
+        });
+      }
     } catch (err) {
       console.error('Email copy error:', err.message);
     } finally {
@@ -805,32 +836,167 @@ export const ContentStudioModule = () => {
 
       {/* 3. Email Copy Studio */}
       {tab === 'EMAIL' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-            <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Email Parameters</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-6 xl:col-span-5 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-5 h-fit">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Subject Line Topic</label>
+              <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">Email Details</h2>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Provide details to draft the perfect email</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Purpose */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Purpose</label>
+                <select
+                  value={emailForm.purpose}
+                  onChange={(e) => updateEmailField('purpose', e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+                >
+                  <option value="newsletter">Newsletter / Update</option>
+                  <option value="sales_pitch">Sales Pitch</option>
+                  <option value="cold_outreach">Cold Outreach</option>
+                  <option value="follow_up">Follow Up</option>
+                  <option value="product_launch">Product Launch</option>
+                  <option value="event_invitation">Event Invitation</option>
+                  <option value="customer_onboarding">Customer Onboarding</option>
+                  <option value="re_engagement">Re-engagement</option>
+                  <option value="thank_you">Thank You / Appreciation</option>
+                  <option value="feedback_request">Feedback Request</option>
+                  <option value="partnership_proposal">Partnership Proposal</option>
+                  <option value="executive_letter">Executive Letter</option>
+                </select>
+              </div>
+
+              {/* Recipient */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Recipient</label>
+                <input
+                  type="text"
+                  value={emailForm.recipient}
+                  onChange={(e) => updateEmailField('recipient', e.target.value)}
+                  placeholder="e.g. Subscribers"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+                />
+              </div>
+
+              {/* Tone */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Tone</label>
+                <select
+                  value={emailForm.tone}
+                  onChange={(e) => updateEmailField('tone', e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+                >
+                  <option value="professional">Professional</option>
+                  <option value="friendly">Friendly & Warm</option>
+                  <option value="formal">Formal / Corporate</option>
+                  <option value="persuasive">Persuasive / Sales-Driven</option>
+                  <option value="casual">Casual & Conversational</option>
+                  <option value="urgent">Urgent / Time-Sensitive</option>
+                  <option value="empathetic">Empathetic / Supportive</option>
+                  <option value="authoritative">Authoritative / Expert</option>
+                  <option value="inspirational">Inspirational / Motivational</option>
+                </select>
+              </div>
+
+              {/* Length / Format */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Length</label>
+                <select
+                  value={emailForm.lengthFormat}
+                  onChange={(e) => updateEmailField('lengthFormat', e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+                >
+                  <option value="short">Short (under 150 words)</option>
+                  <option value="detailed">Detailed (300–500 words)</option>
+                  <option value="long_form">Long-Form (500+ words)</option>
+                  <option value="bullet_points">Bullet Points</option>
+                  <option value="numbered_steps">Numbered Steps</option>
+                  <option value="storytelling">Storytelling</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Subject */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Subject Topic</label>
               <input
                 type="text"
-                value={emailSubject}
-                onChange={(e) => setEmailSubject(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
+                value={emailForm.subject}
+                onChange={(e) => updateEmailField('subject', e.target.value)}
+                placeholder="e.g. Exclusive Launch Invite..."
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
               />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Email Purpose</label>
-              <select
-                value={emailPurpose}
-                onChange={(e) => setEmailPurpose(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 capitalize"
-              >
-                {['newsletter', 'promotional', 'product_announcement', 'nurture'].map((p) => <option key={p} value={p}>{p.replace('_', ' ')}</option>)}
-              </select>
+
+            {/* Context */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Context</label>
+              <textarea
+                value={emailForm.context}
+                onChange={(e) => updateEmailField('context', e.target.value)}
+                placeholder="Background or situation..."
+                rows={1}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all resize-none"
+              />
             </div>
+
+            {/* Key Points */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Key Points</label>
+              <textarea
+                value={emailForm.keyPoints}
+                onChange={(e) => updateEmailField('keyPoints', e.target.value)}
+                placeholder="Points to include..."
+                rows={1}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all resize-none"
+              />
+            </div>
+
+            {/* CTA */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Call to Action (CTA)</label>
+              <input
+                type="text"
+                value={emailForm.cta}
+                onChange={(e) => updateEmailField('cta', e.target.value)}
+                placeholder="e.g. Shop Now..."
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+              />
+            </div>
+
+            {/* Sender Details */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Sender Details</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input
+                  type="text"
+                  value={emailForm.senderName}
+                  onChange={(e) => updateEmailField('senderName', e.target.value)}
+                  placeholder="Name"
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+                />
+                <input
+                  type="text"
+                  value={emailForm.senderDesignation}
+                  onChange={(e) => updateEmailField('senderDesignation', e.target.value)}
+                  placeholder="Role"
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+                />
+                <input
+                  type="text"
+                  value={emailForm.senderCompany}
+                  onChange={(e) => updateEmailField('senderCompany', e.target.value)}
+                  placeholder="Company"
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+                />
+              </div>
+            </div>
+
             <button
               onClick={handleGenerateEmail}
               disabled={draftingEmail}
-              className="w-full btn-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60"
+              className="w-full btn-primary py-3 mt-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {draftingEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               {draftingEmail ? 'Generating Email...' : 'Generate Email Copy'}

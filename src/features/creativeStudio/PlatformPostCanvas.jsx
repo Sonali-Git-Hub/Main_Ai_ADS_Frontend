@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Sparkles, Loader2, Copy, Heart, MessageSquare, Share2, Bookmark, MoreHorizontal } from "lucide-react";
 
 const VisualControls = ({ visualStyle, setVisualStyle, generating, onGenerate }) => (
@@ -32,11 +32,37 @@ const ContentPill = ({ label, value, color = "slate" }) => {
   );
 };
 
-const HeaderRow = ({ platform, topic, formatLabel }) => (
-  <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-slate-200 dark:border-slate-800">
-    <span className="px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[10px] font-black uppercase tracking-widest">{platform.toUpperCase()}</span>
-    <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-[9px] font-bold uppercase">{formatLabel}</span>
-    <span className="ml-auto text-[10px] text-slate-500 font-medium hidden sm:block">Topic: <strong className="text-slate-800 dark:text-slate-200">"{topic}"</strong></span>
+const HeaderRow = ({ platform, topic, formatLabel, isSocial, onPlatformChange }) => (
+  <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[10px] font-black uppercase tracking-widest">{platform.toUpperCase()}</span>
+      <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-[9px] font-bold uppercase">{formatLabel}</span>
+    </div>
+
+    {isSocial && (
+      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200 dark:border-slate-700">
+        {[
+          { id: 'instagram', label: 'Instagram' },
+          { id: 'linkedin',  label: 'LinkedIn' },
+          { id: 'twitter',   label: 'Twitter / X' },
+          { id: 'facebook',  label: 'Facebook' },
+        ].map(p => (
+          <button
+            key={p.id}
+            onClick={() => onPlatformChange && onPlatformChange(p.id)}
+            className={`px-3 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all ${
+              platform === p.id
+                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+    )}
+
+    <span className="text-[10px] text-slate-500 font-medium hidden md:block">Topic: <strong className="text-slate-800 dark:text-slate-200">"{topic}"</strong></span>
   </div>
 );
 
@@ -52,9 +78,10 @@ const CopySidebar = ({ hook, story, shortCap, longCap, cta, hashtags, extras = [
     {extras.map((e,i) => e.value ? <ContentPill key={i} label={e.label} value={e.value} color={e.color||"slate"} /> : null)}
   </div>
 );
+
 export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deductVisualCredits, setIsCreditModalOpen }) => {
   const rawType     = (generatedContent?.type     || generatedContent?.postType || "SOCIAL").toUpperCase();
-  const platform    = (generatedContent?.platform || "instagram").toLowerCase();
+  const [platform, setPlatform] = useState((generatedContent?.platform || "instagram").toLowerCase());
   const rawPostType = (generatedContent?.postType || "").toLowerCase();
 
   const [visualUrl,   setVisualUrl]   = useState(generatedContent?.imageUrl || "https://picsum.photos/seed/aisavisual/800/800");
@@ -64,6 +91,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
 
   useEffect(() => {
     if (generatedContent?.imageUrl) setVisualUrl(generatedContent.imageUrl);
+    if (generatedContent?.platform) setPlatform(generatedContent.platform.toLowerCase());
     setActiveSlide(0);
   }, [generatedContent]);
 
@@ -294,7 +322,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
   // ── E. SINGLE IMAGE SOCIAL ──
   return (
     <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
-      <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} />
+      <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} isSocial={true} onPlatformChange={setPlatform} />
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 space-y-4">
           <VisualControls visualStyle={visualStyle} setVisualStyle={setVisualStyle} generating={generating} onGenerate={handleGenerateVisual} />
