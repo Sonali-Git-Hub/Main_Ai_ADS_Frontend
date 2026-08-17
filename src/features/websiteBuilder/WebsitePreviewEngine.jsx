@@ -215,27 +215,6 @@ const WebsitePreviewContent = ({ website, blueprint, phaseState, progressStep, e
 
         {/* Viewport Selector */}
         <div className="flex flex-wrap items-center gap-3 self-stretch md:self-auto justify-end">
-          {isRuntimeRunning && (
-            <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-slate-800">
-              <button
-                onClick={() => setViewMode('live_sandbox')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  viewMode === 'live_sandbox' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5 text-yellow-300" /> Live App
-              </button>
-              <button
-                onClick={() => setViewMode('model_preview')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  viewMode === 'model_preview' ? 'bg-brand-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5" /> Preview
-              </button>
-            </div>
-          )}
-
           <div className="flex items-center gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
             <button
               onClick={() => setDeviceViewport('desktop')}
@@ -303,28 +282,18 @@ const WebsitePreviewContent = ({ website, blueprint, phaseState, progressStep, e
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
               </div>
               <div className="bg-slate-950 px-3 py-1 rounded-lg text-[10px] font-mono text-slate-400 border border-slate-800/80 flex items-center gap-1.5">
-                {viewMode === 'live_sandbox' && isRuntimeRunning ? (
-                  <>
-                    <span className="text-emerald-400 font-bold">● LIVE</span>
-                    <span className="text-slate-200 font-semibold">{runtime.url}</span>
-                  </>
-                ) : (
-                  <>
-                    <span>https://</span>
-                    <span className="text-slate-200">{siteTitleSlug}.ai-ads.site</span>
-                    <span className="text-slate-500">/{pageNameSlug}</span>
-                  </>
-                )}
+                <span className="text-emerald-400 font-bold">● LIVE</span>
+                <span className="text-slate-200 font-semibold">{runtime?.url || 'http://127.0.0.1:4112'}</span>
               </div>
             </div>
             
             <div className="flex items-center gap-3">
-              {viewMode === 'live_sandbox' && isRuntimeRunning && (
+              {runtime?.url && (
                 <a
                   href={runtime.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[10px] text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20"
+                  className="text-[10px] text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20 transition-all hover:bg-emerald-500/20"
                 >
                   <ExternalLink className="w-3 h-3" /> Open App in New Tab
                 </a>
@@ -333,105 +302,24 @@ const WebsitePreviewContent = ({ website, blueprint, phaseState, progressStep, e
             </div>
           </div>
 
-          {viewMode === 'live_sandbox' && isRuntimeRunning ? (
+          {runtime?.url ? (
             <div className="w-full bg-slate-950 relative min-h-[750px] flex flex-col">
               <iframe
                 key={runtime.url}
                 src={runtime.url}
-                title="Live Sandbox Application"
-                className="w-full flex-1 border-none min-h-[750px] bg-slate-950"
+                title="Live Application"
+                className="w-full flex-1 border-none min-h-[750px] bg-white dark:bg-slate-950"
                 style={{ width: '100%', height: '750px', display: 'block' }}
               />
             </div>
           ) : (
-            <>
-              {/* Website Content Header & Nav */}
-              <div className="p-4 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3" style={{ backgroundColor: theme.headerBg, color: theme.headerText, borderColor: theme.cardBorder }}>
-                <span className="font-extrabold text-sm shrink-0" style={{ color: theme.headerText }}>{website.websiteIdentity?.title}</span>
-                <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-bold overflow-x-auto scrollbar-none max-w-full py-1 px-0.5">
-                  {website.pages?.map((p, i) => (
-                    <button
-                      key={p.id || i}
-                      type="button"
-                      onClick={() => setActivePageIndex(i)}
-                      className={`cursor-pointer whitespace-nowrap px-2.5 py-1 rounded-lg text-xs transition-all ${
-                        activePageIndex === i
-                          ? 'font-extrabold bg-white/20 shadow-sm border border-white/30'
-                          : 'hover:bg-white/10 opacity-90 hover:opacity-100'
-                      }`}
-                      style={{ color: theme.headerText }}
-                    >
-                      {p.name}
-                    </button>
-                  ))}
-                </div>
+            <div className="w-full min-h-[750px] flex flex-col items-center justify-center p-12 bg-slate-950 text-center space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center mx-auto border border-brand-500/40">
+                <Loader2 className="w-7 h-7 animate-spin" />
               </div>
-
-              {/* Render Active Page Sections */}
-              <div className="p-6 space-y-8 min-h-[400px] transition-colors duration-300" style={{ backgroundColor: theme.bg, color: theme.text }}>
-            {activePage?.sections?.map((section) => (
-              <RenderWebsiteSection
-                key={section.id}
-                section={section}
-                website={website}
-                theme={theme}
-                catalogSearch={catalogSearch}
-                setCatalogSearch={setCatalogSearch}
-                expandedAccordion={expandedAccordion}
-                setExpandedAccordion={setExpandedAccordion}
-                formSubmitted={formSubmitted}
-                setFormSubmitted={setFormSubmitted}
-                triggerToast={triggerToast}
-                onCTAClick={(ctaText) => {
-                  if (!ctaText || !website?.pages) return;
-                  const label = ctaText.toLowerCase();
-                  let targetPageIndex = -1;
-
-                  // 1. Target custom order / request / form page
-                  if (label.includes('custom') || label.includes('order') || label.includes('request') || label.includes('book')) {
-                    targetPageIndex = website.pages.findIndex((page) =>
-                      page.sections?.some((sec) => sec.type === 'CustomOrderForm' || sec.type === 'ContactInquiryForm')
-                    );
-                  }
-
-                  // 2. Target catalog / menu page
-                  if (targetPageIndex === -1 && (label.includes('catalog') || label.includes('menu') || label.includes('browse'))) {
-                    targetPageIndex = website.pages.findIndex((page) =>
-                      page.sections?.some((sec) => sec.type === 'ItemCatalogGrid' || sec.type === 'FeaturedItemsGrid')
-                    );
-                  }
-
-                  // 3. Match by page name
-                  if (targetPageIndex === -1) {
-                    targetPageIndex = website.pages.findIndex((page) => {
-                      const pName = page.name.toLowerCase();
-                      if (label.includes('custom') && pName.includes('custom')) return true;
-                      if (label.includes('catalog') && (pName.includes('catalog') || pName.includes('menu'))) return true;
-                      if (label.includes('contact') && (pName.includes('contact') || pName.includes('visit'))) return true;
-                      return false;
-                    });
-                  }
-
-                  if (targetPageIndex !== -1) {
-                    setActivePageIndex(targetPageIndex);
-                    const targetPage = website.pages[targetPageIndex];
-                    triggerToast(`Navigated to "${targetPage.name}"`);
-                  } else {
-                    triggerToast(`Clicked CTA: "${ctaText}"`);
-                  }
-                }}
-              />
-            ))}
-          </div>
-
-              {/* Website Footer */}
-              <div className="p-6 border-t text-center space-y-2 text-xs transition-colors duration-300" style={{ backgroundColor: theme.surface, borderColor: theme.cardBorder, color: theme.mutedText }}>
-                <p className="font-bold" style={{ color: theme.text }}>© 2026 {website.websiteIdentity?.title}. All rights reserved.</p>
-                <p className="text-[10px]" style={{ color: theme.mutedText }}>
-                  Powered by AI Website Builder • Dynamic Blueprint Theme ({theme.themeName})
-                </p>
-              </div>
-            </>
+              <h4 className="text-sm font-bold text-white">Starting Live Application...</h4>
+              <p className="text-xs text-slate-400 max-w-sm">Compiling React components and launching sandbox preview server.</p>
+            </div>
           )}
         </div>
       </div>

@@ -21,7 +21,7 @@ export const ClarificationCard = ({ questions = [], onComplete, onSkip }) => {
           </div>
           <div>
             <h3 className="text-base font-extrabold text-white">Got it. Before I start building...</h3>
-            <p className="text-xs text-slate-400 font-medium">AISA has a few quick questions to personalize your design.</p>
+            <p className="text-xs text-slate-400 font-medium">AI Ads™ has a few quick questions to personalize your design.</p>
           </div>
         </div>
         <button

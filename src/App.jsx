@@ -35,6 +35,16 @@ const MainContent = () => {
   }
 
 
+  const isWebsiteBuilder = ['websiteBuilder', 'websitebuilder', 'builder'].includes(activeModule);
+
+  if (isWebsiteBuilder) {
+    return (
+      <div className="h-screen w-screen overflow-hidden bg-[#070A11] text-slate-100">
+        <AIWebsiteBuilderModule />
+      </div>
+    );
+  }
+
   const renderModule = () => {
     switch (activeModule) {
       case 'dashboard': return <DashboardModule />;
@@ -43,10 +53,6 @@ const MainContent = () => {
       case 'seo': return <SeoModule />;
       case 'calendar': return <CalendarModule />;
       case 'studio': return <ContentStudioModule />;
-      case 'websiteBuilder':
-      case 'websitebuilder':
-      case 'builder':
-        return <AIWebsiteBuilderModule />;
       case 'campaigns': return <CampaignBuilderModule />;
       case 'creative': return <CreativeStudioModule />;
       case 'repurpose': return <RepurposeModule />;

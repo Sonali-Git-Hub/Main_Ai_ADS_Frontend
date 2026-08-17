@@ -78,7 +78,7 @@ export const NewWebsiteView = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between bg-slate-900/60 dark:bg-slate-950/60 p-2.5 rounded-2xl border border-slate-800 text-xs">
           <span className="text-slate-400 font-bold flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-brand-400" /> AISA Conversational Builder Mode Active
+            <Sparkles className="w-3.5 h-3.5 text-brand-400" /> AI Ads™ Builder Mode Active
           </span>
           <button
             onClick={() => setDeveloperMode(true)}
