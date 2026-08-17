@@ -86,6 +86,10 @@ export const VisualAssetsPreviewCard = ({
                 alt={asset.context || `Asset ${idx + 1}`}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                 loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=600&q=80';
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
                 <span className="text-[9px] font-bold text-white truncate drop-shadow-sm">
@@ -109,6 +113,10 @@ export const VisualAssetsPreviewCard = ({
                   src={assets[previewLimit].imageUrl}
                   alt="More assets"
                   className="w-full h-full object-cover opacity-35 filter blur-[1px]"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=600&q=80';
+                  }}
                 />
               )}
               <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white p-1">
