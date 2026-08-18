@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 export const CalendarModule = () => {
-  const { activeWorkspace, setActiveModule, calendarEvents, setStudioTarget, setGeneratedContent, generatedStrategy } = useWorkspace();
+  const { activeWorkspace, setActiveModule, calendarEvents, setStudioTarget, setGeneratedContent, generatedStrategy, t } = useWorkspace();
   const workspaceId = activeWorkspace?._id || activeWorkspace?.id || 'ws_001';
 
   // Read 30-day strategy plan from workspace or context

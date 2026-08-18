@@ -4,7 +4,7 @@ import { approvalsAPI } from '../../services/api';
 import { CheckCircle2, ShieldCheck, ShieldAlert, XCircle, UserCheck, Loader2 } from 'lucide-react';
 
 export const ApprovalsDeskModule = () => {
-  const { approvalsQueue, setApprovalsQueue, activeRole, activeWorkspace, setActiveModule, setGeneratedContent, setStudioTarget } = useWorkspace();
+  const { approvalsQueue, setApprovalsQueue, activeRole, activeWorkspace, setActiveModule, setGeneratedContent, setStudioTarget, t } = useWorkspace();
   const [selectedItem, setSelectedItem] = useState(approvalsQueue[0] || null);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
@@ -72,7 +72,7 @@ export const ApprovalsDeskModule = () => {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Approvals Desk & Governance Review Queue</h1>
+            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">{t('approvalsTitle', 'Approvals Desk')} & Governance Review Queue</h1>
           </div>
           <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
             Role-gated multi-tier approval workflow for <strong className="text-slate-900 dark:text-white">{activeWorkspace?.brandName || 'your brand'}</strong>. Current Role: <span className="text-emerald-600 dark:text-emerald-400 font-bold">{activeRole || 'Admin'}</span>

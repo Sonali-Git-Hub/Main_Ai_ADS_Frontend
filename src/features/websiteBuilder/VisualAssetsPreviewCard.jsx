@@ -158,7 +158,7 @@ export const VisualAssetsPreviewCard = ({
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-brand-600 to-purple-600 text-white flex items-center justify-center">
+                <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 text-white flex items-center justify-center">
                   <Wand2 className="w-3.5 h-3.5" />
                 </div>
                 <div>

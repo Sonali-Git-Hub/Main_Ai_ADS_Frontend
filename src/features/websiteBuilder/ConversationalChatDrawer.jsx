@@ -128,7 +128,7 @@ export const ConversationalChatDrawer = ({
       {/* ── HEADER ── */}
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-3 flex-shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-600 to-purple-600 text-white flex items-center justify-center shadow-sm">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 text-white flex items-center justify-center shadow-sm">
             <Bot className="w-4 h-4" />
           </div>
           <div>
@@ -263,7 +263,7 @@ export const ConversationalChatDrawer = ({
         <button
           type="submit"
           disabled={!chatInput.trim() || isUpdating}
-          className="px-4 py-2.5 h-[40px] rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 disabled:opacity-40 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-brand-500/20 active:scale-95 flex-shrink-0"
+          className="px-4 py-2.5 h-[40px] rounded-xl bg-gradient-to-r from-brand-600 to-brand-400 hover:from-brand-500 hover:to-brand-300 disabled:opacity-40 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-brand-500/20 active:scale-95 flex-shrink-0"
           title="Send edit request (Enter)"
         >
           <Send className="w-3.5 h-3.5" />

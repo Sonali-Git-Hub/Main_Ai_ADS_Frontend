@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 export const AnalyticsModule = () => {
-  const { activeWorkspace, setActiveModule } = useWorkspace();
+  const {activeWorkspace, setActiveModule, t } = useWorkspace();
   const [analytics, setAnalytics] = useState(null);
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);

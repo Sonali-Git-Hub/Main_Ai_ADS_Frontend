@@ -93,7 +93,7 @@ export const AISAAssistantDrawer = () => {
         {/* Drawer Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-900">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#6B5AED] to-[#7B61FF] flex items-center justify-center text-white shadow-md shadow-[#7B61FF]/30">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white shadow-md shadow-brand-500/30">
               <Bot className="w-5 h-5" />
             </div>
             <div>

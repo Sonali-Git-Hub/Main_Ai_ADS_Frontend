@@ -3,8 +3,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { Settings, CreditCard, Key, Sparkles, Check, ShieldCheck, Globe, Zap, User, Mail, Phone, Lock, Camera, LogOut, Save, Image, Trash2, ChevronDown, Eye, EyeOff } from 'lucide-react';
 
 export const SettingsBillingModule = () => {
-  const { 
-    credits, 
+  const {credits, 
     setIsCreditModalOpen, 
     userAvatar, 
     setUserAvatar, 
@@ -20,8 +19,7 @@ export const SettingsBillingModule = () => {
     setLanguage,
     multiScheduleReminder,
     setMultiScheduleReminder,
-    setIsSettingsModalOpen
-  } = useWorkspace();
+    setIsSettingsModalOpen, logout, t } = useWorkspace();
   const [activeTier, setActiveTier] = useState(credits.tier || 'Agency');
   const [apiKey, setApiKey] = useState('aisa_live_pk_9948271038571029481');
   const [copiedKey, setCopiedKey] = useState(false);
@@ -165,8 +163,8 @@ export const SettingsBillingModule = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <button onClick={() => setIsSettingsModalOpen(true)} className="btn-secondary text-xs">
-            <Settings className="w-4 h-4" /> Open Settings Popup
+          <button onClick={() => setIsSettingsModalOpen(true)} className="btn-primary text-xs">
+            <Settings className="w-4 h-4" /> {t('settingsBtn', 'Settings & Billing')}
           </button>
           <button onClick={() => setIsCreditModalOpen(true)} className="btn-primary text-xs">
             <Sparkles className="w-4 h-4" /> Top Up Visual Credits
@@ -451,9 +449,9 @@ export const SettingsBillingModule = () => {
 
       {/* Logout Action */}
       <div className="pt-6 border-t border-slate-200 dark:border-slate-800/80 flex justify-end">
-        <button className="flex items-center gap-2 px-6 py-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 hover:bg-rose-100 dark:hover:bg-rose-500/20 font-bold text-sm transition-colors">
+        <button onClick={logout} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 hover:bg-rose-100 dark:hover:bg-rose-500/20 font-bold text-sm transition-colors">
           <LogOut className="w-4 h-4" />
-          Logout from AISA™
+          {t('logOut', 'Logout')}
         </button>
       </div>
 

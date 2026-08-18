@@ -71,7 +71,7 @@ export const BuilderSidebar = ({
                   className="w-full flex items-center justify-between gap-2 p-1.5 rounded-xl hover:bg-slate-200/60 dark:hover:bg-slate-800/60 transition-colors text-left group"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-pink-500 via-rose-500 to-purple-600 text-white font-black text-xs flex items-center justify-center shadow-sm flex-shrink-0">
+                    <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-brand-600 to-brand-400 text-white font-black text-xs flex items-center justify-center shadow-sm flex-shrink-0">
                       {userInitial}
                     </div>
                     <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
@@ -119,7 +119,7 @@ export const BuilderSidebar = ({
                 )}
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-pink-500 to-purple-600 text-white font-black text-xs flex items-center justify-center mx-auto shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-brand-400 text-white font-black text-xs flex items-center justify-center mx-auto shadow-sm">
                 {userInitial}
               </div>
             )}
@@ -142,11 +142,11 @@ export const BuilderSidebar = ({
               title={collapsed ? 'Dashboard' : undefined}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all group ${
                 activeNav === 'home' || activeNav === 'dashboard'
-                  ? 'bg-slate-200/80 dark:bg-slate-800/90 text-slate-900 dark:text-white font-bold shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
+                  ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300 border border-brand-500/40 shadow-glow font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-white hover:bg-brand-500/10 dark:hover:bg-brand-500/10'
               }`}
             >
-              <LayoutDashboard className="w-4 h-4 flex-shrink-0 text-slate-500 dark:text-slate-400" />
+              <LayoutDashboard className={`w-4 h-4 flex-shrink-0 ${activeNav === 'home' || activeNav === 'dashboard' ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-brand-500'}`} />
               {!collapsed && <span>Dashboard</span>}
             </button>
 
@@ -154,10 +154,10 @@ export const BuilderSidebar = ({
             <button
               onClick={onOpenSearchModal}
               title={collapsed ? 'Search' : undefined}
-              className="w-full flex items-center px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all group"
+              className="w-full flex items-center px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-white hover:bg-brand-500/10 dark:hover:bg-brand-500/10 transition-all group"
             >
               <div className="flex items-center gap-3">
-                <Search className="w-4 h-4 flex-shrink-0 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200" />
+                <Search className="w-4 h-4 flex-shrink-0 text-slate-400 group-hover:text-brand-500" />
                 {!collapsed && <span>Search</span>}
               </div>
             </button>
@@ -168,11 +168,11 @@ export const BuilderSidebar = ({
               title={collapsed ? 'Templates' : undefined}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all group ${
                 activeNav === 'templates'
-                  ? 'bg-slate-200/80 dark:bg-slate-800/90 text-slate-900 dark:text-white font-bold shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
+                  ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300 border border-brand-500/40 shadow-glow font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-white hover:bg-brand-500/10 dark:hover:bg-brand-500/10'
               }`}
             >
-              <Compass className="w-4 h-4 flex-shrink-0 text-slate-500 dark:text-slate-400" />
+              <Compass className={`w-4 h-4 flex-shrink-0 ${activeNav === 'templates' ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-brand-500'}`} />
               {!collapsed && <span>Templates</span>}
             </button>
 
@@ -182,11 +182,11 @@ export const BuilderSidebar = ({
               title={collapsed ? 'Connectors' : undefined}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all group ${
                 activeNav === 'connectors'
-                  ? 'bg-slate-200/80 dark:bg-slate-800/90 text-slate-900 dark:text-white font-bold shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
+                  ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300 border border-brand-500/40 shadow-glow font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-white hover:bg-brand-500/10 dark:hover:bg-brand-500/10'
               }`}
             >
-              <PlugZap className="w-4 h-4 flex-shrink-0 text-slate-500 dark:text-slate-400" />
+              <PlugZap className={`w-4 h-4 flex-shrink-0 ${activeNav === 'connectors' ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-brand-500'}`} />
               {!collapsed && <span>Connectors</span>}
             </button>
           </div>
@@ -205,12 +205,12 @@ export const BuilderSidebar = ({
               title={collapsed ? 'All projects' : undefined}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                 activeNav === 'projects' && projectFilter === 'all'
-                  ? 'bg-slate-200/80 dark:bg-slate-800/90 text-slate-900 dark:text-white font-bold'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
+                  ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300 border border-brand-500/40 shadow-glow font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-white hover:bg-brand-500/10 dark:hover:bg-brand-500/10'
               }`}
             >
               <div className="flex items-center gap-3 truncate">
-                <FolderKanban className="w-4 h-4 flex-shrink-0 text-slate-400" />
+                <FolderKanban className={`w-4 h-4 flex-shrink-0 ${activeNav === 'projects' && projectFilter === 'all' ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400'}`} />
                 {!collapsed && <span className="truncate">All projects</span>}
               </div>
               {!collapsed && projects.length > 0 && (
@@ -226,12 +226,12 @@ export const BuilderSidebar = ({
               title={collapsed ? 'Starred' : undefined}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                 activeNav === 'projects' && projectFilter === 'starred'
-                  ? 'bg-slate-200/80 dark:bg-slate-800/90 text-slate-900 dark:text-white font-bold'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
+                  ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300 border border-brand-500/40 shadow-glow font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-white hover:bg-brand-500/10 dark:hover:bg-brand-500/10'
               }`}
             >
               <div className="flex items-center gap-3 truncate">
-                <Star className="w-4 h-4 flex-shrink-0 text-slate-400" />
+                <Star className={`w-4 h-4 flex-shrink-0 ${activeNav === 'projects' && projectFilter === 'starred' ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400'}`} />
                 {!collapsed && <span className="truncate">Starred</span>}
               </div>
               {!collapsed && starredCount > 0 && (
@@ -247,11 +247,11 @@ export const BuilderSidebar = ({
               title={collapsed ? 'Owned by me' : undefined}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                 activeNav === 'projects' && projectFilter === 'owned'
-                  ? 'bg-slate-200/80 dark:bg-slate-800/90 text-slate-900 dark:text-white font-bold'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
+                  ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300 border border-brand-500/40 shadow-glow font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-white hover:bg-brand-500/10 dark:hover:bg-brand-500/10'
               }`}
             >
-              <User className="w-4 h-4 flex-shrink-0 text-slate-400" />
+              <User className={`w-4 h-4 flex-shrink-0 ${activeNav === 'projects' && projectFilter === 'owned' ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400'}`} />
               {!collapsed && <span>Owned by me</span>}
             </button>
 
@@ -261,11 +261,11 @@ export const BuilderSidebar = ({
               title={collapsed ? 'Shared with me' : undefined}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                 activeNav === 'projects' && projectFilter === 'shared'
-                  ? 'bg-slate-200/80 dark:bg-slate-800/90 text-slate-900 dark:text-white font-bold'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
+                  ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300 border border-brand-500/40 shadow-glow font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-white hover:bg-brand-500/10 dark:hover:bg-brand-500/10'
               }`}
             >
-              <Users className="w-4 h-4 flex-shrink-0 text-slate-400" />
+              <Users className={`w-4 h-4 flex-shrink-0 ${activeNav === 'projects' && projectFilter === 'shared' ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400'}`} />
               {!collapsed && <span>Shared with me</span>}
             </button>
           </div>

@@ -36,7 +36,7 @@ import { BuilderWorkspaceView } from './BuilderWorkspaceView';
 import { ClarificationCard } from './ClarificationCard';
 
 export const AIWebsiteBuilderModule = () => {
-  const { activeWorkspace, setActiveModule, theme, toggleTheme } = useWorkspace();
+  const { activeWorkspace, setActiveModule, theme, toggleTheme, t } = useWorkspace();
 
   // Navigation: 'home' | 'dashboard' | 'projects' | 'templates' | 'assets' | 'brand_dna' | 'connectors' | 'deployments' | 'settings' | 'help'
   const [activeNav, setActiveNav] = useState('home');
@@ -733,14 +733,14 @@ export const AIWebsiteBuilderModule = () => {
                     </div>
 
                     <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-sm">
-                      <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-black">
+                      <div className="w-10 h-10 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-black">
                         🐙
                       </div>
                       <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">GitHub Sync</h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         Automatically push emitted React/Vite repositories to your GitHub account.
                       </p>
-                      <span className="inline-block text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-200 dark:border-purple-500/20">
+                      <span className="inline-block text-[10px] font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10 px-2 py-0.5 rounded-md border border-brand-200 dark:border-brand-500/20">
                         Export ZIP Available
                       </span>
                     </div>
@@ -841,7 +841,7 @@ export const AIWebsiteBuilderModule = () => {
                 className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors group"
               >
                 <div className="flex items-center gap-2.5">
-                  <LayoutTemplate className="w-4 h-4 text-purple-500" />
+                  <LayoutTemplate className="w-4 h-4 text-brand-500" />
                   <span>Browse All 12+ Templates</span>
                 </div>
                 <span className="text-[10px] text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300">&crarr;</span>

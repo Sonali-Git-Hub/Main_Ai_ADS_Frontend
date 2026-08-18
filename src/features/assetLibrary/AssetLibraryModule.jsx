@@ -3,7 +3,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { FolderKanban, Search, Download, ExternalLink, Image as ImageIcon, FileText, Layers, Check } from 'lucide-react';
 
 export const AssetLibraryModule = () => {
-  const { activeWorkspace } = useWorkspace();
+  const {activeWorkspace, t } = useWorkspace();
   const [filterType, setFilterType] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedId, setCopiedId] = useState(null);
@@ -33,7 +33,7 @@ export const AssetLibraryModule = () => {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <FolderKanban className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Central Asset Library & Cloud Storage Vault</h1>
+            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Central {t('assetLibraryTitle', 'Asset Library')} & Cloud Storage Vault</h1>
           </div>
           <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
             Stores every generated visual, document, carousel, and repurposed variant for <strong className="text-slate-900 dark:text-white">{activeWorkspace.brandName}</strong>.

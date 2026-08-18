@@ -377,14 +377,14 @@ const WebsitePreviewContent = ({ website, blueprint, phaseState, progressStep, e
           </div>
 
           {/* Approved Recommendations Implemented */}
-          <div className="p-3 rounded-xl bg-slate-900 border border-purple-500/30 space-y-1.5">
-            <span className="text-[10px] font-extrabold text-purple-400 uppercase flex items-center gap-1">
+          <div className="p-3 rounded-xl bg-slate-900 border border-brand-500/30 space-y-1.5">
+            <span className="text-[10px] font-extrabold text-brand-400 uppercase flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5" /> Approved Recs ({website.featureImplementationSummary?.approvedCount || 0})
             </span>
             <div className="flex flex-wrap gap-1">
               {website.featureImplementationSummary?.approvedList?.length > 0 ? (
                 website.featureImplementationSummary?.approvedList?.map((f, i) => (
-                  <span key={i} className="text-[9px] bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded">
+                  <span key={i} className="text-[9px] bg-brand-500/10 text-brand-300 border border-brand-500/20 px-2 py-0.5 rounded">
                     ✓ {f}
                   </span>
                 ))

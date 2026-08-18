@@ -3,7 +3,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { Repeat, Sparkles, Send, Copy, Check, FileText, Share2, Mail, Layers, HelpCircle, ArrowLeft } from 'lucide-react';
 
 export const RepurposeModule = () => {
-  const { activeWorkspace, approvalsQueue, setActiveModule, goBack, canGoBack } = useWorkspace();
+  const {activeWorkspace, approvalsQueue, setActiveModule, goBack, canGoBack, t } = useWorkspace();
   const [selectedSource, setSelectedSource] = useState(approvalsQueue[0]?.id || '');
   const [loading, setLoading] = useState(false);
   const [repurposed, setRepurposed] = useState(null);

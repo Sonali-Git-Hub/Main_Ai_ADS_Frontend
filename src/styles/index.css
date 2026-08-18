@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --brand-500: #7B61FF;
+  --brand-600: #6B5AED;
+  --brand-400: #A882FF;
+  --brand-300: #B388FF;
+  --brand-100: #E8E3FF;
+  --brand-50: #F8F9FD;
+  --brand-glow: rgba(123, 97, 255, 0.35);
+  --brand-from: #6B5AED;
+  --brand-to: #7B61FF;
+  --brand-500-rgb: 123, 97, 255;
+  --brand-600-rgb: 107, 90, 237;
+  --brand-400-rgb: 168, 130, 255;
+  --brand-300-rgb: 179, 136, 255;
+  --brand-700-rgb: 86, 70, 199;
+}
+
 @layer base {
   body {
     @apply transition-colors duration-200;
@@ -35,7 +52,15 @@
 }
 
 .btn-primary {
-  @apply bg-gradient-to-r from-[#6B5AED] to-[#7B61FF] hover:from-[#7B61FF] hover:to-[#A882FF] text-white font-medium px-4 py-2.5 rounded-xl shadow-lg shadow-[#7B61FF]/25 hover:shadow-[#7B61FF]/40 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 text-sm;
+  background-image: linear-gradient(to right, var(--brand-from, #6B5AED), var(--brand-to, #7B61FF)) !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 25px -5px var(--brand-glow, rgba(123, 97, 255, 0.35));
+  @apply font-medium px-4 py-2.5 rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 text-sm;
+}
+
+.btn-primary:hover {
+  background-image: linear-gradient(to right, var(--brand-to, #7B61FF), var(--brand-400, #A882FF)) !important;
+  box-shadow: 0 12px 28px -4px var(--brand-glow, rgba(123, 97, 255, 0.5));
 }
 
 .btn-secondary {

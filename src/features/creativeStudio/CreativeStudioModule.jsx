@@ -677,7 +677,7 @@ const BrandKitStudio = ({ workspace }) => {
 // MAIN MODULE
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export const CreativeStudioModule = () => {
-  const { activeWorkspace, credits, deductVisualCredits, setIsCreditModalOpen, generatedContent, studioTarget } = useWorkspace();
+  const { activeWorkspace, credits, deductVisualCredits, setIsCreditModalOpen, generatedContent, studioTarget, t } = useWorkspace();
   const [selectedFormat, setSelectedFormat] = useState(null);
 
   // If redirected from Calendar or Content Studio, studioTarget carries the post's platform/type/topic.
@@ -802,7 +802,7 @@ export const CreativeStudioModule = () => {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Palette className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Creative Studio & Format Synthesis</h1>
+              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">{t('creativeStudioTitle', 'Creative Studio')} & Format Synthesis</h1>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
               Multi-channel creative synthesis for{' '}

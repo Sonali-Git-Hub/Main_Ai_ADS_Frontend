@@ -86,7 +86,7 @@ export const BuilderProjectsView = ({
 
           <button
             onClick={onNewProject}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-md shadow-brand-500/20 flex items-center gap-1.5 whitespace-nowrap"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-400 hover:from-brand-500 hover:to-brand-300 text-white font-extrabold text-xs shadow-md shadow-brand-500/20 flex items-center gap-1.5 whitespace-nowrap"
           >
             <Plus className="w-4 h-4" />
             <span>New Application</span>

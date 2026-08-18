@@ -250,7 +250,7 @@ export const BuilderWorkspaceView = ({
                   : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
               }`}
             >
-              <Code2 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              <Code2 className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
               <span>Code</span>
             </button>
           </div>

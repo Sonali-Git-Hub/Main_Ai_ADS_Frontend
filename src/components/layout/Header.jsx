@@ -41,7 +41,8 @@ export const Header = () => {
     setActiveModule,
     userAvatar,
     user,
-    logout
+    logout,
+    t
   } = useWorkspace();
 
   const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
@@ -95,10 +96,10 @@ export const Header = () => {
         {canGoBack && (
           <button 
             onClick={goBack}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-900/80 hover:bg-[#7B61FF]/10 text-slate-800 dark:text-slate-200 hover:text-[#7B61FF] dark:hover:text-[#A882FF] font-bold text-xs transition-all shadow-sm group"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-900/80 hover:bg-brand-500/10 text-slate-800 dark:text-slate-200 hover:text-brand-500 dark:hover:text-brand-400 font-bold text-xs transition-all shadow-sm group"
             title="Go to previous page"
           >
-            <ArrowLeft className="w-4 h-4 text-[#7B61FF] group-hover:-translate-x-0.5 transition-transform" />
+            <ArrowLeft className="w-4 h-4 text-brand-500 group-hover:-translate-x-0.5 transition-transform" />
             <span className="hidden sm:inline">Back</span>
           </button>
         )}
@@ -220,10 +221,10 @@ export const Header = () => {
         >
           <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
           <div className="text-left hidden xs:block">
-            <div className="text-[10px] uppercase font-bold text-cyan-400 leading-tight">Visual Credits</div>
+            <div className="text-[10px] uppercase font-bold text-cyan-400 leading-tight">{t('visualCredits', 'Visual Credits')}</div>
             <div className="text-xs font-extrabold text-brand-400">{credits.balance} Credits</div>
           </div>
-          <span className="text-[10px] bg-brand-500 text-white font-bold px-1.5 py-0.5 rounded-full ml-1">+Top Up</span>
+          <span className="text-[10px] bg-brand-500 text-white font-bold px-1.5 py-0.5 rounded-full ml-1">{t('topUp', '+Top Up')}</span>
         </button>
 
         {/* Profile Button */}
@@ -248,7 +249,7 @@ export const Header = () => {
           {showProfileMenu && (
             <div className="absolute top-full right-0 mt-2 w-60 glass-card bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-3 px-4 z-50 animate-in fade-in slide-in-from-top-2">
               <div className="border-b border-slate-200 dark:border-slate-800 pb-3 mb-3">
-                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Signed In As</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">{t('signedInAs', 'Signed In As')}</p>
                 <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate mt-0.5">{user?.email}</p>
                 <span className="inline-block text-[10px] bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full mt-1.5 border border-emerald-500/20">
                   {roles.find(r => r.id === activeRole)?.label || activeRole}
@@ -264,7 +265,7 @@ export const Header = () => {
                   className="w-full text-left py-2 px-3 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl transition-colors text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2"
                 >
                   <Users className="w-4 h-4 text-brand-500" />
-                  Team & User Management
+                  {t('team', '14. Team & RBAC')}
                 </button>
                 <button
                   onClick={() => {
@@ -274,7 +275,7 @@ export const Header = () => {
                   className="w-full text-left py-2 px-3 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl transition-colors text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2"
                 >
                   <User className="w-4 h-4 text-slate-400" />
-                  Account Settings
+                  {t('accountSettings', 'Account Settings')}
                 </button>
                 <button
                   onClick={() => {
@@ -284,7 +285,7 @@ export const Header = () => {
                   className="w-full text-left py-2 px-3 hover:bg-red-500/10 text-red-500 rounded-xl transition-colors text-xs font-semibold flex items-center gap-2"
                 >
                   <LogOut className="w-4 h-4 text-red-500" />
-                  Sign Out
+                  {t('signOut', 'Sign Out')}
                 </button>
               </div>
             </div>

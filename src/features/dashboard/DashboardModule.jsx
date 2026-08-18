@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 export const DashboardModule = () => {
-  const { activeWorkspace, setActiveModule, setIsQuickPostOpen, setIsScraperOpen, openScraperModal } = useWorkspace();
+  const { activeWorkspace, setActiveModule, setIsQuickPostOpen, setIsScraperOpen, openScraperModal, t } = useWorkspace();
   const [analytics, setAnalytics] = useState(null);
   const [approvalsQueue, setApprovalsQueue] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,37 +44,37 @@ export const DashboardModule = () => {
   const filteredQueue = approvalsQueue.filter(item => item.workspaceId === workspaceId);
 
   let verificationRate = '0%';
-  let unverifiedText = '0 unverified stats published';
+  let unverifiedText = t('itemsUnverified', 'items unverified');
 
   if (filteredQueue.length > 0) {
     const passedCount = filteredQueue.filter(item => item.factCheck?.passed).length;
     verificationRate = Math.round((passedCount / filteredQueue.length) * 100) + '%';
     const unverifiedCount = filteredQueue.length - passedCount;
-    unverifiedText = `${unverifiedCount} item${unverifiedCount === 1 ? '' : 's'} unverified`;
+    unverifiedText = `${unverifiedCount} ${t('itemsUnverified', 'items unverified')}`;
   } else {
     verificationRate = 'N/A';
-    unverifiedText = 'No items generated yet';
+    unverifiedText = t('noItemsGenerated', 'No items generated yet');
   }
 
   const stats = [
     {
-      label: 'Verified Brand DNA Memory',
+      label: t('verifiedDnaMemory', 'Verified Brand DNA Memory'),
       value: (activeWorkspace?.id === 'ws_empty' || !activeWorkspace) ? '0%' : '100%',
-      sub: 'Immutable positioning locked',
+      sub: t('immutablePositioning', 'Immutable positioning locked'),
       icon: Dna,
       color: 'text-brand-600 dark:text-brand-400',
       bg: 'bg-brand-500/5 dark:bg-brand-500/10 border-brand-500/20 dark:border-brand-500/30'
     },
     {
-      label: 'Total Campaigns',
+      label: t('totalCampaigns', 'Total Campaigns'),
       value: analytics?.campaigns?.total || 0,
-      sub: `${analytics?.campaigns?.active || 0} currently active`,
+      sub: `${analytics?.campaigns?.active || 0} ${t('currentlyActive', 'currently active')}`,
       icon: Layers,
       color: 'text-purple-600 dark:text-purple-400',
       bg: 'bg-purple-500/5 dark:bg-purple-500/10 border-purple-500/20 dark:border-purple-500/30'
     },
     {
-      label: 'Fact-Check Verification Rate',
+      label: t('factCheckRate', 'Fact-Check Verification Rate'),
       value: verificationRate,
       sub: unverifiedText,
       icon: ShieldCheck,
@@ -89,12 +89,12 @@ export const DashboardModule = () => {
       <div className="p-6 rounded-3xl bg-gradient-to-r from-brand-50 via-white to-purple-50 dark:from-brand-900/60 dark:via-slate-900 dark:to-purple-950/60 border border-brand-200 dark:border-brand-500/30 shadow-xl relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="relative z-10 space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-xs uppercase font-extrabold tracking-widest text-brand-600 dark:text-brand-400 bg-brand-500/10 dark:bg-brand-500/20 px-2.5 py-0.5 rounded-full">Canonical Operations</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Brand → Strategy → SEO → Create → Approve → Publish</span>
+            <span className="text-xs uppercase font-extrabold tracking-widest text-brand-600 dark:text-brand-400 bg-brand-500/10 dark:bg-brand-500/20 px-2.5 py-0.5 rounded-full">{t('canonicalOps', 'Canonical Operations')}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('opsFlow', 'Brand → Strategy → SEO → Create → Approve → Publish')}</span>
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">AI Ads™ Operations Hub</h1>
+          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">{t('opsHubTitle', 'AI Ads™ Operations Hub')}</h1>
           <p className="text-xs text-slate-600 dark:text-slate-300 max-w-xl">
-            Currently governing <strong className="text-slate-900 dark:text-white">{activeWorkspace?.brandName || 'your brand'}</strong> ({activeWorkspace?.domainUrl || 'website'}). All output is anchored to immutable Brand DNA.
+            {t('currentlyGoverning', 'Currently governing')} <strong className="text-slate-900 dark:text-white">{activeWorkspace?.brandName || 'your brand'}</strong> ({activeWorkspace?.domainUrl || 'website'}). {t('anchoredToDna', 'All output is anchored to immutable Brand DNA.')}
           </p>
         </div>
 
@@ -104,14 +104,14 @@ export const DashboardModule = () => {
             className="btn-secondary text-xs flex items-center gap-1.5"
           >
             <Dna className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-            Brand DNA
+            {t('brandDna', 'Brand DNA')}
           </button>
           <button
             onClick={() => setIsQuickPostOpen(true)}
             className="btn-secondary text-xs flex items-center gap-1.5"
           >
             <Zap className="w-4 h-4 text-amber-500" />
-            Quick Post
+            {t('quickPost', 'Quick Post')}
           </button>
 
         </div>
@@ -139,16 +139,16 @@ export const DashboardModule = () => {
       {/* Pipeline Shortcuts */}
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
         <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-          <Layers className="w-4 h-4 text-brand-500" /> End-to-End Content Pipeline
+          <Layers className="w-4 h-4 text-brand-500" /> {t('endToEndPipeline', 'End-to-End Content Pipeline')}
         </h2>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
-            { id: 'brands', label: '1. Brand DNA', sub: 'Positioning & Claims', icon: Dna, color: 'text-brand-600 dark:text-brand-400', bg: 'bg-brand-500/10' },
-            { id: 'seo', label: '2. SEO Briefs', sub: 'Topic Clusters & Intent', icon: Search, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-500/10' },
-            { id: 'studio', label: '3. Editorial Studio', sub: 'Multi-Channel Generation', icon: PenTool, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500/10' },
-            { id: 'approvals', label: '4. Approvals Desk', sub: 'Governance & Verification', icon: CheckCircle2, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10' },
-            { id: 'repurpose', label: '5. Repurposing', sub: '1 Asset to 5 Formats', icon: Repeat, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10' },
+            { id: 'brands', label: t('dnaStepTitle', '1. Brand DNA'), sub: t('dnaStepSub', 'Positioning & Claims'), icon: Dna, color: 'text-brand-600 dark:text-brand-400', bg: 'bg-brand-500/10' },
+            { id: 'seo', label: t('seoStepTitle', '2. SEO Briefs'), sub: t('seoStepSub', 'Topic Clusters & Intent'), icon: Search, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-500/10' },
+            { id: 'studio', label: t('studioStepTitle', '3. Editorial Studio'), sub: t('studioStepSub', 'Multi-Channel Generation'), icon: PenTool, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500/10' },
+            { id: 'approvals', label: t('approvalsStepTitle', '4. Approvals Desk'), sub: t('approvalsStepSub', 'Governance & Verification'), icon: CheckCircle2, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10' },
+            { id: 'repurpose', label: t('repurposeStepTitle', '5. Repurposing'), sub: t('repurposeStepSub', '1 Asset to 5 Formats'), icon: Repeat, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10' },
           ].map((step) => {
             const Icon = step.icon;
             return (
@@ -172,13 +172,13 @@ export const DashboardModule = () => {
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-            <Clock className="w-4 h-4 text-brand-500" /> Recent Production Items & Governance Status
+            <Clock className="w-4 h-4 text-brand-500" /> {t('recentProductionItems', 'Recent Production Items & Governance Status')}
           </h2>
           <button
             onClick={() => setActiveModule('approvals')}
             className="text-xs text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 font-semibold"
           >
-            View Approvals Queue <ArrowUpRight className="w-3.5 h-3.5" />
+            {t('viewApprovalsQueue', 'View Approvals Queue')} <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
         </div>
         {loading ? (
@@ -191,8 +191,8 @@ export const DashboardModule = () => {
               <Clock className="w-6 h-6" />
             </div>
             <div className="space-y-1 max-w-sm">
-              <h3 className="text-slate-900 dark:text-slate-200 font-extrabold text-sm">No production items yet</h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">You haven't generated any drafts or campaigns for this brand yet. Get started by scraping the Brand DNA or writing a new post.</p>
+              <h3 className="text-slate-900 dark:text-slate-200 font-extrabold text-sm">{t('noProductionItemsYet', 'No production items yet')}</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('noProductionDesc', "You haven't generated any drafts or campaigns for this brand yet. Get started by scraping the Brand DNA or writing a new post.")}</p>
             </div>
           </div>
         ) : (
@@ -200,11 +200,11 @@ export const DashboardModule = () => {
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">
-                  <th className="pb-3 px-3">Content</th>
-                  <th className="pb-3 px-3">Type</th>
-                  <th className="pb-3 px-3">Verified</th>
-                  <th className="pb-3 px-3">Status</th>
-                  <th className="pb-3 px-3 text-right">View</th>
+                  <th className="pb-3 px-3">{t('tableContent', 'Content')}</th>
+                  <th className="pb-3 px-3">{t('tableType', 'Type')}</th>
+                  <th className="pb-3 px-3">{t('tableVerified', 'Verified')}</th>
+                  <th className="pb-3 px-3">{t('tableStatus', 'Status')}</th>
+                  <th className="pb-3 px-3 text-right">{t('tableView', 'View')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">

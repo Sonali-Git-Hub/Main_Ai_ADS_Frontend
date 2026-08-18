@@ -221,7 +221,7 @@ export const BuilderTemplatesView = ({ onSelectTemplate }) => {
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
               <button
                 onClick={() => onSelectTemplate(tmpl)}
-                className="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-gradient-to-r hover:from-brand-600 hover:to-purple-600 text-slate-700 dark:text-slate-200 hover:text-white font-extrabold text-xs transition-all flex items-center justify-center gap-2 shadow-sm"
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-gradient-to-r hover:from-brand-600 hover:to-brand-400 text-slate-700 dark:text-slate-200 hover:text-white font-extrabold text-xs transition-all flex items-center justify-center gap-2 shadow-sm"
               >
                 <span>Use Template</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />

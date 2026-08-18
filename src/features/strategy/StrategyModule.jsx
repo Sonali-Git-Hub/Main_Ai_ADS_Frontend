@@ -93,7 +93,7 @@ const getWeekLabel = (day) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export const StrategyModule = () => {
-  const { activeWorkspace, setActiveModule, updateWorkspace, bulkAddCalendarEvents, calendarEvents, setGeneratedStrategy } = useWorkspace();
+  const {activeWorkspace, setActiveModule, updateWorkspace, bulkAddCalendarEvents, calendarEvents, setGeneratedStrategy, t } = useWorkspace();
 
   // Core strategy fields
   const [businessGoal,      setBusinessGoal]      = useState('');
@@ -308,15 +308,15 @@ export const StrategyModule = () => {
     : thirtyDayPlan.filter(d => getWeekLabel(d.day) === Number(selectedWeek));
 
   const objectiveCards = [
-    { key: 'businessGoal', label: 'Primary Business Goal', sublabel: 'North-star metric for all content strategy', value: businessGoal, setter: setBusinessGoal, icon: Crosshair, iconBg: 'bg-gradient-to-br from-violet-500 to-indigo-600', tag: 'GOAL', tagColor: 'bg-violet-500/15 text-violet-700 dark:text-violet-300' },
-    { key: 'leadMagnet',   label: 'Lead Magnet / Offer',   sublabel: 'High-value asset to capture qualified leads',  value: leadMagnet,   setter: setLeadMagnet,   icon: Gift,           iconBg: 'bg-gradient-to-br from-amber-500 to-orange-500',  tag: 'OFFER', tagColor: 'bg-amber-500/15 text-amber-700 dark:text-amber-300' },
-    { key: 'primaryCta',   label: 'Primary CTA',           sublabel: 'Main call-to-action across all touchpoints',    value: primaryCta,   setter: setPrimaryCta,   icon: MousePointerClick, iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-500', tag: 'CTA',   tagColor: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' },
+    { key: 'businessGoal', label: t('primaryBusinessGoal', 'Primary Business Goal'), sublabel: t('primaryBusinessGoalSub', 'North-star metric for all content strategy'), value: businessGoal, setter: setBusinessGoal, icon: Crosshair, iconBg: 'bg-gradient-to-br from-violet-500 to-indigo-600', tag: 'GOAL', tagColor: 'bg-violet-500/15 text-violet-700 dark:text-violet-300' },
+    { key: 'leadMagnet',   label: t('leadMagnetOffer', 'Lead Magnet / Offer'),   sublabel: t('leadMagnetOfferSub', 'High-value asset to capture qualified leads'),  value: leadMagnet,   setter: setLeadMagnet,   icon: Gift,           iconBg: 'bg-gradient-to-br from-amber-500 to-orange-500',  tag: 'OFFER', tagColor: 'bg-amber-500/15 text-amber-700 dark:text-amber-300' },
+    { key: 'primaryCta',   label: t('primaryCtaTitle', 'Primary CTA'),           sublabel: t('primaryCtaSub', 'Main call-to-action across all touchpoints'),    value: primaryCta,   setter: setPrimaryCta,   icon: MousePointerClick, iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-500', tag: 'CTA',   tagColor: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' },
   ];
 
   const funnelStages = [
-    { label: 'Brand Awareness', mix: '50%', desc: funnel.awareness,  goal: 'Organic Traffic & Reach', border: 'border-brand-500/40',   bg: 'bg-brand-500/5 dark:bg-brand-500/10',   badge: 'bg-brand-500/15 text-brand-700 dark:text-brand-300',   text: 'text-brand-600 dark:text-brand-400',   bar: 'bg-brand-500',   barW: 'w-[50%]' },
-    { label: 'Lead Nurturing',  mix: '30%', desc: funnel.nurturing,  goal: 'Lead Captures',           border: 'border-purple-500/40',  bg: 'bg-purple-500/5 dark:bg-purple-500/10', badge: 'bg-purple-500/15 text-purple-700 dark:text-purple-300', text: 'text-purple-600 dark:text-purple-400', bar: 'bg-purple-500', barW: 'w-[30%]' },
-    { label: 'Conversion',      mix: '20%', desc: funnel.conversion, goal: 'Sales & Revenue',         border: 'border-emerald-500/40', bg: 'bg-emerald-500/5 dark:bg-emerald-500/10', badge: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', text: 'text-emerald-600 dark:text-emerald-400', bar: 'bg-emerald-500', barW: 'w-[20%]' },
+    { label: t('brandAwareness', 'Brand Awareness'), mix: '50%', desc: funnel.awareness,  goal: t('organicTrafficReach', 'Organic Traffic & Reach'), border: 'border-brand-500/40',   bg: 'bg-brand-500/5 dark:bg-brand-500/10',   badge: 'bg-brand-500/15 text-brand-700 dark:text-brand-300',   text: 'text-brand-600 dark:text-brand-400',   bar: 'bg-brand-500',   barW: 'w-[50%]' },
+    { label: t('leadNurturing', 'Lead Nurturing'),  mix: '30%', desc: funnel.nurturing,  goal: t('leadCaptures', 'Lead Captures'),           border: 'border-purple-500/40',  bg: 'bg-purple-500/5 dark:bg-purple-500/10', badge: 'bg-purple-500/15 text-purple-700 dark:text-purple-300', text: 'text-purple-600 dark:text-purple-400', bar: 'bg-purple-500', barW: 'w-[30%]' },
+    { label: t('conversion', 'Conversion'),      mix: '20%', desc: funnel.conversion, goal: t('salesRevenue', 'Sales & Revenue'),         border: 'border-emerald-500/40', bg: 'bg-emerald-500/5 dark:bg-emerald-500/10', badge: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', text: 'text-emerald-600 dark:text-emerald-400', bar: 'bg-emerald-500', barW: 'w-[20%]' },
   ];
 
   const weekStats = [1,2,3,4].map(w => {
@@ -343,7 +343,7 @@ export const StrategyModule = () => {
               </div>
               <div>
                 <h1 className="text-xl font-extrabold text-slate-900 dark:text-white leading-none">
-                  Marketing Strategy & Roadmap
+                  {t('strategyTitle', 'Marketing Strategy & Roadmap')}
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   AI-generated 30-day growth blueprint for{' '}
@@ -360,9 +360,9 @@ export const StrategyModule = () => {
             {/* Tabs */}
             <div className="flex items-center gap-1 mt-1 bg-slate-100 dark:bg-slate-800/70 rounded-xl p-1 w-fit">
               {[
-                { id: 'overview',   label: 'Overview',   icon: BarChart2 },
-                { id: 'plan',       label: '30-Day Plan', icon: Calendar  },
-                { id: 'campaigns',  label: 'Campaigns',  icon: Megaphone },
+                { id: 'overview',   label: t('overviewTab', 'Overview'),   icon: BarChart2 },
+                { id: 'plan',       label: t('thirtyDayPlanTab', '30-Day Plan'), icon: Calendar  },
+                { id: 'campaigns',  label: t('campaignsTab', 'Campaigns'),  icon: Megaphone },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -388,7 +388,7 @@ export const StrategyModule = () => {
               </span>
             )}
             <button onClick={handleSave} className="btn-secondary text-xs flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-xl font-semibold">
-              <Save className="w-4 h-4" /> Save
+              <Save className="w-4 h-4" /> {t('saveBtn', 'Save')}
             </button>
             <button
               onClick={handleGenerate}
@@ -396,8 +396,8 @@ export const StrategyModule = () => {
               className="btn-primary text-xs flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold disabled:opacity-50"
             >
               {isGenerating
-                ? <><Loader2 className="w-4 h-4 animate-spin text-amber-300" /> Generating 30-Day Plan...</>
-                : <><Zap className="w-4 h-4 text-amber-300 fill-amber-300" /> Generate Master Strategy</>
+                ? <><Loader2 className="w-4 h-4 animate-spin text-amber-300" /> {t('generatingPlan', 'Generating 30-Day Plan...')}</>
+                : <><Zap className="w-4 h-4 text-amber-300 fill-amber-300" /> {t('generateMasterStrategy', 'Generate Master Strategy')}</>
               }
             </button>
           </div>
@@ -418,7 +418,7 @@ export const StrategyModule = () => {
                   <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
                     <TrendingUp className="w-3 h-3 text-white" />
                   </div>
-                  Objectives & Conversion Path
+                  {t('objectivesPathTitle', 'Objectives & Conversion Path')}
                 </h2>
                 <span className="text-[10px] text-slate-400 flex items-center gap-1">
                   <Sparkles className="w-3 h-3" /> Click to edit
