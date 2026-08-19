@@ -61,12 +61,12 @@ export const QuickPostModal = () => {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#6B5AED] to-[#7B61FF] flex items-center justify-center text-white shadow-lg shadow-[#7B61FF]/30">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-brand-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
               <Zap className="w-5 h-5 text-amber-300 fill-amber-300" />
             </div>
             <div>
               <h2 className="font-extrabold text-slate-900 text-base sm:text-lg">Quick Social Post Generator</h2>
-              <p className="text-xs text-[#7B61FF] font-medium">Anchored to {activeWorkspace.brandName} Brand DNA</p>
+              <p className="text-xs text-brand-500 font-medium">Anchored to {activeWorkspace.brandName} Brand DNA</p>
             </div>
           </div>
           <button 
@@ -89,7 +89,7 @@ export const QuickPostModal = () => {
                   onClick={() => setPlatform(p)}
                   className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
                     platform === p 
-                      ? 'bg-[#7B61FF]/15 text-[#7B61FF] border-[#7B61FF] shadow-sm' 
+                      ? 'bg-brand-500/15 text-brand-500 border-brand-500 shadow-sm' 
                       : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
                   }`}
                 >
@@ -106,7 +106,7 @@ export const QuickPostModal = () => {
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="e.g. 5 Reasons to Automate SEO Topic Clustering in 2026"
-              className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#7B61FF] focus:ring-1 focus:ring-[#7B61FF] rounded-xl px-4 py-2.5 text-xs"
+              className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl px-4 py-2.5 text-xs"
             />
           </div>
 
@@ -115,7 +115,7 @@ export const QuickPostModal = () => {
             <select 
               value={tone} 
               onChange={(e) => setTone(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#7B61FF] focus:ring-1 focus:ring-[#7B61FF] rounded-xl px-4 py-2.5 text-xs"
+              className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl px-4 py-2.5 text-xs"
             >
               <option value="Authoritative & Professional">Authoritative & Professional</option>
               <option value="Conversational & Friendly">Conversational & Friendly</option>
@@ -141,7 +141,7 @@ export const QuickPostModal = () => {
               <span>{output.platform} Draft Preview</span>
               <button 
                 onClick={copyToClipboard}
-                className="flex items-center gap-1 text-[#7B61FF] hover:underline"
+                className="flex items-center gap-1 text-brand-500 hover:underline"
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 {copied ? 'Copied!' : 'Copy Post'}
@@ -149,9 +149,9 @@ export const QuickPostModal = () => {
             </div>
             
             <div className="space-y-2 text-xs text-slate-900">
-              <p className="font-extrabold text-[#7B61FF] text-sm">{output.hook}</p>
+              <p className="font-extrabold text-brand-500 text-sm">{output.hook}</p>
               <p className="whitespace-pre-wrap font-medium leading-relaxed">{output.caption}</p>
-              <p className="text-[#7B61FF] font-semibold">{output.hashtags.join(' ')}</p>
+              <p className="text-brand-500 font-semibold">{output.hashtags.join(' ')}</p>
               <p className="font-bold text-slate-700">{output.cta}</p>
             </div>
 

@@ -103,11 +103,28 @@ export const SettingsBillingModule = () => {
         return;
       }
     }
+    const newName = profile.name.trim();
+    try {
+      localStorage.setItem('aisa_user_name', newName);
+    } catch(e){}
+    setUser(prev => {
+      const updated = prev
+        ? { ...prev, name: newName, fullName: newName }
+        : { email: profile.email, name: newName, fullName: newName, role: 'AgencyAdmin' };
+      try { localStorage.setItem('aisa_user', JSON.stringify(updated)); } catch(e){}
+      return updated;
+    });
     setIsSavedPopupOpen(true);
   };
 
   // Profile states
   const getUserName = (u) => {
+    try {
+      const savedName = localStorage.getItem('aisa_user_name');
+      if (savedName) return savedName;
+    } catch(e){}
+    if (u?.name) return u.name;
+    if (u?.fullName) return u.fullName;
     if (!u?.email) return 'Agency User';
     const prefix = u.email.split('@')[0];
     return prefix.charAt(0).toUpperCase() + prefix.slice(1);
@@ -125,7 +142,7 @@ export const SettingsBillingModule = () => {
       setProfile(prev => ({
         ...prev,
         email: user.email,
-        name: prev.name === 'Agency User' || prev.name === 'Jane Doe' ? getUserName(user) : prev.name
+        name: getUserName(user)
       }));
     }
   }, [user]);
@@ -357,7 +374,7 @@ export const SettingsBillingModule = () => {
             </div>
 
             <div className="flex justify-end pt-2">
-              <button onClick={handleSave} className="btn-primary text-xs"><Save className="w-4 h-4" /> Save Profile</button>
+              <button onClick={handleSave} className="btn-save"><Save className="w-4 h-4" /> Save Profile</button>
             </div>
           </div>
         </div>

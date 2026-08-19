@@ -70,8 +70,8 @@ export const DashboardModule = () => {
       value: analytics?.campaigns?.total || 0,
       sub: `${analytics?.campaigns?.active || 0} ${t('currentlyActive', 'currently active')}`,
       icon: Layers,
-      color: 'text-purple-600 dark:text-purple-400',
-      bg: 'bg-purple-500/5 dark:bg-purple-500/10 border-purple-500/20 dark:border-purple-500/30'
+      color: 'text-brand-600 dark:text-brand-400',
+      bg: 'bg-purple-500/5 dark:bg-brand-500/10 border-brand-500/20 dark:border-purple-500/30'
     },
     {
       label: t('factCheckRate', 'Fact-Check Verification Rate'),
@@ -146,7 +146,7 @@ export const DashboardModule = () => {
           {[
             { id: 'brands', label: t('dnaStepTitle', '1. Brand DNA'), sub: t('dnaStepSub', 'Positioning & Claims'), icon: Dna, color: 'text-brand-600 dark:text-brand-400', bg: 'bg-brand-500/10' },
             { id: 'seo', label: t('seoStepTitle', '2. SEO Briefs'), sub: t('seoStepSub', 'Topic Clusters & Intent'), icon: Search, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-500/10' },
-            { id: 'studio', label: t('studioStepTitle', '3. Editorial Studio'), sub: t('studioStepSub', 'Multi-Channel Generation'), icon: PenTool, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500/10' },
+            { id: 'studio', label: t('studioStepTitle', '3. Editorial Studio'), sub: t('studioStepSub', 'Multi-Channel Generation'), icon: PenTool, color: 'text-brand-600 dark:text-brand-400', bg: 'bg-brand-500/10' },
             { id: 'approvals', label: t('approvalsStepTitle', '4. Approvals Desk'), sub: t('approvalsStepSub', 'Governance & Verification'), icon: CheckCircle2, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10' },
             { id: 'repurpose', label: t('repurposeStepTitle', '5. Repurposing'), sub: t('repurposeStepSub', '1 Asset to 5 Formats'), icon: Repeat, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10' },
           ].map((step) => {

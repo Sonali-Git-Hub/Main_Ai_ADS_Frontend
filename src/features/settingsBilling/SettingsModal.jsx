@@ -348,8 +348,12 @@ export const SettingsModal = () => {
 
   const handleSaveName = () => {
     if (!nicknameInput.trim()) return;
+    const newName = nicknameInput.trim();
+    try {
+      localStorage.setItem('aisa_user_name', newName);
+    } catch(e){}
     setUser(prev => {
-      const updated = prev ? { ...prev, name: nicknameInput.trim(), fullName: nicknameInput.trim() } : { name: nicknameInput.trim(), fullName: nicknameInput.trim() };
+      const updated = prev ? { ...prev, name: newName, fullName: newName } : { name: newName, fullName: newName };
       try { localStorage.setItem('aisa_user', JSON.stringify(updated)); } catch(e){}
       return updated;
     });
@@ -962,9 +966,9 @@ export const SettingsModal = () => {
                         <button
                           type="button"
                           onClick={startCamera}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-purple-500/10 hover:text-purple-500 transition-all text-left group"
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-brand-500/10 hover:text-brand-500 transition-all text-left group"
                         >
-                          <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                          <div className="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-500 flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition-colors">
                             <Camera className="w-4 h-4" />
                           </div>
                           <div>
@@ -1025,7 +1029,7 @@ export const SettingsModal = () => {
                   className={`text-xs px-5 py-2 font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 ${
                     isNameSaved
                       ? 'bg-emerald-500 text-white'
-                      : 'btn-primary'
+                      : 'btn-save'
                   }`}
                 >
                   {isNameSaved ? <Check className="w-4 h-4" /> : null}

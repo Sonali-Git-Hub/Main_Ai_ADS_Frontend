@@ -52,23 +52,46 @@
 }
 
 .btn-primary {
-  background-image: linear-gradient(to right, var(--brand-from, #6B5AED), var(--brand-to, #7B61FF)) !important;
+  background-image: linear-gradient(135deg, var(--brand-from, #6B5AED), var(--brand-to, #7B61FF)) !important;
   color: #ffffff !important;
-  box-shadow: 0 10px 25px -5px var(--brand-glow, rgba(123, 97, 255, 0.35));
-  @apply font-medium px-4 py-2.5 rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 text-sm;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px -4px var(--brand-glow, rgba(123, 97, 255, 0.4)), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  @apply font-bold px-5 py-2.5 rounded-xl transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 flex items-center justify-center gap-2 text-sm tracking-wide cursor-pointer;
 }
 
 .btn-primary:hover {
-  background-image: linear-gradient(to right, var(--brand-to, #7B61FF), var(--brand-400, #A882FF)) !important;
-  box-shadow: 0 12px 28px -4px var(--brand-glow, rgba(123, 97, 255, 0.5));
+  background-image: linear-gradient(135deg, var(--brand-to, #7B61FF), var(--brand-400, #A882FF)) !important;
+  box-shadow: 0 12px 28px -4px var(--brand-glow, rgba(123, 97, 255, 0.6)), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+}
+
+.btn-save {
+  background-image: linear-gradient(135deg, var(--brand-from, #6B5AED), var(--brand-to, #7B61FF)) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 22px -4px var(--brand-glow, rgba(123, 97, 255, 0.4)), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  @apply font-bold px-4 py-2 rounded-xl transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 flex items-center justify-center gap-1.5 text-xs cursor-pointer;
+}
+
+.btn-save:hover {
+  background-image: linear-gradient(135deg, var(--brand-to, #7B61FF), var(--brand-400, #A882FF)) !important;
+  box-shadow: 0 10px 26px -4px var(--brand-glow, rgba(123, 97, 255, 0.6)), inset 0 1px 1px rgba(255, 255, 255, 0.4);
 }
 
 .btn-secondary {
-  @apply bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700/60 font-medium px-4 py-2.5 rounded-xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 text-sm;
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  @apply font-semibold px-4 py-2 rounded-xl transition-all duration-200 hover:bg-slate-800 hover:text-white hover:border-slate-500 active:scale-95 flex items-center justify-center gap-2 text-sm cursor-pointer;
 }
 
 .light .btn-secondary {
-  @apply bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300;
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  @apply hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300;
 }
 
 /* Custom Scrollbar */

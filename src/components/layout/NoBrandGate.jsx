@@ -28,11 +28,13 @@ export const NoBrandGate = ({ children, moduleName = 'this feature' }) => {
       {/* Glowing Icon */}
       <div className="relative mb-8">
         <div
-          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, var(--brand-glow, rgba(99,102,241,0.35)) 0%, transparent 70%)' }}
           className="absolute inset-0 scale-150 rounded-full animate-pulse"
         />
-        <div className="relative flex items-center justify-center w-24 h-24 rounded-3xl shadow-xl"
-          style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)' }}>
+        <div
+          className="relative flex items-center justify-center w-24 h-24 rounded-3xl shadow-xl"
+          style={{ background: 'linear-gradient(135deg, var(--brand-from, #6B5AED), var(--brand-to, #7B61FF))' }}
+        >
           <Dna className="w-12 h-12 text-white" />
         </div>
       </div>
@@ -43,7 +45,7 @@ export const NoBrandGate = ({ children, moduleName = 'this feature' }) => {
       </h2>
       <p className="text-slate-500 dark:text-slate-400 text-center max-w-md mb-10 text-base leading-relaxed">
         To access{' '}
-        <span className="text-indigo-500 dark:text-indigo-400 font-semibold">{moduleName}</span>,
+        <span className="text-brand-600 dark:text-brand-400 font-semibold">{moduleName}</span>,
         please load or create a brand first. Choose an option below to get started.
       </p>
 
@@ -53,11 +55,11 @@ export const NoBrandGate = ({ children, moduleName = 'this feature' }) => {
         <button
           onClick={goToBrands}
           className="group flex flex-col gap-3 p-6 rounded-2xl border border-slate-200 dark:border-slate-700
-                     bg-white dark:bg-slate-800/60 hover:border-indigo-400 dark:hover:border-indigo-500
-                     hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-lg"
+                     bg-white dark:bg-slate-800/60 hover:border-brand-500/50 dark:hover:border-brand-500/50
+                     hover:bg-brand-500/5 dark:hover:bg-brand-500/10 transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-lg"
         >
-          <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-indigo-100 dark:bg-indigo-900/40
-                           text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
+          <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-brand-500/10
+                           text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform">
             <Globe className="w-5 h-5" />
           </span>
           <div>
@@ -72,11 +74,11 @@ export const NoBrandGate = ({ children, moduleName = 'this feature' }) => {
         <button
           onClick={() => setActiveModule('brands')}
           className="group flex flex-col gap-3 p-6 rounded-2xl border border-slate-200 dark:border-slate-700
-                     bg-white dark:bg-slate-800/60 hover:border-purple-400 dark:hover:border-purple-500
-                     hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-lg"
+                     bg-white dark:bg-slate-800/60 hover:border-brand-500/50 dark:hover:border-brand-500/50
+                     hover:bg-brand-500/5 dark:hover:bg-brand-500/10 transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-lg"
         >
-          <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-purple-100 dark:bg-purple-900/40
-                           text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
+          <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-brand-500/10
+                           text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform">
             <Link2 className="w-5 h-5" />
           </span>
           <div>
@@ -91,11 +93,11 @@ export const NoBrandGate = ({ children, moduleName = 'this feature' }) => {
         <button
           onClick={goToBrands}
           className="group flex flex-col gap-3 p-6 rounded-2xl border border-slate-200 dark:border-slate-700
-                     bg-white dark:bg-slate-800/60 hover:border-emerald-400 dark:hover:border-emerald-500
-                     hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-lg"
+                     bg-white dark:bg-slate-800/60 hover:border-brand-500/50 dark:hover:border-brand-500/50
+                     hover:bg-brand-500/5 dark:hover:bg-brand-500/10 transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-lg"
         >
-          <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-900/40
-                           text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+          <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-brand-500/10
+                           text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform">
             <FileText className="w-5 h-5" />
           </span>
           <div>
@@ -110,9 +112,7 @@ export const NoBrandGate = ({ children, moduleName = 'this feature' }) => {
       {/* Primary CTA */}
       <button
         onClick={goToBrands}
-        className="flex items-center gap-2 px-7 py-3.5 rounded-full text-white font-semibold text-sm
-                   transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg"
-        style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', boxShadow: '0 8px 30px rgba(99,102,241,0.35)' }}
+        className="btn-primary flex items-center gap-2 px-7 py-3.5 rounded-full text-white font-semibold text-sm transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg"
       >
         <Zap className="w-4 h-4" />
         Create Your Brand DNA Now

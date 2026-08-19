@@ -3,6 +3,113 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { approvalsAPI } from '../../services/api';
 import { CheckCircle2, ShieldCheck, ShieldAlert, XCircle, UserCheck, Loader2 } from 'lucide-react';
 
+const getCleanItemTitle = (item) => {
+  if (!item) return 'Untitled Content';
+  if (item.title && typeof item.title === 'string' && !item.title.trim().startsWith('{')) return item.title;
+  try {
+    const raw = item.rawPayload || item.payload || (typeof item.content === 'string' && item.content.trim().startsWith('{') ? JSON.parse(item.content) : null);
+    const data = raw?.data || raw;
+    if (data?.hook) return data.hook;
+    if (data?.title) return data.title;
+    if (data?.caption) return data.caption.slice(0, 60) + '...';
+  } catch(e){}
+  return item.type ? `${item.type} Campaign` : 'Approval Item';
+};
+
+const renderParsedContentPreview = (selectedItem) => {
+  if (!selectedItem) return null;
+  let parsed = null;
+
+  if (selectedItem.rawPayload) parsed = selectedItem.rawPayload;
+  else if (selectedItem.payload) parsed = selectedItem.payload;
+  else if (typeof selectedItem.content === 'string' && selectedItem.content.trim().startsWith('{')) {
+    try { parsed = JSON.parse(selectedItem.content); } catch(e){}
+  }
+
+  const data = parsed?.data || parsed;
+
+  if (data && (data.hook || data.caption || data.shortCaption || data.longCaption || data.cta || data.creativeVariations || data.imagePrompt)) {
+    const hookText = data.hook || data.headline || data.title;
+    const captionText = data.caption || data.longCaption || data.shortCaption || selectedItem.content;
+    const ctaText = data.cta || data.callToAction;
+    const hashtags = Array.isArray(data.hashtags) ? data.hashtags : [];
+    const variations = Array.isArray(data.creativeVariations) ? data.creativeVariations : [];
+    const imagePrompt = data.imagePrompt;
+
+    return (
+      <div className="space-y-4">
+        {/* Hook / Headline */}
+        {hookText && (
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-brand-500/10 via-purple-500/10 to-indigo-500/10 border border-brand-500/30">
+            <span className="text-[10px] font-black uppercase tracking-wider text-brand-600 dark:text-brand-400 block mb-1">📌 Hook & Headline</span>
+            <p className="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">{hookText}</p>
+          </div>
+        )}
+
+        {/* Caption */}
+        {captionText && (
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-sm">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">📝 Caption & Copy</span>
+            <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium whitespace-pre-wrap">{captionText}</p>
+          </div>
+        )}
+
+        {/* Call To Action */}
+        {ctaText && (
+          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 shrink-0">🎯 CTA:</span>
+            <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">{ctaText}</p>
+          </div>
+        )}
+
+        {/* Hashtags */}
+        {hashtags.length > 0 && (
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">🏷️ Hashtags</span>
+            <div className="flex flex-wrap gap-1.5">
+              {hashtags.map((tag, idx) => (
+                <span key={idx} className="px-2.5 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold border border-brand-500/20">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Creative Variations */}
+        {variations.length > 0 && (
+          <div className="space-y-2 pt-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">💡 Creative Angle Variations</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {variations.map((v, idx) => (
+                <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-brand-500 block">{v.type || `Variation ${idx+1}`}</span>
+                  <p className="text-slate-700 dark:text-slate-300 text-[11px] font-medium leading-normal">{v.text || v.caption}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Image Prompt */}
+        {imagePrompt && (
+          <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/30 space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400 block">🖼️ AI Image Prompt</span>
+            <p className="text-xs text-slate-700 dark:text-slate-300 italic">{imagePrompt}</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Fallback to plain text formatting
+  return (
+    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed shadow-inner">
+      {selectedItem.content || 'No content preview available for this item.'}
+    </div>
+  );
+};
+
 export const ApprovalsDeskModule = () => {
   const { approvalsQueue, setApprovalsQueue, activeRole, activeWorkspace, setActiveModule, setGeneratedContent, setStudioTarget, t } = useWorkspace();
   const [selectedItem, setSelectedItem] = useState(approvalsQueue[0] || null);
@@ -45,18 +152,23 @@ export const ApprovalsDeskModule = () => {
     setLoading(false);
 
     if (status === 'APPROVED') {
-      const approvedPayload = selectedItem.payload || {
-        topic: selectedItem.title,
+      const raw = selectedItem.payload || selectedItem.rawPayload || selectedItem;
+      const data = raw?.data || raw;
+      const approvedPayload = {
+        ...raw,
+        ...data,
+        topic: data.topic || getCleanItemTitle(selectedItem),
         type: selectedItem.type || 'SOCIAL',
         platform: selectedItem.platform || 'instagram',
-        hook: selectedItem.title,
-        headline: selectedItem.title,
-        caption: selectedItem.content,
-        shortCaption: selectedItem.content?.slice(0, 120),
-        longCaption: selectedItem.content,
-        leadParagraph: selectedItem.content,
-        cta: 'Click link to learn more!',
-        hashtags: ['#AIMarketing', '#BrandDNA', '#Growth']
+        hook: data.hook || getCleanItemTitle(selectedItem),
+        headline: data.headline || data.hook || getCleanItemTitle(selectedItem),
+        caption: data.caption || data.longCaption || selectedItem.content,
+        shortCaption: data.shortCaption || data.short_caption || data.caption,
+        longCaption: data.longCaption || data.caption || selectedItem.content,
+        leadParagraph: data.leadParagraph || data.caption || selectedItem.content,
+        cta: data.cta || data.callToAction || 'Click link to learn more!',
+        hashtags: Array.isArray(data.hashtags) ? data.hashtags : ['#AIMarketing', '#BrandDNA', '#Growth'],
+        creativeVariations: data.creativeVariations || []
       };
 
       if (setGeneratedContent) setGeneratedContent(approvedPayload);
@@ -113,7 +225,7 @@ export const ApprovalsDeskModule = () => {
                     {item.status}
                   </span>
                 </div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-xs leading-snug">{item.title}</h3>
+                <h3 className="font-bold text-slate-900 dark:text-white text-xs leading-snug">{getCleanItemTitle(item)}</h3>
                 <div className="flex justify-between items-center text-[10px] text-slate-600 dark:text-slate-400 font-medium">
                   <span>Author: {item.author || 'AI Engine'}</span>
                   <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{item.factCheck?.passed !== false ? '✓ Fact-Checked' : '⚠ Citation Needed'}</span>
@@ -137,7 +249,7 @@ export const ApprovalsDeskModule = () => {
                     <span className="text-slate-400 dark:text-slate-500 text-[10px]">&bull;</span>
                     <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">{selectedItem.platform || 'General'}</span>
                   </div>
-                  <h2 className="text-lg font-extrabold text-slate-900 dark:text-white leading-tight">{selectedItem.title}</h2>
+                  <h2 className="text-lg font-extrabold text-slate-900 dark:text-white leading-tight">{getCleanItemTitle(selectedItem)}</h2>
                   <div className="flex items-center gap-3 text-[10px] font-medium text-slate-500 mt-1">
                     <span>Scheduled: <strong className="text-slate-700 dark:text-slate-300">{selectedItem.scheduledDate || 'TBD'}</strong></span>
                   </div>
@@ -155,9 +267,7 @@ export const ApprovalsDeskModule = () => {
               {/* 2. Content Preview */}
               <div className="space-y-2">
                 <h3 className="text-xs font-bold text-slate-800 dark:text-slate-300 uppercase tracking-widest">Content Preview</h3>
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed shadow-inner">
-                  {selectedItem.content || 'No content preview available for this item.'}
-                </div>
+                {renderParsedContentPreview(selectedItem)}
               </div>
 
               {/* 5. Comment & Actions */}

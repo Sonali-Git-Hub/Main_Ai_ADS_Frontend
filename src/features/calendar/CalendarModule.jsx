@@ -4,7 +4,7 @@ import { campaignAPI } from '../../services/api';
 import {
   Calendar as CalendarIcon, Plus, Settings, BarChart3, ChevronUp, ChevronDown,
   Sparkles, CheckCircle2, Clock, Layers, FileText, Trash2, X, Loader2,
-  Linkedin, Instagram, Mail, Globe, Youtube, Twitter, Edit2, Save
+  Linkedin, Instagram, Mail, Globe, Youtube, Twitter, Edit2, Save, ArrowRight
 } from 'lucide-react';
 
 export const CalendarModule = () => {
@@ -303,11 +303,11 @@ export const CalendarModule = () => {
 
   // Render Campaign Info Card Component
   const campaignInfoCard = (
-    <div className="bg-white dark:bg-[#0d131f] p-6 rounded-[28px] border border-slate-200 dark:border-slate-800 shadow-md flex flex-col justify-between space-y-4">
+    <div className="bg-white dark:bg-[#0d131f] p-5 rounded-[24px] border border-slate-200 dark:border-slate-800 shadow-md flex flex-col justify-between min-h-[380px]">
       <div>
-        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 mb-4">
+        <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-slate-800 mb-3">
           <div className="flex items-center gap-2">
-            <Settings className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+            <Settings className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
             <h3 className="text-xs font-black uppercase text-slate-800 dark:text-white tracking-wider">Campaign Info</h3>
           </div>
           
@@ -349,24 +349,24 @@ export const CalendarModule = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Campaign Name</label>
+            <label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Campaign Name</label>
             <input
               type="text"
               value={campaignConfig.campaignName}
               onChange={e => setCampaignConfig(prev => ({ ...prev, campaignName: e.target.value }))}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500/50"
+              className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500/50"
               placeholder="e.g. Q1 Product Launch"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Posting Frequency</label>
+            <label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Posting Frequency</label>
             <select
               value={campaignConfig.postingFrequency}
               onChange={e => setCampaignConfig(prev => ({ ...prev, postingFrequency: e.target.value }))}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500/50"
+              className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500/50"
             >
               {['Daily', '2x per week', '3x per week', '4x per week', '5x per week', 'Weekly', 'Bi Weekly', 'Monthly'].map(f => (
                 <option key={f} value={f}>{f}</option>
@@ -375,7 +375,7 @@ export const CalendarModule = () => {
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Start Date</label>
+            <label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Start Date</label>
             <input
               type="date"
               value={campaignConfig.startDate}
@@ -391,26 +391,26 @@ export const CalendarModule = () => {
                 
                 setCampaignConfig(prev => ({ ...prev, startDate: newStartDate, endDate: newEndDate }));
               }}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500/50"
+              className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500/50"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">End Date</label>
+            <label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider block">End Date</label>
             <input
               type="date"
               value={campaignConfig.endDate}
               onChange={e => setCampaignConfig(prev => ({ ...prev, endDate: e.target.value }))}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500/50"
+              className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500/50"
             />
           </div>
         </div>
       </div>
 
-      <div className="space-y-3 mt-4">
+      <div className="space-y-2 mt-3">
         {/* Strategy Plan Indicator */}
         {hasStrategyPlan ? (
-          <div className="flex items-center justify-between p-2.5 bg-emerald-500/8 rounded-xl border border-emerald-500/20">
+          <div className="flex items-center justify-between p-2 bg-emerald-500/8 rounded-lg border border-emerald-500/20">
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
               <span className="text-[9px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-widest">Strategy Linked</span>
@@ -420,7 +420,7 @@ export const CalendarModule = () => {
             </span>
           </div>
         ) : (
-          <div className="flex items-center justify-between p-2.5 bg-amber-500/8 rounded-xl border border-amber-500/20">
+          <div className="flex items-center justify-between p-2 bg-amber-500/8 rounded-lg border border-amber-500/20">
             <div className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-amber-500" />
               <span className="text-[9px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-widest">No Strategy Plan</span>
@@ -435,7 +435,7 @@ export const CalendarModule = () => {
         )}
 
         {campaignConfig.startDate && campaignConfig.endDate && (
-          <div className="flex items-center justify-between p-2.5 bg-brand-500/5 rounded-xl border border-brand-500/10">
+          <div className="flex items-center justify-between p-2 bg-brand-500/5 rounded-lg border border-brand-500/10">
             <span className="text-[9px] font-black uppercase text-brand-600/70 dark:text-brand-400/70 tracking-widest">Active Schedule Span</span>
             <span className="text-[10px] font-black text-brand-600 dark:text-brand-400 uppercase tracking-widest">
               {campaignConfig.startDate} → {campaignConfig.endDate}
@@ -446,14 +446,14 @@ export const CalendarModule = () => {
         <button
           onClick={handleCreateCampaign}
           disabled={isCampaignLoading}
-          className="w-full py-3 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-brand-500/20 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2"
+          className="w-full py-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md shadow-brand-500/20 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2"
         >
           {isCampaignLoading ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Generating Plan...</>
+            <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating Plan...</>
           ) : hasStrategyPlan ? (
-            <><Sparkles className="w-4 h-4" /> Generate from Strategy Plan</>
+            <><Sparkles className="w-3.5 h-3.5" /> Generate from Strategy Plan</>
           ) : (
-            <><Sparkles className="w-4 h-4" /> Generate Calendar</>
+            <><Sparkles className="w-3.5 h-3.5" /> Generate Calendar</>
           )}
         </button>
       </div>
@@ -462,21 +462,21 @@ export const CalendarModule = () => {
 
   // Render Campaign Progress Card Component
   const campaignProgressCard = (
-    <div className="bg-white dark:bg-[#0d131f] p-6 rounded-[28px] border border-slate-200 dark:border-slate-800 shadow-md flex flex-col justify-between">
+    <div className="bg-white dark:bg-[#0d131f] p-5 rounded-[24px] border border-slate-200 dark:border-slate-800 shadow-md flex flex-col justify-between min-h-[380px]">
       <div>
-        <div className="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-slate-800 mb-4">
+        <div className="flex justify-between items-center pb-2.5 border-b border-slate-200 dark:border-slate-800 mb-3">
           <div>
             <h3 className="text-[10px] font-black text-slate-850 dark:text-white uppercase tracking-widest">Campaign Progress: {currentCampaign?.campaignName || 'NEW LAUNCH'}</h3>
             <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">{totalCount} Scheduled Publication Days</p>
           </div>
-          <span className="text-[10px] font-black text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2.5 py-1 rounded-full">{progressPercent}% Completed</span>
+          <span className="text-[9px] font-black text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2.5 py-1 rounded-full">{progressPercent}% Completed</span>
         </div>
 
-        <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden mb-4">
+        <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mb-3">
           <div className="bg-brand-600 h-full transition-all duration-1000" style={{ width: `${progressPercent}%` }} />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           {[
             { label: "Total Posts", val: totalCount },
             { label: "Generated", val: generatedCount },
@@ -485,9 +485,9 @@ export const CalendarModule = () => {
             { label: "Published", val: publishedCount },
             { label: "Remaining", val: remainingCount }
           ].map((c, idx) => (
-            <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-center">
+            <div key={idx} className="p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-center">
               <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">{c.label}</span>
-              <span className="text-sm font-black text-slate-800 dark:text-white">{c.val}</span>
+              <span className="text-xs font-black text-slate-800 dark:text-white">{c.val}</span>
             </div>
           ))}
         </div>
@@ -510,25 +510,25 @@ export const CalendarModule = () => {
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[4px] animate-pulse">Orchestrating Campaign Calendar & Posts...</p>
         </div>
       ) : currentCampaign ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
           {/* Calendar monthly cells widget */}
-          <div className="lg:col-span-5 bg-white dark:bg-[#0d131f] p-6 rounded-[28px] border border-slate-200 dark:border-slate-800 shadow-md space-y-4">
+          <div className="bg-white dark:bg-[#0d131f] p-5 rounded-[24px] border border-slate-200 dark:border-slate-800 shadow-md flex flex-col justify-between min-h-[380px] space-y-1.5">
             
             {/* Header / Month selectors */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
               <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
                 {monthNames[calendarMonth]}, {calendarYear}
               </h3>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 <button
                   onClick={handlePrevMonth}
-                  className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-600 transition-all"
+                  className="p-1 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-600 transition-all"
                 >
                   <ChevronUp className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={handleNextMonth}
-                  className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-600 transition-all"
+                  className="p-1 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-600 transition-all"
                 >
                   <ChevronDown className="w-3.5 h-3.5" />
                 </button>
@@ -536,17 +536,17 @@ export const CalendarModule = () => {
             </div>
 
             {/* Weekday labels */}
-            <div className="grid grid-cols-7 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            <div className="grid grid-cols-7 text-center text-[9px] font-black text-slate-400 uppercase tracking-widest">
               {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map(dayName => (
-                <div key={dayName} className="py-2">{dayName}</div>
+                <div key={dayName} className="py-0.5">{dayName}</div>
               ))}
             </div>
 
             {/* Calendar Cells Grid */}
-            <div className="grid grid-cols-7 gap-y-2 text-center text-xs font-bold">
+            <div className="grid grid-cols-7 gap-y-1 text-center text-xs font-bold">
               {calendarCells.map((cell, cellIdx) => {
                 if (!cell.isCurrentMonth) {
-                  return <div key={cellIdx} className="aspect-square" />;
+                  return <div key={cellIdx} className="h-8" />;
                 }
 
                 const cellDate = new Date(cell.year, cell.month, cell.day);
@@ -558,13 +558,13 @@ export const CalendarModule = () => {
                 const PlatformIcon = (() => {
                   if (!postOnDay) return null;
                   const p = (postOnDay.platform || '').toLowerCase();
-                  if (p === 'linkedin')  return <Linkedin className="w-2 h-2 text-blue-500" />;
-                  if (p === 'instagram') return <Instagram className="w-2 h-2 text-pink-500" />;
-                  if (p === 'email')     return <Mail className="w-2 h-2 text-amber-500" />;
-                  if (p === 'blog')      return <Globe className="w-2 h-2 text-violet-500" />;
-                  if (p === 'youtube')   return <Youtube className="w-2 h-2 text-red-500" />;
-                  if (p === 'twitter')   return <Twitter className="w-2 h-2 text-sky-500" />;
-                  return <Sparkles className="w-2 h-2 text-brand-500" />;
+                  if (p === 'linkedin')  return <Linkedin className="w-2.5 h-2.5 text-blue-600 dark:text-blue-400" />;
+                  if (p === 'instagram') return <Instagram className="w-2.5 h-2.5 text-pink-600 dark:text-pink-400" />;
+                  if (p === 'email')     return <Mail className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />;
+                  if (p === 'blog')      return <Globe className="w-2.5 h-2.5 text-violet-600 dark:text-violet-400" />;
+                  if (p === 'youtube')   return <Youtube className="w-2.5 h-2.5 text-red-600 dark:text-red-400" />;
+                  if (p === 'twitter')   return <Twitter className="w-2.5 h-2.5 text-sky-500" />;
+                  return <Sparkles className="w-2.5 h-2.5 text-brand-500" />;
                 })();
 
                 // Platform-based cell bg when selected
@@ -581,26 +581,28 @@ export const CalendarModule = () => {
                 })();
 
                 return (
-                  <div key={cellIdx} className="flex justify-center items-center relative aspect-square">
-                    <button
-                      onClick={() => setSelectedDate(cellDate)}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all text-[11px] ${
-                        hasPost
-                          ? `${platformBg} text-white font-black shadow-md shadow-brand-500/20`
-                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:scale-105'
-                      } ${
-                        isSelected
-                          ? 'ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-[#0d131f] scale-110'
-                          : ''
-                      }`}
-                    >
-                      {cell.day}
-                    </button>
-                    {hasPost && !isSelected && PlatformIcon && (
-                      <span className="absolute bottom-0 w-3 h-3 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-sm">
-                        {PlatformIcon}
-                      </span>
-                    )}
+                  <div key={cellIdx} className="flex justify-center items-center relative h-8">
+                    <div className="relative">
+                      <button
+                        onClick={() => setSelectedDate(cellDate)}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-all text-[11px] font-black ${
+                          hasPost
+                            ? `${platformBg} text-white shadow-sm`
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:scale-105'
+                        } ${
+                          isSelected
+                            ? 'ring-2 ring-brand-500 ring-offset-1 dark:ring-offset-[#0d131f] scale-105'
+                            : ''
+                        }`}
+                      >
+                        {cell.day}
+                      </button>
+                      {hasPost && PlatformIcon && (
+                        <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full flex items-center justify-center shadow-md z-10">
+                          {PlatformIcon}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
                 })}
@@ -627,9 +629,9 @@ export const CalendarModule = () => {
           </div>
 
           {/* Active selected day details card */}
-          <div className="lg:col-span-7">
+          <div className="min-h-[380px] flex flex-col">
             {activePost ? (
-              <div className="bg-white dark:bg-[#0d131f] border border-slate-200 dark:border-slate-800 rounded-[28px] p-6 space-y-4 hover:shadow-lg transition-all flex flex-col justify-between">
+              <div className="bg-white dark:bg-[#0d131f] border border-slate-200 dark:border-slate-800 rounded-[24px] p-5 hover:shadow-lg transition-all flex flex-col justify-between min-h-[380px] h-full flex-1">
                 <div className="space-y-3">
                   <div className="flex justify-between items-start pb-2 border-b border-slate-100 dark:border-slate-800/80">
                     <div>
@@ -896,18 +898,18 @@ export const CalendarModule = () => {
                       });
 
                       setStudioTarget({ platform, topic, postType, type, autoGenerate: true });
-                      // Route to Content Studio to generate the content first
-                      setActiveModule('content');
+                      // Route to Content Studio module
+                      setActiveModule('studio');
                     }}
-                    className="w-full py-3 bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2 transition-all active:scale-98"
+                    className="w-full py-3 bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer"
                   >
-                    <Sparkles className="w-4 h-4 text-amber-300" />
-                    GENERATE IN CONTENT STUDIO
+                    <ArrowRight className="w-4 h-4 text-white" />
+                    CONTINUE TO CONTENT STUDIO
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="bg-white dark:bg-[#0d131f] border border-dashed border-slate-200 dark:border-slate-800 rounded-[28px] p-12 text-center flex flex-col items-center justify-center h-full min-h-[300px]">
+              <div className="bg-white dark:bg-[#0d131f] border border-dashed border-slate-200 dark:border-slate-800 rounded-[24px] p-8 text-center flex flex-col items-center justify-center min-h-[380px] h-full flex-1">
                 <CalendarIcon className="w-8 h-8 text-slate-300 dark:text-slate-600 mb-3" />
                 <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">No Post Scheduled</h5>
                 <p className="text-[9px] text-slate-400 font-medium mt-1 leading-normal max-w-xs">

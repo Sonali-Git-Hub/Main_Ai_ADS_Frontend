@@ -215,6 +215,7 @@ export const ContentStudioModule = () => {
     try {
       const res = await contentAPI.generateSocialPost({
         workspaceId,
+        brandName: activeWorkspace?.brandName,
         platform: socialPlatform,
         topic: socialTopic,
         postType: socialPostType,
@@ -245,6 +246,7 @@ export const ContentStudioModule = () => {
     try {
       const res = await contentAPI.generateSocialPost({
         workspaceId,
+        brandName: activeWorkspace?.brandName,
         platform: socialPlatform,
         topic: socialTopic,
         postType: socialPostType,
@@ -275,6 +277,7 @@ export const ContentStudioModule = () => {
     try {
       const res = await contentAPI.generateEmailCopy({
         workspaceId,
+        brandName: activeWorkspace?.brandName,
         subject: emailForm.subject || `${activeWorkspace?.brandName || 'Brand'} — ${emailForm.purpose}`,
         purpose: emailForm.purpose,
         recipientType: emailForm.recipient,
@@ -284,7 +287,7 @@ export const ContentStudioModule = () => {
         cta: emailForm.cta,
         senderName: emailForm.senderName,
         senderDesignation: emailForm.senderDesignation,
-        senderCompany: emailForm.senderCompany,
+        senderCompany: emailForm.senderCompany || activeWorkspace?.brandName,
         lengthFormat: emailForm.lengthFormat
       });
       if (res.email) {
@@ -312,6 +315,7 @@ export const ContentStudioModule = () => {
     try {
       const res = await contentAPI.generateAdCopy({
         workspaceId,
+        brandName: activeWorkspace?.brandName,
         product: adProduct,
         adPlatform,
       });
@@ -326,14 +330,19 @@ export const ContentStudioModule = () => {
   const submitToApprovals = (item) => {
     if (!item) return;
     if (setApprovalsQueue) {
+      const data = item.data || item;
+      let displayTitle = item.title || item.subject || data.hook || data.headline || data.title || '';
+      if (!displayTitle && typeof item === 'string') displayTitle = item.slice(0, 50) + '...';
+      if (!displayTitle) displayTitle = `${tab} Campaign Post`;
+
       let contentStr = '';
       if (typeof item === 'string') contentStr = item;
-      else if (item.content) contentStr = item.content;
-      else if (item.article) contentStr = item.article;
-      else if (item.caption) contentStr = item.caption;
-      else if (item.pressRelease) contentStr = item.pressRelease;
-      else if (item.text) contentStr = item.text;
-      else if (item.body) contentStr = item.body;
+      else if (data.caption) contentStr = data.caption;
+      else if (data.content) contentStr = data.content;
+      else if (data.article) contentStr = data.article;
+      else if (data.pressRelease) contentStr = data.pressRelease;
+      else if (data.text) contentStr = data.text;
+      else if (data.body) contentStr = data.body;
       else contentStr = JSON.stringify(item, null, 2);
 
       let platform = 'General';
@@ -346,13 +355,15 @@ export const ContentStudioModule = () => {
       setApprovalsQueue((prev) => [
         {
           id: item.id || `cnt_${Date.now()}`,
-          title: item.title || item.subject || (contentStr.substring(0, 30) + '...'),
+          title: displayTitle,
           type: tab,
           platform: platform,
           status: tab === 'BLOG' ? (factCheck?.passed ? 'PENDING' : 'RED_FLAG_CITATION_NEEDED') : 'PENDING',
-          wordCount: item.wordCount || contentStr.split(' ').length,
+          wordCount: item.wordCount || (typeof contentStr === 'string' ? contentStr.split(' ').length : 100),
           author: 'AISA AI Engine',
           factCheck: factCheck || { passed: true, score: 98, status: 'VERIFIED' },
+          payload: item,
+          rawPayload: item,
           checks: {
             brandDna: { passed: true, score: 98, message: 'Strong alignment with brand voice.' },
             seo: { passed: true, score: 92, message: 'Keywords optimized correctly.' },
@@ -580,9 +591,9 @@ export const ContentStudioModule = () => {
                 </div>
 
                 {/* Banner notice explaining focus on copy */}
-                <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between text-xs text-indigo-700 dark:text-indigo-300 font-medium">
+                <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-between text-xs text-indigo-700 dark:text-indigo-300 font-medium">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                    <FileText className="w-4 h-4 text-brand-500 flex-shrink-0" />
                     <p><strong>Content Studio focus:</strong> Structured text copy (Hook, Storytelling, Captions, CTAs, SEO Hashtags). Generate matching visual assets in <strong>Creative Studio</strong>.</p>
                   </div>
                 </div>
@@ -621,7 +632,7 @@ export const ContentStudioModule = () => {
                   {/* ── CARD 2: STORYTELLING ANGLE ── */}
                   <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-purple-500/40 transition-colors">
                     <div className="flex items-center justify-between">
-                      <span className="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                      <span className="px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
                         📖 STORYTELLING ANGLE
                       </span>
                       <div className="flex items-center gap-1">
@@ -635,7 +646,7 @@ export const ContentStudioModule = () => {
                         </button>
                         <button
                           onClick={() => navigator.clipboard.writeText(socialResult.storytelling || 'Every brand has a story, but only the ones with consistent voice build lasting loyalty.')}
-                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-purple-500 transition-colors"
+                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-brand-500 transition-colors"
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </button>
@@ -1284,8 +1295,8 @@ export const ContentStudioModule = () => {
                 icon: Share2,
                 colorClass: 'from-purple-500/10 to-indigo-500/5',
                 hoverBorder: 'hover:border-purple-400/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] dark:hover:border-purple-400/40',
-                badgeBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-                iconColor: 'text-purple-500'
+                badgeBg: 'bg-brand-500/10 text-brand-600 dark:text-brand-400',
+                iconColor: 'text-brand-500'
               },
               {
                 id: 'EMAIL',

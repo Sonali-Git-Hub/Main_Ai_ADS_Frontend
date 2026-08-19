@@ -1130,8 +1130,6 @@ export const TRANSLATIONS = {
     "noProductionItemsYet": "ഇതുവരെ ഉൽപ്പാദന ഇനങ്ങളൊന്നുമില്ല",
     "noProductionDesc": "ഈ ബ്രാൻഡിനായി നിങ്ങൾ ഇതുവരെ ഡ്രാഫ്റ്റുകളോ പ്രചാരണങ്ങളോ സൃഷ്ടിച്ചിട്ടില്ല.",
     "tableContent": "കോൺടെന്റ്",
-    "tableType": "തരം",
-    "tableVerified": "സ്ഥിരീകരിച്ചു",
     "tableStatus": "നില",
     "tableView": "കാണുക"
   },
@@ -1932,17 +1930,33 @@ export const WorkspaceProvider = ({ children }) => {
       return 'dark';
     }
   });
-  const [user, setUser] = useState(() => {
+  const [user, setUserState] = useState(() => {
     try {
+      const savedName = localStorage.getItem('aisa_user_name');
       const saved = localStorage.getItem('aisa_user');
       const savedEmail = localStorage.getItem('aisa_user_email');
-      if (saved) return JSON.parse(saved);
-      if (savedEmail) return { email: savedEmail, name: savedEmail.split('@')[0], role: 'AgencyAdmin' };
-      return { email: 'admin@aiads.io', name: 'Admin', role: 'AgencyAdmin' };
+      let u = { email: 'admin@aiads.io', name: 'Admin', role: 'AgencyAdmin' };
+      if (saved) u = JSON.parse(saved);
+      else if (savedEmail) u = { email: savedEmail, name: savedEmail.split('@')[0], role: 'AgencyAdmin' };
+      if (savedName) u.name = savedName;
+      return u;
     } catch (e) {
       return { email: 'admin@aiads.io', name: 'Admin', role: 'AgencyAdmin' };
     }
   });
+
+  const setUser = (update) => {
+    setUserState(prev => {
+      const updated = typeof update === 'function' ? update(prev) : update;
+      if (updated) {
+        try {
+          if (updated.name) localStorage.setItem('aisa_user_name', updated.name);
+          localStorage.setItem('aisa_user', JSON.stringify(updated));
+        } catch(e){}
+      }
+      return updated;
+    });
+  };
 
   const [activeRole, setActiveRole] = useState(() => {
     try {
