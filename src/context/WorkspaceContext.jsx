@@ -19,6 +19,7 @@ const MODULE_TO_PATH = {
   analytics: '/analytics',
   team: '/team-rbac',
   settings: '/settings-billing',
+  adminDashboard: '/admin-dashboard',
 };
 
 const PATH_TO_MODULE = {
@@ -48,6 +49,8 @@ const PATH_TO_MODULE = {
   '/team': 'team',
   '/settings-billing': 'settings',
   '/settings': 'settings',
+  '/admin-dashboard': 'adminDashboard',
+  '/admin': 'adminDashboard',
 };
 
 function getModuleFromLocation() {

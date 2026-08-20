@@ -251,6 +251,24 @@ export const autopilotAPI = {
   },
 };
 
+// ─── Admin Dashboard API ──────────────────────────────────────────────────────
+const adminApiFetch = async (path, options = {}) => {
+  const token = localStorage.getItem('aisa_token');
+  return apiFetch(path, {
+    ...options,
+    headers: {
+      ...options.headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+};
+
+export const adminAPI = {
+  getDashboardSummary: () => adminApiFetch('/admin/dashboard-summary'),
+  getAllUserStats: () => adminApiFetch('/admin/users-stats'),
+  getUserDetail: (userId) => adminApiFetch(`/admin/user/${userId}`),
+};
+
 // ─── Health Check ─────────────────────────────────────────────────────────────
 export const healthAPI = {
   check: () => apiFetch('/health'),
@@ -271,5 +289,6 @@ export default {
   reminders: remindersAPI,
   websiteBuilder: websiteBuilderAPI,
   autopilot: autopilotAPI,
+  admin: adminAPI,
   health: healthAPI,
 };

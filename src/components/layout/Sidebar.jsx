@@ -19,12 +19,27 @@ import {
   ChevronLeft,
   ChevronRight,
   Send,
-  Zap
+  Zap,
+  User as UserIcon,
+  Shield
 } from 'lucide-react';
 
 export const Sidebar = () => {
-  const { activeModule, setActiveModule, setIsQuickPostOpen, setIsSettingsModalOpen, t } = useWorkspace();
+  const { activeModule, setActiveModule, setIsQuickPostOpen, setIsSettingsModalOpen, user, userAvatar, activeWorkspace, t } = useWorkspace();
   const [collapsed, setCollapsed] = useState(false);
+
+  const userName = (() => {
+    if (user?.name && user.name.trim() && user.name.toLowerCase() !== 'user') return user.name;
+    if (user?.username && user.username.trim()) return user.username;
+    if (user?.email) {
+      const prefix = user.email.split('@')[0];
+      return prefix
+        .replace(/[._-]+/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .trim();
+    }
+    return activeWorkspace?.brandName || 'Agency Administrator';
+  })();
 
   const modules = [
     { id: 'dashboard', label: t('dashboard', '1. Dashboard'), icon: LayoutDashboard },
@@ -71,16 +86,19 @@ export const Sidebar = () => {
           </button>
         </div>
 
-        {/* Quick Social Post Button container */}
+        {/* User Greeting container */}
         <div className="p-3">
-          <button
-            onClick={() => setIsQuickPostOpen(true)}
-            className={`w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-brand-600 to-brand-400 hover:from-brand-500 hover:to-brand-300 text-white font-semibold text-xs shadow-glow flex items-center justify-center gap-2 transition-all active:scale-95 ${collapsed ? 'px-0' : ''}`}
-            title={t('quickSocialPost', 'Quick Social Post')}
+          <div
+            className={`w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-brand-600 to-brand-accent text-white font-semibold text-xs shadow-glow flex items-center justify-center gap-2 transition-all ${collapsed ? 'px-0' : ''}`}
+            title={`Logged in as ${userName}`}
           >
-            <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
-            {!collapsed && <span>{t('quickSocialPost', 'Quick Social Post')}</span>}
-          </button>
+            {userAvatar ? (
+              <img src={userAvatar} alt="Profile" className="w-4 h-4 rounded-full object-cover shrink-0" />
+            ) : (
+              <UserIcon className="w-4 h-4 text-white shrink-0" />
+            )}
+            {!collapsed && <span className="truncate">{userName}</span>}
+          </div>
         </div>
 
         {/* Navigation List (14 Modules) */}

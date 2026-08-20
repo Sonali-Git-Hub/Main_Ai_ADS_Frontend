@@ -27,12 +27,19 @@ import { SettingsBillingModule } from './features/settingsBilling/SettingsBillin
 import { SettingsModal } from './features/settingsBilling/SettingsModal';
 import { AISAAssistantDrawer } from './features/aisaAssistant/AISAAssistantDrawer';
 import { Login } from './features/auth/Login';
+import { AdminDashboardModule } from './features/admin/AdminDashboard';
+import { AdminLayout } from './components/layout/AdminLayout';
 
 const MainContent = () => {
   const { activeModule, setIsAISAAssistantOpen, user, loginUser } = useWorkspace();
 
   if (!user) {
     return <Login onLoginSuccess={loginUser} />;
+  }
+
+  // If the user is our dedicated Super Admin, render the entirely separate admin flow
+  if (user.role === 'SuperAdmin') {
+    return <AdminLayout />;
   }
 
 
@@ -125,14 +132,15 @@ const MainContent = () => {
         );
       case 'team': return <TeamRbacModule />;
       case 'settings': return <SettingsBillingModule />;
+      case 'adminDashboard': return <AdminDashboardModule />;
       default: return <DashboardModule />;
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F8F9FD] dark:bg-[#090d16] text-slate-900 dark:text-slate-100">
+    <div className="flex h-screen bg-[#F8F9FD] dark:bg-[#090d16] text-slate-900 dark:text-slate-100 overflow-hidden">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <Header />
         <main className="p-6 flex-1 overflow-y-auto max-w-7xl w-full mx-auto">
           {renderModule()}

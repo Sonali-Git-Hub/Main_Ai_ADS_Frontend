@@ -213,49 +213,53 @@ export const SeoModule = () => {
       <div className="flex flex-col gap-5">
 
         {/* Top Section: Keyword Input + Cluster */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
           {/* Keyword Workspace */}
-          <div className="p-5 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-            <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+          <div className="p-5 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 h-full flex flex-col">
+            <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2 mb-4">
               <Layers className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
               Keyword & Intent Input
             </h2>
-            <div>
-              <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Seed Keyword</label>
-              <input
-                type="text"
-                value={seedKeyword}
-                onChange={(e) => setSeedKeyword(e.target.value)}
-                className="w-full glass-input text-xs"
-              />
+            <div className="space-y-4 flex-1">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Seed Keyword</label>
+                <input
+                  type="text"
+                  value={seedKeyword}
+                  onChange={(e) => setSeedKeyword(e.target.value)}
+                  className="w-full glass-input text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Search Intent</label>
+                <select
+                  value={intent}
+                  onChange={(e) => setIntent(e.target.value)}
+                  className="w-full glass-input text-xs"
+                >
+                  <option value="Informational">Informational (Know)</option>
+                  <option value="Commercial">Commercial (Investigate)</option>
+                  <option value="Transactional">Transactional (Buy / Convert)</option>
+                  <option value="Navigational">Navigational (Find)</option>
+                  <option value="Local">Local Intent</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Search Intent</label>
-              <select
-                value={intent}
-                onChange={(e) => setIntent(e.target.value)}
-                className="w-full glass-input text-xs"
+            <div className="mt-4">
+              <button
+                onClick={handleGenerateBrief}
+                disabled={loading}
+                className="w-full btn-primary py-3 text-xs font-bold"
               >
-                <option value="Informational">Informational (Know)</option>
-                <option value="Commercial">Commercial (Investigate)</option>
-                <option value="Transactional">Transactional (Buy / Convert)</option>
-                <option value="Navigational">Navigational (Find)</option>
-                <option value="Local">Local Intent</option>
-              </select>
+                {loading ? <Sparkles className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                {loading ? 'Synthesizing Brief...' : 'Generate SEO Brief'}
+              </button>
             </div>
-            <button
-              onClick={handleGenerateBrief}
-              disabled={loading}
-              className="w-full btn-primary py-3 text-xs font-bold"
-            >
-              {loading ? <Sparkles className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-               {loading ? 'Synthesizing Brief...' : t('generateSeoBrief', 'Generate SEO Brief')}
-            </button>
           </div>
 
           {/* Cluster Table */}
-          <div className="p-5 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
-            <div className="flex items-center justify-between">
+          <div className="p-5 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 h-full flex flex-col">
+            <div className="flex items-center justify-between mb-3">
               <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                 <Hash className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
                 Clustered Keywords
@@ -269,7 +273,7 @@ export const SeoModule = () => {
                 Regen All
               </button>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 flex-1 overflow-y-auto max-h-[200px] pr-2">
               {keywordsList.map((kw, idx) => (
                 <div
                   key={idx}
@@ -326,7 +330,7 @@ export const SeoModule = () => {
                 </div>
               ))}
             </div>
-            <p className="text-[10px] text-slate-400 text-center">Click a keyword to use as seed · Hover for copy & regenerate</p>
+            <p className="text-[10px] text-slate-400 text-center mt-3">Click a keyword to use as seed · Hover for copy & regenerate</p>
           </div>
         </div>
 
