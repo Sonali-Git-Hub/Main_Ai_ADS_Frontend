@@ -421,9 +421,9 @@ const CampaignDetail = ({ campaign, onBack }) => {
   );
 };
 
-// ─── Main Campaign Builder Module ──────────────────────────────────────────────
+// ─── Main {t('campaignsTitle', 'Campaign Builder')} Module ──────────────────────────────────────────────
 export const CampaignBuilderModule = () => {
-  const { activeWorkspace } = useWorkspace();
+  const {activeWorkspace, t } = useWorkspace();
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);

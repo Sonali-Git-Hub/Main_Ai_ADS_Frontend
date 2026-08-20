@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 export const ContentStudioModule = () => {
-  const { activeWorkspace, setActiveModule, setApprovalsQueue, studioTarget, setStudioTarget, setGeneratedContent } = useWorkspace();
+  const { activeWorkspace, setActiveModule, setApprovalsQueue, studioTarget, setStudioTarget, setGeneratedContent, t } = useWorkspace();
   const [activeSubPage, setActiveSubPage] = useState(null); // null = Main Hub, 'BLOG', 'SOCIAL', 'EMAIL', 'NEWSPAPER'
   const [tab, setTab] = useState('BLOG'); // BLOG, SOCIAL, EMAIL, AD_COPY
 
@@ -215,6 +215,7 @@ export const ContentStudioModule = () => {
     try {
       const res = await contentAPI.generateSocialPost({
         workspaceId,
+        brandName: activeWorkspace?.brandName,
         platform: socialPlatform,
         topic: socialTopic,
         postType: socialPostType,
@@ -245,6 +246,7 @@ export const ContentStudioModule = () => {
     try {
       const res = await contentAPI.generateSocialPost({
         workspaceId,
+        brandName: activeWorkspace?.brandName,
         platform: socialPlatform,
         topic: socialTopic,
         postType: socialPostType,
@@ -275,6 +277,7 @@ export const ContentStudioModule = () => {
     try {
       const res = await contentAPI.generateEmailCopy({
         workspaceId,
+        brandName: activeWorkspace?.brandName,
         subject: emailForm.subject || `${activeWorkspace?.brandName || 'Brand'} — ${emailForm.purpose}`,
         purpose: emailForm.purpose,
         recipientType: emailForm.recipient,
@@ -284,7 +287,7 @@ export const ContentStudioModule = () => {
         cta: emailForm.cta,
         senderName: emailForm.senderName,
         senderDesignation: emailForm.senderDesignation,
-        senderCompany: emailForm.senderCompany,
+        senderCompany: emailForm.senderCompany || activeWorkspace?.brandName,
         lengthFormat: emailForm.lengthFormat
       });
       if (res.email) {
@@ -312,6 +315,7 @@ export const ContentStudioModule = () => {
     try {
       const res = await contentAPI.generateAdCopy({
         workspaceId,
+        brandName: activeWorkspace?.brandName,
         product: adProduct,
         adPlatform,
       });
@@ -326,14 +330,19 @@ export const ContentStudioModule = () => {
   const submitToApprovals = (item) => {
     if (!item) return;
     if (setApprovalsQueue) {
+      const data = item.data || item;
+      let displayTitle = item.title || item.subject || data.hook || data.headline || data.title || '';
+      if (!displayTitle && typeof item === 'string') displayTitle = item.slice(0, 50) + '...';
+      if (!displayTitle) displayTitle = `${tab} Campaign Post`;
+
       let contentStr = '';
       if (typeof item === 'string') contentStr = item;
-      else if (item.content) contentStr = item.content;
-      else if (item.article) contentStr = item.article;
-      else if (item.caption) contentStr = item.caption;
-      else if (item.pressRelease) contentStr = item.pressRelease;
-      else if (item.text) contentStr = item.text;
-      else if (item.body) contentStr = item.body;
+      else if (data.caption) contentStr = data.caption;
+      else if (data.content) contentStr = data.content;
+      else if (data.article) contentStr = data.article;
+      else if (data.pressRelease) contentStr = data.pressRelease;
+      else if (data.text) contentStr = data.text;
+      else if (data.body) contentStr = data.body;
       else contentStr = JSON.stringify(item, null, 2);
 
       let platform = 'General';
@@ -346,13 +355,15 @@ export const ContentStudioModule = () => {
       setApprovalsQueue((prev) => [
         {
           id: item.id || `cnt_${Date.now()}`,
-          title: item.title || item.subject || (contentStr.substring(0, 30) + '...'),
+          title: displayTitle,
           type: tab,
           platform: platform,
           status: tab === 'BLOG' ? (factCheck?.passed ? 'PENDING' : 'RED_FLAG_CITATION_NEEDED') : 'PENDING',
-          wordCount: item.wordCount || contentStr.split(' ').length,
+          wordCount: item.wordCount || (typeof contentStr === 'string' ? contentStr.split(' ').length : 100),
           author: 'AISA AI Engine',
           factCheck: factCheck || { passed: true, score: 98, status: 'VERIFIED' },
+          payload: item,
+          rawPayload: item,
           checks: {
             brandDna: { passed: true, score: 98, message: 'Strong alignment with brand voice.' },
             seo: { passed: true, score: 92, message: 'Keywords optimized correctly.' },
@@ -373,10 +384,10 @@ export const ContentStudioModule = () => {
   };
 
   const subPageTitles = {
-    BLOG: 'Blog & Article Studio',
-    SOCIAL: 'Social Media Studio',
+    BLOG: `${t('blog', 'Blog')} & Article Studio`,
+    SOCIAL: `${t('socialMedia', 'Social Media')} Studio`,
     EMAIL: 'Email & Letter Outreach Studio',
-    NEWSPAPER: 'Newspaper & Press Release Studio'
+    NEWSPAPER: `${t('newspaper', 'Newspaper')} & Press Release Studio`
   };
 
   return (
@@ -390,7 +401,7 @@ export const ContentStudioModule = () => {
               className="btn-secondary text-xs py-2 px-3 flex items-center gap-2 hover:border-brand-500 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 text-brand-500" />
-              <span>Back to Content Studio</span>
+              <span>Back to {t('studioTitle', 'Content Studio')}</span>
             </button>
 
             <div className="text-right">
@@ -403,7 +414,7 @@ export const ContentStudioModule = () => {
           {tab === 'BLOG' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-            <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Blog Parameters</h2>
+            <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('blog', 'Blog')} Parameters</h2>
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Article Topic</label>
               <textarea
@@ -482,11 +493,11 @@ export const ContentStudioModule = () => {
         </div>
       )}
 
-      {/* 2. Social Media Studio */}
+      {/* 2. {t('socialMedia', 'Social Media')} Studio */}
       {tab === 'SOCIAL' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-            <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Social Media Parameters</h2>
+            <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('socialMedia', 'Social Media')} Parameters</h2>
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Platform</label>
               <select
@@ -580,9 +591,9 @@ export const ContentStudioModule = () => {
                 </div>
 
                 {/* Banner notice explaining focus on copy */}
-                <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between text-xs text-indigo-700 dark:text-indigo-300 font-medium">
+                <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-between text-xs text-indigo-700 dark:text-indigo-300 font-medium">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                    <FileText className="w-4 h-4 text-brand-500 flex-shrink-0" />
                     <p><strong>Content Studio focus:</strong> Structured text copy (Hook, Storytelling, Captions, CTAs, SEO Hashtags). Generate matching visual assets in <strong>Creative Studio</strong>.</p>
                   </div>
                 </div>
@@ -621,7 +632,7 @@ export const ContentStudioModule = () => {
                   {/* ── CARD 2: STORYTELLING ANGLE ── */}
                   <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-purple-500/40 transition-colors">
                     <div className="flex items-center justify-between">
-                      <span className="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                      <span className="px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
                         📖 STORYTELLING ANGLE
                       </span>
                       <div className="flex items-center gap-1">
@@ -635,7 +646,7 @@ export const ContentStudioModule = () => {
                         </button>
                         <button
                           onClick={() => navigator.clipboard.writeText(socialResult.storytelling || 'Every brand has a story, but only the ones with consistent voice build lasting loyalty.')}
-                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-purple-500 transition-colors"
+                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-brand-500 transition-colors"
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </button>
@@ -1132,13 +1143,13 @@ export const ContentStudioModule = () => {
         </div>
       )}
 
-      {/* 5. Newspaper & Print Studio */}
+      {/* 5. {t('newspaper', 'Newspaper')} & Print Studio */}
       {tab === 'NEWSPAPER' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
             <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
               <Newspaper className="w-5 h-5" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Newspaper & PR Parameters</h2>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">{t('newspaper', 'Newspaper')} & PR Parameters</h2>
             </div>
 
             <div>
@@ -1198,10 +1209,10 @@ export const ContentStudioModule = () => {
             </button>
           </div>
 
-          {/* Newspaper Editorial Canvas */}
+          {/* {t('newspaper', 'Newspaper')} Editorial Canvas */}
           <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Newspaper & PR Proofing Canvas</span>
+              <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('newspaper', 'Newspaper')} & PR Proofing Canvas</span>
               {newspaperDraft && (
                 <button onClick={() => submitToApprovals(newspaperDraft)} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1">
                   <Send className="w-3.5 h-3.5" /> Submit to Approvals
@@ -1255,7 +1266,7 @@ export const ContentStudioModule = () => {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <PenTool className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-                <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Unified Content Studio</h1>
+                <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">{t('unifiedContentStudio', 'Unified Content Studio')}</h1>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
                 AI-powered drafting engine for blogs, social posts, emails, and ads anchored to{' '}
@@ -1264,12 +1275,12 @@ export const ContentStudioModule = () => {
             </div>
           </div>
 
-          {/* 4 Channel Grid Cards (Blog, Social Media, Email / Letter, Newspaper) */}
+          {/* 4 Channel Grid Cards ({t('blog', 'Blog')}, {t('socialMedia', 'Social Media')}, {t('emailLetter', 'Email / Letter')}, {t('newspaper', 'Newspaper')}) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               {
                 id: 'BLOG',
-                title: 'Blog',
+                title: t('blog', 'Blog'),
                 subtitle: 'Articles, Guides & SEO Copy',
                 icon: FileText,
                 colorClass: 'from-blue-500/10 to-sky-500/5',
@@ -1279,17 +1290,17 @@ export const ContentStudioModule = () => {
               },
               {
                 id: 'SOCIAL',
-                title: 'Social Media',
+                title: t('socialMedia', 'Social Media'),
                 subtitle: 'Posts, Carousels & Reels',
                 icon: Share2,
                 colorClass: 'from-purple-500/10 to-indigo-500/5',
                 hoverBorder: 'hover:border-purple-400/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] dark:hover:border-purple-400/40',
-                badgeBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-                iconColor: 'text-purple-500'
+                badgeBg: 'bg-brand-500/10 text-brand-600 dark:text-brand-400',
+                iconColor: 'text-brand-500'
               },
               {
                 id: 'EMAIL',
-                title: 'Email / Letter',
+                title: t('emailLetter', 'Email / Letter'),
                 subtitle: 'Newsletters & Cold Outreach',
                 icon: Mail,
                 colorClass: 'from-emerald-500/10 to-teal-500/5',
@@ -1299,7 +1310,7 @@ export const ContentStudioModule = () => {
               },
               {
                 id: 'NEWSPAPER',
-                title: 'Newspaper',
+                title: t('newspaper', 'Newspaper'),
                 subtitle: 'Press Releases & Print Copy',
                 icon: Newspaper,
                 colorClass: 'from-amber-500/10 to-orange-500/5',
@@ -1332,8 +1343,8 @@ export const ContentStudioModule = () => {
                   </div>
 
                   <div className="relative z-10 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                    <span>Open Studio</span>
-                    <span className={`${card.iconColor} opacity-80 group-hover:opacity-100 font-semibold`}>Open Page →</span>
+                    <span>{t('openStudio', 'Open Studio')}</span>
+                    <span className={`${card.iconColor} opacity-80 group-hover:opacity-100 font-semibold`}>{t('openPage', 'Open Page →')}</span>
                   </div>
                 </button>
               );
@@ -1345,9 +1356,9 @@ export const ContentStudioModule = () => {
             <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center mx-auto">
               <Sparkles className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Select a Channel Studio to Begin</h3>
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">{t('selectChannelStudio', 'Select a Channel Studio to Begin')}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-              Click on any channel card above (Blog, Social Media, Email, or Newspaper) to open its dedicated studio drafting page.
+              Click on any channel card above ({t('blog', 'Blog')}, {t('socialMedia', 'Social Media')}, Email, or {t('newspaper', 'Newspaper')}) to open its dedicated studio drafting page.
             </p>
           </div>
         </div>

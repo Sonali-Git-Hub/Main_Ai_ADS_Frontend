@@ -43,6 +43,16 @@ const MainContent = () => {
   }
 
 
+  const isWebsiteBuilder = ['websiteBuilder', 'websitebuilder', 'builder'].includes(activeModule);
+
+  if (isWebsiteBuilder) {
+    return (
+      <div className="h-screen w-screen overflow-hidden bg-[#070A11] text-slate-100">
+        <AIWebsiteBuilderModule />
+      </div>
+    );
+  }
+
   const renderModule = () => {
     switch (activeModule) {
       case 'dashboard':

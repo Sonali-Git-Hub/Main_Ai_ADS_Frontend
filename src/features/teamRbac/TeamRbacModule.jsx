@@ -3,7 +3,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { Users, UserPlus, ShieldCheck, Check, X, Mail, Plus } from 'lucide-react';
 
 export const TeamRbacModule = () => {
-  const { activeWorkspace, activeRole, setActiveRole } = useWorkspace();
+  const {activeWorkspace, activeRole, setActiveRole, t } = useWorkspace();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [members, setMembers] = useState([
     { id: 1, name: 'Ritik Director', email: 'ritik@agency.com', role: 'AgencyAdmin', status: 'Active' },

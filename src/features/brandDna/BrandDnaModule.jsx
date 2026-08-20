@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 export const BrandDnaModule = () => {
-  const { activeWorkspace, updateWorkspace, setActiveModule, setIsScraperOpen, openScraperModal, setBrandDnaData } = useWorkspace();
+  const {activeWorkspace, updateWorkspace, setActiveModule, setIsScraperOpen, openScraperModal, setBrandDnaData, t } = useWorkspace();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
@@ -212,12 +212,12 @@ export const BrandDnaModule = () => {
         {/* Glowing DNA Icon */}
         <div className="relative mb-8">
           <div
-            style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)' }}
+            style={{ background: 'radial-gradient(circle, var(--brand-glow, rgba(99,102,241,0.35)) 0%, transparent 70%)' }}
             className="absolute inset-0 scale-150 rounded-full animate-pulse"
           />
           <div
             className="relative flex items-center justify-center w-24 h-24 rounded-3xl shadow-xl"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)' }}
+            style={{ background: 'linear-gradient(135deg, var(--brand-from, var(--brand-600, #6B5AED)), var(--brand-to, var(--brand-500, #7B61FF)))' }}
           >
             <Dna className="w-12 h-12 text-white" />
           </div>
@@ -229,7 +229,7 @@ export const BrandDnaModule = () => {
         </h2>
         <p className="text-slate-500 dark:text-slate-400 text-center max-w-md mb-10 text-base leading-relaxed">
           Build your{' '}
-          <span className="text-indigo-500 dark:text-indigo-400 font-semibold">Brand DNA</span>{' '}
+          <span className="text-brand-600 dark:text-brand-400 font-semibold">Brand DNA</span>{' '}
           in under 60 seconds. Let AI ADS™ analyze your brand and generate an immutable memory
           that powers every module — strategy, SEO, content, and more.
         </p>
@@ -240,17 +240,17 @@ export const BrandDnaModule = () => {
           <button
             onClick={() => openScraperModal('NEW_BRAND')}
             className="group flex flex-col gap-3 p-6 rounded-2xl border border-slate-200 dark:border-slate-700
-                       bg-white dark:bg-slate-800/60 hover:border-indigo-400 dark:hover:border-indigo-500
-                       hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-lg"
+                       bg-white dark:bg-slate-800/60 hover:border-brand-500/50 dark:hover:border-brand-500/50
+                       hover:bg-brand-500/5 dark:hover:bg-brand-500/10 transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-lg"
           >
-            <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-indigo-100 dark:bg-indigo-900/40
-                             text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
+            <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-brand-500/10
+                             text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform">
               <Globe className="w-5 h-5" />
             </span>
             <div>
-              <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm mb-1">Enter Brand URL</p>
+              <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm mb-1">{t('enterBrandUrl', 'Enter Brand URL')}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
-                AI scrapes your website and builds Brand DNA automatically.
+                {t('enterBrandUrlDesc', 'AI scrapes your website and builds Brand DNA automatically.')}
               </p>
             </div>
           </button>
@@ -259,17 +259,17 @@ export const BrandDnaModule = () => {
           <button
             onClick={() => openScraperModal('NEW_BRAND')}
             className="group flex flex-col gap-3 p-6 rounded-2xl border border-slate-200 dark:border-slate-700
-                       bg-white dark:bg-slate-800/60 hover:border-purple-400 dark:hover:border-purple-500
-                       hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-lg"
+                       bg-white dark:bg-slate-800/60 hover:border-brand-500/50 dark:hover:border-brand-500/50
+                       hover:bg-brand-500/5 dark:hover:bg-brand-500/10 transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-lg"
           >
-            <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-purple-100 dark:bg-purple-900/40
-                             text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
+            <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-brand-500/10
+                             text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform">
               <Target className="w-5 h-5" />
             </span>
             <div>
-              <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm mb-1">Activate Your Brand</p>
+              <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm mb-1">{t('activateYourBrand', 'Activate Your Brand')}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
-                Select and activate an existing brand from your workspace list.
+                {t('activateBrandDesc', 'Select and activate an existing brand from your workspace list.')}
               </p>
             </div>
           </button>
@@ -278,17 +278,17 @@ export const BrandDnaModule = () => {
           <button
             onClick={() => openScraperModal('NEW_BRAND')}
             className="group flex flex-col gap-3 p-6 rounded-2xl border border-slate-200 dark:border-slate-700
-                       bg-white dark:bg-slate-800/60 hover:border-emerald-400 dark:hover:border-emerald-500
-                       hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-lg"
+                       bg-white dark:bg-slate-800/60 hover:border-brand-500/50 dark:hover:border-brand-500/50
+                       hover:bg-brand-500/5 dark:hover:bg-brand-500/10 transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-lg"
           >
-            <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-900/40
-                             text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+            <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-brand-500/10
+                             text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform">
               <FileText className="w-5 h-5" />
             </span>
             <div>
-              <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm mb-1">Upload Brand PDF</p>
+              <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm mb-1">{t('uploadBrandPdf', 'Upload Brand PDF')}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
-                Upload a brand guide or deck — AI extracts your identity.
+                {t('uploadPdfDesc', 'Upload a brand guide or deck — AI extracts your identity.')}
               </p>
             </div>
           </button>
@@ -297,9 +297,7 @@ export const BrandDnaModule = () => {
         {/* Primary CTA */}
         <button
           onClick={() => openScraperModal('NEW_BRAND')}
-          className="flex items-center gap-2 px-7 py-3.5 rounded-full text-white font-semibold text-sm
-                     transition-all duration-200 hover:scale-105 active:scale-95"
-          style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', boxShadow: '0 8px 30px rgba(99,102,241,0.35)' }}
+          className="btn-primary flex items-center gap-2 px-7 py-3.5 rounded-full text-white font-semibold text-sm transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg"
         >
           <Zap className="w-4 h-4" />
           Start Your Brand Journey Now
@@ -324,7 +322,7 @@ export const BrandDnaModule = () => {
               <Dna className="w-5 h-5" />
             </div>
             <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              Brand Intelligence & Brand DNA
+              {t('brandDnaTitle', 'Brand Intelligence & Brand DNA')}
             </h1>
           </div>
           <p className="text-xs text-slate-500 font-medium pl-10">
@@ -338,8 +336,8 @@ export const BrandDnaModule = () => {
             onClick={() => openScraperModal('NEW_BRAND')}
             className="btn-primary py-2 px-5 text-xs flex items-center gap-2 shadow-lg shadow-brand-500/20"
           >
-            <Sparkles className="w-4 h-4" />
-            Create New Brand
+            {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {analyzing ? 'Analyzing Brand...' : t('runDeepAiAnalysis', 'Run Deep AI Analysis')}
           </button>
           {effectiveProfile && (
             <button
@@ -429,9 +427,9 @@ export const BrandDnaModule = () => {
             {/* Identity Card */}
             <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-5">
               <div className="flex items-center justify-between">
-                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Brand Identity</h2>
+                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('brandIdentity', 'Brand Identity')}</h2>
                 <span className="text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-extrabold px-2 py-0.5 rounded-full border border-emerald-500/30">
-                  Confidence: {effectiveProfile.aiConfidence || 85}%
+                  {t('confidence', 'Confidence')}: {effectiveProfile.aiConfidence || 85}%
                 </span>
               </div>
 
@@ -452,14 +450,14 @@ export const BrandDnaModule = () => {
                 </div>
               </div>
 
-              {/* Color Palette */}
+              {/* {t('colorPalette', '{t('colorPalette', 'Color Palette')}')} */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Color Palette</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">{t('colorPalette', 'Color Palette')}</label>
                 <div className="flex gap-2">
                   {displayColors.length > 0 ? (
                     displayColors.map((hex, i) => (
                       <div key={i} className="flex-1 text-center">
-                        <div className="h-8 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm" style={{ backgroundColor: typeof hex === 'string' ? hex : hex.hex || '#6B5AED' }} />
+                        <div className="h-8 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm" style={{ backgroundColor: typeof hex === 'string' ? hex : hex.hex || 'var(--brand-600, #6B5AED)' }} />
                         <span className="text-[9px] text-slate-500 font-mono mt-1 block uppercase">{typeof hex === 'string' ? hex : hex.hex}</span>
                       </div>
                     ))
@@ -472,21 +470,21 @@ export const BrandDnaModule = () => {
               {/* Quick Attributes */}
               <div className="space-y-2 text-xs">
                 <div>
-                  <span className="font-bold text-slate-500 dark:text-slate-400 block">Industry</span>
+                  <span className="font-bold text-slate-500 dark:text-slate-400 block">{t('industry', 'Industry')}</span>
                   <span className="font-medium text-slate-900 dark:text-white">{structured.industry || 'Not specified'}</span>
                 </div>
                 <div>
-                  <span className="font-bold text-slate-500 dark:text-slate-400 block">Tone of Voice</span>
+                  <span className="font-bold text-slate-500 dark:text-slate-400 block">{t('toneOfVoice', 'Tone of Voice')}</span>
                   <span className="font-medium text-slate-900 dark:text-white">{structured.tone || 'Professional & Authoritative'}</span>
                 </div>
                 <div>
-                  <span className="font-bold text-slate-500 dark:text-slate-400 block">Target Goal</span>
+                  <span className="font-bold text-slate-500 dark:text-slate-400 block">{t('targetGoal', 'Target Goal')}</span>
                   <span className="font-medium text-slate-900 dark:text-white">{structured.goal || 'Engagement & Lead Generation'}</span>
                 </div>
               </div>
             </div>
 
-            {/* Target Audience Section */}
+            {/* {t('targetAudience', 'Target Audience')} Section */}
             <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
@@ -512,7 +510,7 @@ export const BrandDnaModule = () => {
             <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <Layers className="w-4 h-4 text-purple-500" /> Content Pillars & Angles
+                  <Layers className="w-4 h-4 text-brand-500" /> {t('contentPillarsAngles', 'Content Pillars & Angles')}
                 </h2>
                 <button
                   onClick={() => handleRegenerateSection('contentStrategy')}
@@ -525,7 +523,7 @@ export const BrandDnaModule = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {(structured.content_angles || []).map((angle, i) => (
                   <div key={i} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
-                    <span className="text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase">Pillar #{i + 1}</span>
+                    <span className="text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase">{t('pillar', 'PILLAR')} #{i + 1}</span>
                     <p className="text-xs font-bold text-slate-900 dark:text-white">{angle}</p>
                   </div>
                 ))}
@@ -550,7 +548,7 @@ export const BrandDnaModule = () => {
 
               <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
                 <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" /> Brand Values
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" /> {t('brandValuesTitle', 'Brand Values')}
                 </h2>
                 <div className="space-y-1.5">
                   {(structured.brand_values || []).map((val, i) => (
@@ -566,7 +564,7 @@ export const BrandDnaModule = () => {
             {/* Content Rules / Dos & Don'ts */}
             <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
               <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                <MessageSquare className="w-4 h-4 text-blue-500" /> Communication Rules (Dos & Don'ts)
+                <MessageSquare className="w-4 h-4 text-blue-500" /> {t('commRules', "COMMUNICATION RULES (DOS & DON'TS)")}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 space-y-2">

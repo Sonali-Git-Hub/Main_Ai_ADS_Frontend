@@ -49,7 +49,7 @@ const MetaStamp = ({ topic, date, type }) => (
       </span>
     )}
     {type && (
-      <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+      <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
         <Star className="w-3 h-3" /> {type}
       </span>
     )}
@@ -241,7 +241,7 @@ const CarouselStudio = ({ workspace }) => {
           <div className="space-y-4 animate-in fade-in">
             <MetaStamp topic={result.topic} type={`${result.slides.length + 2} Slides Â· ${result.platform}`} date={result.createdAt} />
             {/* Cover Slide */}
-            <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 space-y-1.5">
+            <div className="p-4 rounded-2xl bg-brand-500/10 border border-purple-500/30 space-y-1.5">
               <div className="flex items-center gap-2">
                 <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-300">SLIDE 1 â€” COVER</span>
               </div>
@@ -635,7 +635,7 @@ const BrandKitStudio = ({ workspace }) => {
               <div className="space-y-3">
                 <div className="flex gap-2 flex-wrap">
                   {result.voiceTone.adjectives.map(a => (
-                    <span key={a} className="px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold border border-purple-500/20">{a}</span>
+                    <span key={a} className="px-2.5 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold border border-brand-500/20">{a}</span>
                   ))}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -677,12 +677,13 @@ const BrandKitStudio = ({ workspace }) => {
 // MAIN MODULE
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export const CreativeStudioModule = () => {
-  const { activeWorkspace, credits, deductVisualCredits, setIsCreditModalOpen, generatedContent, studioTarget } = useWorkspace();
+  const { activeWorkspace, credits, deductVisualCredits, setIsCreditModalOpen, generatedContent, studioTarget, t } = useWorkspace();
   const [selectedFormat, setSelectedFormat] = useState(null);
 
   // If redirected from Calendar or Content Studio, studioTarget carries the post's platform/type/topic.
-  const effectiveContent = generatedContent
-    ? { ...studioTarget, ...generatedContent }
+  const contentObj = generatedContent?.data ? { ...generatedContent, ...generatedContent.data } : generatedContent;
+  const effectiveContent = contentObj
+    ? { ...studioTarget, ...contentObj }
     : studioTarget
       ? { platform: studioTarget.platform, type: studioTarget.type || 'SOCIAL', topic: studioTarget.topic, hook: studioTarget.topic, caption: '', hashtags: [] }
       : null;
@@ -714,8 +715,8 @@ export const CreativeStudioModule = () => {
       icon: Mail,
       colorClass: 'from-indigo-500/10 to-blue-500/5',
       hoverBorder: 'hover:border-indigo-400/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.15)]',
-      badgeBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
-      iconColor: 'text-indigo-500',
+      badgeBg: 'bg-brand-500/10 text-brand-600 dark:text-brand-400',
+      iconColor: 'text-brand-500',
       accentClass: 'border-indigo-500/30 bg-indigo-500/5'
     },
     {
@@ -727,8 +728,8 @@ export const CreativeStudioModule = () => {
       icon: Share2,
       colorClass: 'from-purple-500/10 to-violet-500/5',
       hoverBorder: 'hover:border-purple-400/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]',
-      badgeBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-      iconColor: 'text-purple-500',
+      badgeBg: 'bg-brand-500/10 text-brand-600 dark:text-brand-400',
+      iconColor: 'text-brand-500',
       accentClass: 'border-purple-500/30 bg-purple-500/5'
     },
     {
@@ -801,8 +802,8 @@ export const CreativeStudioModule = () => {
         <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Palette className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Creative Studio & Format Synthesis</h1>
+              <Palette className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">{t('creativeStudioTitle', 'Creative Studio')} & Format Synthesis</h1>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
               Multi-channel creative synthesis for{' '}

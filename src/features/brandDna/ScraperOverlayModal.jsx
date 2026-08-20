@@ -109,12 +109,12 @@ export const ScraperOverlayModal = () => {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#6B5AED] to-[#7B61FF] flex items-center justify-center text-white shadow-lg shadow-[#7B61FF]/30">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-brand-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
               <Dna className="w-5 h-5" />
             </div>
             <div>
               <h2 className="font-extrabold text-slate-900 text-base sm:text-lg">Domain Web Scraper & Brand DNA Setup</h2>
-              <p className="text-xs text-[#7B61FF] font-semibold">10-Point Expert Brand DNA Extraction Engine</p>
+              <p className="text-xs text-brand-500 font-semibold">10-Point Expert Brand DNA Extraction Engine</p>
             </div>
           </div>
           <button 
@@ -133,14 +133,14 @@ export const ScraperOverlayModal = () => {
               <button
                 type="button"
                 onClick={() => setActiveTab('URL')}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'URL' ? 'bg-white text-[#7B61FF] shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'URL' ? 'bg-white text-brand-500 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 🌐 Auto Scrape Website
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('FILE')}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'FILE' ? 'bg-white text-[#7B61FF] shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'FILE' ? 'bg-white text-brand-500 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 📄 Upload Brand Guideline PDF / Deck
               </button>
@@ -157,7 +157,7 @@ export const ScraperOverlayModal = () => {
                       value={url}
                       onChange={(e) => setUrl(e.target.value)}
                       placeholder="https://www.flipkart.com/"
-                      className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#7B61FF] focus:ring-1 focus:ring-[#7B61FF] rounded-xl px-4 py-2.5 text-xs pl-10 font-medium"
+                      className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl px-4 py-2.5 text-xs pl-10 font-medium"
                     />
                   </div>
                 </div>
@@ -169,32 +169,32 @@ export const ScraperOverlayModal = () => {
                     value={brandName}
                     onChange={(e) => setBrandName(e.target.value)}
                     placeholder="e.g. Flipkart"
-                    className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#7B61FF] focus:ring-1 focus:ring-[#7B61FF] rounded-xl px-4 py-2.5 text-xs font-medium"
+                    className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl px-4 py-2.5 text-xs font-medium"
                   />
                 </div>
               </>
             ) : (
-              <div className="p-6 rounded-2xl border-2 border-dashed border-[#7B61FF]/40 bg-[#7B61FF]/5 text-center space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-[#7B61FF]/10 text-[#7B61FF] flex items-center justify-center mx-auto font-bold text-lg">
+              <div className="p-6 rounded-2xl border-2 border-dashed border-brand-500/40 bg-brand-500/5 text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-500 flex items-center justify-center mx-auto font-bold text-lg">
                   📄
                 </div>
                 <div>
                   <p className="text-xs font-extrabold text-slate-900">Upload Official Brand Guideline PDF / PPT Deck</p>
                   <p className="text-[11px] text-slate-500 font-medium mt-0.5">Supports .pdf, .pptx, .docx, .xlsx files up to 25MB</p>
                 </div>
-                <label className="inline-block px-4 py-2 bg-[#7B61FF] text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-[#6B5AED] transition-colors shadow-md">
+                <label className="inline-block px-4 py-2 bg-brand-500 text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-brand-600 transition-colors shadow-md">
                   Browse Brand File
                   <input type="file" onChange={handleFileUpload} accept=".pdf,.pptx,.docx,.xlsx" className="hidden" />
                 </label>
                 {selectedFile && (
-                  <p className="text-xs font-bold text-[#7B61FF] pt-1">Selected: {selectedFile.name}</p>
+                  <p className="text-xs font-bold text-brand-500 pt-1">Selected: {selectedFile.name}</p>
                 )}
               </div>
             )}
 
 
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-1">
-              <p className="font-bold text-[#7B61FF]">10 Specific Brand DNA Data Points Extracted:</p>
+              <p className="font-bold text-brand-500">10 Specific Brand DNA Data Points Extracted:</p>
               <ul className="grid grid-cols-2 gap-1 text-[11px] text-slate-600 font-semibold pt-1">
                 <li>1. Target Personas (3-5)</li>
                 <li>2. Voice & Tone (1-5 Score)</li>
@@ -212,7 +212,7 @@ export const ScraperOverlayModal = () => {
             <button
               onClick={handleScrape}
               disabled={loading}
-              className="w-full btn-primary py-3 rounded-xl font-bold text-xs shadow-lg shadow-[#7B61FF]/30"
+              className="w-full btn-primary py-3 rounded-xl font-bold text-xs shadow-lg shadow-brand-500/30"
             >
               {loading ? <Sparkles className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               {loading ? 'Analyzing HTML & Extracting 10 Brand DNA Points...' : 'Auto Scrape Domain & Extract 10 Brand DNA Points'}
@@ -222,7 +222,7 @@ export const ScraperOverlayModal = () => {
           /* Step 2: Display Extracted 10 Brand DNA Data Points */
           <div className="space-y-4 animate-in fade-in">
             {/* Top Brand Banner */}
-            <div className="p-4 rounded-2xl bg-[#7B61FF]/10 border border-[#7B61FF]/30 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-brand-500/10 border border-brand-500/30 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <img 
                   src={result.logoUrl || result.faviconUrl || `https://www.google.com/s2/favicons?domain=${result.domainUrl || 'google.com'}&sz=128`} 
@@ -238,9 +238,9 @@ export const ScraperOverlayModal = () => {
                 <div>
                   <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
                     {result.brandName}
-                    <span className="text-[10px] bg-[#7B61FF] text-white px-2 py-0.5 rounded-full font-extrabold">{result.industryCategory || 'Retail & Tech'}</span>
+                    <span className="text-[10px] bg-brand-500 text-white px-2 py-0.5 rounded-full font-extrabold">{result.industryCategory || 'Retail & Tech'}</span>
                   </h3>
-                  <p className="text-xs font-bold text-[#7B61FF]">{result.domainUrl}</p>
+                  <p className="text-xs font-bold text-brand-500">{result.domainUrl}</p>
                 </div>
               </div>
               <div className="flex gap-1">
@@ -256,7 +256,7 @@ export const ScraperOverlayModal = () => {
               {/* SECTION 1: COMPANY INFORMATION */}
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                  <span className="font-extrabold text-[#7B61FF] uppercase text-[11px] tracking-wider flex items-center gap-1.5">
+                  <span className="font-extrabold text-brand-500 uppercase text-[11px] tracking-wider flex items-center gap-1.5">
                     🏢 Company Information
                   </span>
                   <span className="text-[10px] bg-amber-500/10 text-amber-600 font-extrabold px-2 py-0.5 rounded-full border border-amber-500/20">
@@ -293,7 +293,7 @@ export const ScraperOverlayModal = () => {
                       <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">WEBSITE</span>
                       <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Website DOM</span>
                     </div>
-                    <p className="font-bold text-[#7B61FF] text-xs mt-0.5 truncate">{result.domainUrl}</p>
+                    <p className="font-bold text-brand-500 text-xs mt-0.5 truncate">{result.domainUrl}</p>
                   </div>
 
                   {/* INDUSTRY */}
@@ -361,7 +361,7 @@ export const ScraperOverlayModal = () => {
               {/* SECTION 2: BRAND IDENTITY */}
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                  <span className="font-extrabold text-[#7B61FF] uppercase text-[11px] tracking-wider flex items-center gap-1.5">
+                  <span className="font-extrabold text-brand-500 uppercase text-[11px] tracking-wider flex items-center gap-1.5">
                     ✨ Brand Identity
                   </span>
                   <span className="text-[10px] bg-amber-500/10 text-amber-600 font-extrabold px-2 py-0.5 rounded-full border border-amber-500/20">
@@ -402,7 +402,7 @@ export const ScraperOverlayModal = () => {
 
             <button
               onClick={confirmSaveWorkspace}
-              className="w-full btn-primary py-3 rounded-xl font-bold text-xs shadow-lg shadow-[#7B61FF]/30"
+              className="w-full btn-primary py-3 rounded-xl font-bold text-xs shadow-lg shadow-brand-500/30"
             >
               <ArrowRight className="w-4 h-4" />
               Save & Lock Brand DNA Memory

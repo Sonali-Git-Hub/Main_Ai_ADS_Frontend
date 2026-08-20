@@ -187,7 +187,7 @@ export const ConversationalBuilder = ({ developerMode = false }) => {
             What do you want to build?
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 font-medium max-w-xl mx-auto">
-            Describe your website or app idea in plain English. AISA will design, build, and run your real application automatically.
+            Describe your website or app idea in plain English. AI Ads™ will design, build, and run your real application automatically.
           </p>
         </div>
 
@@ -268,7 +268,7 @@ export const ConversationalBuilder = ({ developerMode = false }) => {
           <Loader2 className="w-8 h-8 animate-spin" />
         </div>
         <div className="space-y-2">
-          <span className="text-[10px] font-extrabold text-brand-500 uppercase tracking-widest">AISA Conversational Builder</span>
+          <span className="text-[10px] font-extrabold text-brand-500 uppercase tracking-widest">AI Ads™ Website Builder</span>
           <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">{currentMsg}</h2>
           <p className="text-xs text-slate-500 max-w-sm mx-auto font-medium">Building your real application, compiling code, and running runtime sandbox...</p>
         </div>

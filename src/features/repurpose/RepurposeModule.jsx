@@ -3,7 +3,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { Repeat, Sparkles, Send, Copy, Check, FileText, Share2, Mail, Layers, HelpCircle, ArrowLeft } from 'lucide-react';
 
 export const RepurposeModule = () => {
-  const { activeWorkspace, approvalsQueue, setActiveModule, goBack, canGoBack } = useWorkspace();
+  const {activeWorkspace, approvalsQueue, setActiveModule, goBack, canGoBack, t } = useWorkspace();
   const [selectedSource, setSelectedSource] = useState(approvalsQueue[0]?.id || '');
   const [loading, setLoading] = useState(false);
   const [repurposed, setRepurposed] = useState(null);
@@ -57,7 +57,7 @@ export const RepurposeModule = () => {
             {canGoBack && (
               <button 
                 onClick={goBack}
-                className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 hover:bg-[#7B61FF]/10 text-[#7B61FF] transition-all mr-1"
+                className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 hover:bg-brand-500/10 text-brand-500 transition-all mr-1"
                 title="Go to previous page"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -130,9 +130,9 @@ export const RepurposeModule = () => {
           <div className="p-5 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
               <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                <Mail className="w-4 h-4 text-purple-600 dark:text-purple-400" /> 3. Newsletter Email
+                <Mail className="w-4 h-4 text-brand-600 dark:text-brand-400" /> 3. Newsletter Email
               </span>
-              <span className="text-[10px] bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded font-bold">Email</span>
+              <span className="text-[10px] bg-brand-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded font-bold">Email</span>
             </div>
             <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed font-medium">{repurposed.newsletterEmail}</p>
           </div>

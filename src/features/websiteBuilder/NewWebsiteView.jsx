@@ -78,7 +78,7 @@ export const NewWebsiteView = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between bg-slate-900/60 dark:bg-slate-950/60 p-2.5 rounded-2xl border border-slate-800 text-xs">
           <span className="text-slate-400 font-bold flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-brand-400" /> AISA Conversational Builder Mode Active
+            <Sparkles className="w-3.5 h-3.5 text-brand-400" /> AI Ads™ Builder Mode Active
           </span>
           <button
             onClick={() => setDeveloperMode(true)}
@@ -564,7 +564,7 @@ export const NewWebsiteView = () => {
       {activePhase === 1 && (
         <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6 animate-fadeIn">
           <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-md">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-brand-400 text-white flex items-center justify-center font-bold text-sm shadow-md">
               <Bot className="w-5 h-5" />
             </div>
             <div>
@@ -631,7 +631,7 @@ export const NewWebsiteView = () => {
           <button
             onClick={() => handleAnalyze()}
             disabled={analyzing}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-lg shadow-brand-500/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-600 to-brand-400 hover:from-brand-500 hover:to-brand-300 text-white font-extrabold text-xs shadow-lg shadow-brand-500/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
           >
             {analyzing ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Sparkles className="w-4 h-4 text-amber-300" />}
             {analyzing ? 'Analyzing via LLM Reasoning...' : 'Analyze Requirement Specification &rarr;'}
@@ -716,7 +716,7 @@ export const NewWebsiteView = () => {
               </div>
 
               {/* USER INTENT UNDERSTANDING CARD */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-950/80 via-slate-900 to-purple-950/80 border border-indigo-500/30 space-y-3">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-slate-900 border border-brand-500/30 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-amber-400" />
@@ -726,7 +726,7 @@ export const NewWebsiteView = () => {
                     requirement.userIntent?.specificityLevel === 'HIGH'
                       ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                       : requirement.userIntent?.specificityLevel === 'LOW'
-                      ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                      ? 'bg-brand-500/20 text-brand-300 border-brand-500/40'
                       : 'bg-blue-500/20 text-blue-300 border-blue-500/40'
                   }`}>
                     {requirement.userIntent?.specificityLevel === 'HIGH' ? '🎯 High Specificity Prompt' : requirement.userIntent?.specificityLevel === 'LOW' ? '🎨 Creative Discovery (Low Specificity)' : '🔍 Medium Specificity Topic'}
@@ -1122,10 +1122,10 @@ export const NewWebsiteView = () => {
 
               {/* 4. AI RECOMMENDATIONS ([Accept], [Edit], [Reject]) */}
               {requirement.aiRecommendedFeatures && requirement.aiRecommendedFeatures.length > 0 && (
-                <div className="p-4 rounded-2xl bg-purple-950/60 border border-purple-500/50 space-y-3 text-xs shadow-inner">
-                  <span className="text-[11px] font-black text-purple-300 uppercase tracking-wider flex items-center justify-between">
-                    <span className="flex items-center gap-1.5"><Cpu className="w-4 h-4 text-purple-400" /> AI RECOMMENDATIONS & FEATURE CONTROLS</span>
-                    <span className="text-[10px] text-purple-200/90 font-extrabold">Accept • Edit • Reject</span>
+                <div className="p-4 rounded-2xl bg-slate-900 border border-brand-500/50 space-y-3 text-xs shadow-inner">
+                  <span className="text-[11px] font-black text-brand-300 uppercase tracking-wider flex items-center justify-between">
+                    <span className="flex items-center gap-1.5"><Cpu className="w-4 h-4 text-brand-400" /> AI RECOMMENDATIONS & FEATURE CONTROLS</span>
+                    <span className="text-[10px] text-brand-200/90 font-extrabold">Accept • Edit • Reject</span>
                   </span>
 
                   <div className="space-y-2">
@@ -1142,12 +1142,12 @@ export const NewWebsiteView = () => {
                               ? 'bg-rose-950/40 border-rose-500/40 opacity-70'
                               : isApproved
                               ? 'bg-emerald-950/50 border-emerald-500/50'
-                              : 'bg-slate-900 border-purple-500/40'
+                              : 'bg-slate-900 border-brand-500/40'
                           }`}
                         >
                           <div className="space-y-0.5">
                             <div className="flex items-center gap-2">
-                              <span className={`font-bold text-xs ${isRejected ? 'line-through text-rose-300' : isApproved ? 'text-emerald-300' : 'text-purple-100'}`}>
+                              <span className={`font-bold text-xs ${isRejected ? 'line-through text-rose-300' : isApproved ? 'text-emerald-300' : 'text-brand-100'}`}>
                                 🤖 {editedInfo?.customName || feat}
                               </span>
                               {editedInfo && (
@@ -1186,7 +1186,7 @@ export const NewWebsiteView = () => {
                                   intent: editedInfo?.intent || ''
                                 })
                               }
-                              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600 text-indigo-300 hover:text-white text-[10px] font-bold flex items-center gap-1 transition-all"
+                              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-brand-600 text-brand-300 hover:text-white text-[10px] font-bold flex items-center gap-1 transition-all"
                             >
                               <Edit2 className="w-3 h-3" /> Edit
                             </button>
@@ -1223,8 +1223,8 @@ export const NewWebsiteView = () => {
               <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 text-xs">
                 <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
                   <div className="flex items-center gap-2">
-                    <Layout className="w-4 h-4 text-indigo-400" />
-                    <span className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-wider">
+                    <Layout className="w-4 h-4 text-brand-400" />
+                    <span className="text-[10px] font-extrabold text-brand-400 uppercase tracking-wider">
                       5. Proposed Pages & Architecture ({requirement.proposedPages?.length || 0})
                     </span>
                     {isPagesOverridden && (
@@ -1261,7 +1261,7 @@ export const NewWebsiteView = () => {
                               page.source === 'user_created'
                                 ? 'bg-emerald-500/20 text-emerald-300'
                                 : page.source === 'user_requested'
-                                ? 'bg-indigo-500/20 text-indigo-300'
+                                ? 'bg-brand-500/20 text-brand-300'
                                 : 'bg-slate-800 text-slate-400'
                             }`}>
                               {page.source === 'user_created' ? 'User Added' : page.source === 'user_requested' ? 'User Requested' : 'AI Recommended'}
@@ -1290,14 +1290,13 @@ export const NewWebsiteView = () => {
                             onClick={() => handleMovePage(idx, 'down')}
                             disabled={idx === (requirement.proposedPages || []).length - 1}
                             className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-30 text-slate-300"
-                            title="Move Page Down"
                           >
                             <ArrowDown className="w-3.5 h-3.5" />
                           </button>
 
                           <button
                             onClick={() => setEditingPageModal({ index: idx, page: JSON.parse(JSON.stringify(page)) })}
-                            className="px-2.5 py-1 rounded-lg bg-indigo-600/80 hover:bg-indigo-500 text-white text-[10px] font-extrabold flex items-center gap-1"
+                            className="px-2.5 py-1 rounded-lg bg-brand-600/80 hover:bg-brand-500 text-white text-[10px] font-extrabold flex items-center gap-1"
                           >
                             <Edit2 className="w-3 h-3" /> Edit Page
                           </button>
@@ -1317,8 +1316,8 @@ export const NewWebsiteView = () => {
               </div>
 
               {/* 7. FINAL APPROVED STRATEGY SUMMARY CARD */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-indigo-500/50 space-y-3 shadow-xl">
-                <div className="flex items-center justify-between border-b border-indigo-500/30 pb-2">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-brand-950 to-slate-900 border border-brand-500/50 space-y-3 shadow-xl">
+                <div className="flex items-center justify-between border-b border-brand-500/30 pb-2">
                   <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-amber-400" />
                     AI GENERATED + USER MODIFICATIONS = FINAL APPROVED STRATEGY
@@ -1342,7 +1341,7 @@ export const NewWebsiteView = () => {
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold block">Final Site Structure</span>
-                    <p className="font-extrabold text-indigo-300">{requirement.proposedPages?.length || 0} Pages Configured</p>
+                    <p className="font-extrabold text-brand-300">{requirement.proposedPages?.length || 0} Pages Configured</p>
                   </div>
                 </div>
 
@@ -1350,7 +1349,7 @@ export const NewWebsiteView = () => {
                   <button
                     onClick={handleGenerateBlueprint}
                     disabled={generatingBlueprint}
-                    className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-brand-600 to-brand-400 hover:from-brand-500 hover:to-brand-300 text-white font-extrabold text-xs shadow-lg shadow-brand-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {generatingBlueprint ? (
                       <>
@@ -1428,7 +1427,7 @@ export const NewWebsiteView = () => {
               {/* COMPONENT STACK EDITOR */}
               <div className="space-y-2 pt-2 border-t border-slate-800">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold text-indigo-400 uppercase">
+                  <span className="text-[10px] font-extrabold text-brand-400 uppercase">
                     Page Component Stack ({(editingPageModal.page.recommendedSections || editingPageModal.page.components || []).length})
                   </span>
                 </div>
@@ -1659,7 +1658,7 @@ export const NewWebsiteView = () => {
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl text-slate-100 animate-fadeIn">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
-                <Edit2 className="w-4 h-4 text-indigo-400" /> Edit Recommendation
+                <Edit2 className="w-4 h-4 text-brand-400" /> Edit Recommendation
               </h3>
               <button onClick={() => setEditingRecModal(null)} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
@@ -1704,7 +1703,7 @@ export const NewWebsiteView = () => {
                       editingRecModal.intent
                     )
                   }
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow"
+                  className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow"
                 >
                   Save & Approve
                 </button>
@@ -1756,7 +1755,7 @@ export const NewWebsiteView = () => {
                 </div>
                 <div>
                   <span className="text-[10px] text-slate-400 font-medium block uppercase">Website Type</span>
-                  <p className="font-extrabold text-indigo-300">{blueprint.websiteType}</p>
+                  <p className="font-extrabold text-brand-300">{blueprint.websiteType}</p>
                 </div>
               </div>
 
@@ -1779,14 +1778,14 @@ export const NewWebsiteView = () => {
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-slate-900 border border-purple-500/30 space-y-1">
-                    <span className="text-[9px] font-extrabold text-purple-400 uppercase flex items-center gap-1">
+                  <div className="p-2.5 rounded-xl bg-slate-900 border border-brand-500/30 space-y-1">
+                    <span className="text-[9px] font-extrabold text-brand-400 uppercase flex items-center gap-1">
                       <UserCheck className="w-3 h-3" /> Approved Recs ({blueprint.featureMatrix?.approvedRecommendations?.length || 0})
                     </span>
                     <div className="flex flex-wrap gap-1 pt-1">
                       {(blueprint.featureMatrix?.approvedRecommendations || []).length > 0 ? (
                         (blueprint.featureMatrix?.approvedRecommendations || []).map((f, idx) => (
-                          <span key={idx} className="text-[9px] bg-purple-500/10 text-purple-300 border border-purple-500/20 px-1.5 py-0.5 rounded">
+                          <span key={idx} className="text-[9px] bg-brand-500/10 text-brand-300 border border-brand-500/20 px-1.5 py-0.5 rounded">
                             {f}
                           </span>
                         ))

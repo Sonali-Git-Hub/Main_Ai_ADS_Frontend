@@ -54,7 +54,7 @@ const deriveCta = (ws) => {
 
 // Channel icon/color mapping
 const channelColors = {
-  Globe:     { gradient: 'from-violet-500 to-indigo-600', bg: 'bg-violet-500/10', text: 'text-violet-600 dark:text-violet-400', bar: 'from-violet-500 to-indigo-500', ring: 'ring-violet-500/20' },
+  Globe:     { gradient: 'from-violet-500 to-indigo-600', bg: 'bg-violet-500/10', text: 'text-brand-600 dark:text-violet-400', bar: 'from-violet-500 to-indigo-500', ring: 'ring-violet-500/20' },
   Linkedin:  { gradient: 'from-blue-500 to-cyan-500',     bg: 'bg-blue-500/10',   text: 'text-blue-600 dark:text-blue-400',    bar: 'from-blue-500 to-cyan-500',   ring: 'ring-blue-500/20' },
   Mail:      { gradient: 'from-amber-500 to-orange-500',  bg: 'bg-amber-500/10',  text: 'text-amber-600 dark:text-amber-400',  bar: 'from-amber-500 to-orange-500', ring: 'ring-amber-500/20' },
   Instagram: { gradient: 'from-pink-500 to-rose-500',     bg: 'bg-pink-500/10',   text: 'text-pink-600 dark:text-pink-400',   bar: 'from-pink-500 to-rose-500',    ring: 'ring-pink-500/20' },
@@ -77,7 +77,7 @@ const getPlatformColor = (platform = '') => {
   if (p.includes('linkedin')) return 'bg-blue-500/15 text-blue-600 dark:text-blue-400 ring-blue-500/20';
   if (p.includes('instagram') || p.includes('reels')) return 'bg-pink-500/15 text-pink-600 dark:text-pink-400 ring-pink-500/20';
   if (p.includes('email') || p.includes('newsletter')) return 'bg-amber-500/15 text-amber-600 dark:text-amber-400 ring-amber-500/20';
-  if (p.includes('blog') || p.includes('seo')) return 'bg-violet-500/15 text-violet-600 dark:text-violet-400 ring-violet-500/20';
+  if (p.includes('blog') || p.includes('seo')) return 'bg-violet-500/15 text-brand-600 dark:text-violet-400 ring-violet-500/20';
   if (p.includes('twitter') || p.includes('x.com')) return 'bg-sky-500/15 text-sky-600 dark:text-sky-400 ring-sky-500/20';
   if (p.includes('youtube') || p.includes('video')) return 'bg-red-500/15 text-red-600 dark:text-red-400 ring-red-500/20';
   return 'bg-slate-500/15 text-slate-600 dark:text-slate-400 ring-slate-500/20';
@@ -93,7 +93,7 @@ const getWeekLabel = (day) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export const StrategyModule = () => {
-  const { activeWorkspace, setActiveModule, updateWorkspace, bulkAddCalendarEvents, calendarEvents, setGeneratedStrategy } = useWorkspace();
+  const {activeWorkspace, setActiveModule, updateWorkspace, bulkAddCalendarEvents, calendarEvents, setGeneratedStrategy, t } = useWorkspace();
 
   // Core strategy fields
   const [businessGoal,      setBusinessGoal]      = useState('');
@@ -116,6 +116,8 @@ export const StrategyModule = () => {
   const [isSaving,      setIsSaving]      = useState(false);
   const [editingField,  setEditingField]  = useState(null);
   const [activeTab,     setActiveTab]     = useState('overview'); // overview | plan | campaigns
+  const [showSaveToast, setShowSaveToast] = useState(false);
+  const [isSavedState,  setIsSavedState]  = useState(false);
 
   // Schedule Modal State
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -148,9 +150,9 @@ export const StrategyModule = () => {
       setChannelMix(strat.channelMix);
     } else {
       const raw = activeWorkspace.socialMediaPresence || [];
-      const hasLinkedin  = raw.some(s => s.toLowerCase?.().includes('linkedin'));
-      const hasInstagram = raw.some(s => s.toLowerCase?.().includes('instagram'));
-      const hasYoutube   = raw.some(s => s.toLowerCase?.().includes('youtube'));
+      const hasLinkedin  = raw.some(p => p.platform?.toLowerCase().includes('linkedin'));
+      const hasInstagram = raw.some(p => p.platform?.toLowerCase().includes('instagram'));
+      const hasYoutube   = raw.some(p => p.platform?.toLowerCase().includes('youtube'));
       setChannelMix([
         { label: 'SEO Blogs (Long-Form)',                            pct: 40, icon: 'Globe',     color: 'bg-brand-500' },
         { label: hasLinkedin ? 'LinkedIn & Founder Copy' : 'Facebook & Community Posts', pct: 30, icon: 'Linkedin',  color: 'bg-blue-500' },
@@ -173,6 +175,12 @@ export const StrategyModule = () => {
     await updateWorkspace(activeWorkspace.id || activeWorkspace._id, { currentStrategy: updatedStrategy });
     setIsSaving(false);
     setEditingField(null);
+    setIsSavedState(true);
+    setShowSaveToast(true);
+    setTimeout(() => {
+      setIsSavedState(false);
+      setShowSaveToast(false);
+    }, 3000);
   }, [activeWorkspace, businessGoal, leadMagnet, primaryCta, channelMix,
       postingFrequency, budgetSuggestions, bestPlatforms, contentPillars,
       campaignIdeas, thirtyDayPlan, funnel, audience, updateWorkspace]);
@@ -308,15 +316,15 @@ export const StrategyModule = () => {
     : thirtyDayPlan.filter(d => getWeekLabel(d.day) === Number(selectedWeek));
 
   const objectiveCards = [
-    { key: 'businessGoal', label: 'Primary Business Goal', sublabel: 'North-star metric for all content strategy', value: businessGoal, setter: setBusinessGoal, icon: Crosshair, iconBg: 'bg-gradient-to-br from-violet-500 to-indigo-600', tag: 'GOAL', tagColor: 'bg-violet-500/15 text-violet-700 dark:text-violet-300' },
-    { key: 'leadMagnet',   label: 'Lead Magnet / Offer',   sublabel: 'High-value asset to capture qualified leads',  value: leadMagnet,   setter: setLeadMagnet,   icon: Gift,           iconBg: 'bg-gradient-to-br from-amber-500 to-orange-500',  tag: 'OFFER', tagColor: 'bg-amber-500/15 text-amber-700 dark:text-amber-300' },
-    { key: 'primaryCta',   label: 'Primary CTA',           sublabel: 'Main call-to-action across all touchpoints',    value: primaryCta,   setter: setPrimaryCta,   icon: MousePointerClick, iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-500', tag: 'CTA',   tagColor: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' },
+    { key: 'businessGoal', label: t('primaryBusinessGoal', 'Primary Business Goal'), sublabel: t('primaryBusinessGoalSub', 'North-star metric for all content strategy'), value: businessGoal, setter: setBusinessGoal, icon: Crosshair, iconBg: 'bg-gradient-to-br from-violet-500 to-indigo-600', tag: 'GOAL', tagColor: 'bg-violet-500/15 text-violet-700 dark:text-violet-300' },
+    { key: 'leadMagnet',   label: t('leadMagnetOffer', 'Lead Magnet / Offer'),   sublabel: t('leadMagnetOfferSub', 'High-value asset to capture qualified leads'),  value: leadMagnet,   setter: setLeadMagnet,   icon: Gift,           iconBg: 'bg-gradient-to-br from-amber-500 to-orange-500',  tag: 'OFFER', tagColor: 'bg-amber-500/15 text-amber-700 dark:text-amber-300' },
+    { key: 'primaryCta',   label: t('primaryCtaTitle', 'Primary CTA'),           sublabel: t('primaryCtaSub', 'Main call-to-action across all touchpoints'),    value: primaryCta,   setter: setPrimaryCta,   icon: MousePointerClick, iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-500', tag: 'CTA',   tagColor: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' },
   ];
 
   const funnelStages = [
-    { label: 'Brand Awareness', mix: '50%', desc: funnel.awareness,  goal: 'Organic Traffic & Reach', border: 'border-brand-500/40',   bg: 'bg-brand-500/5 dark:bg-brand-500/10',   badge: 'bg-brand-500/15 text-brand-700 dark:text-brand-300',   text: 'text-brand-600 dark:text-brand-400',   bar: 'bg-brand-500',   barW: 'w-[50%]' },
-    { label: 'Lead Nurturing',  mix: '30%', desc: funnel.nurturing,  goal: 'Lead Captures',           border: 'border-purple-500/40',  bg: 'bg-purple-500/5 dark:bg-purple-500/10', badge: 'bg-purple-500/15 text-purple-700 dark:text-purple-300', text: 'text-purple-600 dark:text-purple-400', bar: 'bg-purple-500', barW: 'w-[30%]' },
-    { label: 'Conversion',      mix: '20%', desc: funnel.conversion, goal: 'Sales & Revenue',         border: 'border-emerald-500/40', bg: 'bg-emerald-500/5 dark:bg-emerald-500/10', badge: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', text: 'text-emerald-600 dark:text-emerald-400', bar: 'bg-emerald-500', barW: 'w-[20%]' },
+    { label: t('brandAwareness', 'Brand Awareness'), mix: '50%', desc: funnel.awareness,  goal: t('organicTrafficReach', 'Organic Traffic & Reach'), border: 'border-brand-500/40',   bg: 'bg-brand-500/5 dark:bg-brand-500/10',   badge: 'bg-brand-500/15 text-brand-700 dark:text-brand-300',   text: 'text-brand-600 dark:text-brand-400',   bar: 'bg-brand-500',   barW: 'w-[50%]' },
+    { label: t('leadNurturing', 'Lead Nurturing'),  mix: '30%', desc: funnel.nurturing,  goal: t('leadCaptures', 'Lead Captures'),           border: 'border-purple-500/40',  bg: 'bg-purple-500/5 dark:bg-brand-500/10', badge: 'bg-purple-500/15 text-purple-700 dark:text-purple-300', text: 'text-brand-600 dark:text-brand-400', bar: 'bg-purple-500', barW: 'w-[30%]' },
+    { label: t('conversion', 'Conversion'),      mix: '20%', desc: funnel.conversion, goal: t('salesRevenue', 'Sales & Revenue'),         border: 'border-emerald-500/40', bg: 'bg-emerald-500/5 dark:bg-emerald-500/10', badge: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', text: 'text-emerald-600 dark:text-emerald-400', bar: 'bg-emerald-500', barW: 'w-[20%]' },
   ];
 
   const weekStats = [1,2,3,4].map(w => {
@@ -326,7 +334,32 @@ export const StrategyModule = () => {
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-6 animate-in fade-in">
+    <div className="space-y-6 animate-in fade-in relative">
+
+      {/* ── SAVE SUCCESS FLOATING NOTIFICATION ── */}
+      {showSaveToast && (
+        <div className="fixed top-20 right-6 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-xl border border-emerald-500/40 text-white p-3.5 px-4 rounded-2xl shadow-2xl shadow-emerald-500/20 flex items-center gap-3 max-w-sm">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-4.5 h-4.5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-xs font-bold text-white flex items-center justify-between">
+                <span>Strategy Saved Successfully</span>
+                <button
+                  onClick={() => setShowSaveToast(false)}
+                  className="text-slate-400 hover:text-white transition-colors ml-2 p-0.5"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </h4>
+              <p className="text-[11px] text-slate-300 mt-0.5 leading-snug">
+                Your growth roadmap & campaign settings are updated.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ══════════ HEADER ══════════ */}
       <div className="relative overflow-hidden p-6 rounded-3xl border border-slate-200 dark:border-slate-800 glass-card">
@@ -343,7 +376,7 @@ export const StrategyModule = () => {
               </div>
               <div>
                 <h1 className="text-xl font-extrabold text-slate-900 dark:text-white leading-none">
-                  Marketing Strategy & Roadmap
+                  {t('strategyTitle', 'Marketing Strategy & Roadmap')}
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   AI-generated 30-day growth blueprint for{' '}
@@ -360,9 +393,9 @@ export const StrategyModule = () => {
             {/* Tabs */}
             <div className="flex items-center gap-1 mt-1 bg-slate-100 dark:bg-slate-800/70 rounded-xl p-1 w-fit">
               {[
-                { id: 'overview',   label: 'Overview',   icon: BarChart2 },
-                { id: 'plan',       label: '30-Day Plan', icon: Calendar  },
-                { id: 'campaigns',  label: 'Campaigns',  icon: Megaphone },
+                { id: 'overview',   label: t('overviewTab', 'Overview'),   icon: BarChart2 },
+                { id: 'plan',       label: t('thirtyDayPlanTab', '30-Day Plan'), icon: Calendar  },
+                { id: 'campaigns',  label: t('campaignsTab', 'Campaigns'),  icon: Megaphone },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -382,13 +415,20 @@ export const StrategyModule = () => {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2 shrink-0">
-            {isSaving && (
-              <span className="text-xs text-slate-400 flex items-center gap-1">
-                <Loader2 className="w-3 h-3 animate-spin" /> Saving...
-              </span>
-            )}
-            <button onClick={handleSave} className="btn-secondary text-xs flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-xl font-semibold">
-              <Save className="w-4 h-4" /> Save
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className={`btn-save transition-all duration-200 ${
+                isSavedState ? '!bg-emerald-500 !border-emerald-400 !text-white' : ''
+              }`}
+            >
+              {isSaving ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+              ) : isSavedState ? (
+                <><CheckCircle2 className="w-4 h-4 text-white" /> Saved!</>
+              ) : (
+                <><Save className="w-4 h-4" /> {t('saveBtn', 'Save')}</>
+              )}
             </button>
             <button
               onClick={handleGenerate}
@@ -396,8 +436,8 @@ export const StrategyModule = () => {
               className="btn-primary text-xs flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold disabled:opacity-50"
             >
               {isGenerating
-                ? <><Loader2 className="w-4 h-4 animate-spin text-amber-300" /> Generating 30-Day Plan...</>
-                : <><Zap className="w-4 h-4 text-amber-300 fill-amber-300" /> Generate Master Strategy</>
+                ? <><Loader2 className="w-4 h-4 animate-spin text-amber-300" /> {t('generatingPlan', 'Generating 30-Day Plan...')}</>
+                : <><Zap className="w-4 h-4 text-amber-300 fill-amber-300" /> {t('generateMasterStrategy', 'Generate Master Strategy')}</>
               }
             </button>
           </div>
@@ -418,7 +458,7 @@ export const StrategyModule = () => {
                   <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
                     <TrendingUp className="w-3 h-3 text-white" />
                   </div>
-                  Objectives & Conversion Path
+                  {t('objectivesPathTitle', 'Objectives & Conversion Path')}
                 </h2>
                 <span className="text-[10px] text-slate-400 flex items-center gap-1">
                   <Sparkles className="w-3 h-3" /> Click to edit
@@ -634,7 +674,7 @@ export const StrategyModule = () => {
               <div className="grid grid-cols-1 gap-2">
                 {(audience.length > 0 ? audience : (activeWorkspace.targetAudience || []).slice(0, 4)).map((persona, i) => (
                   <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
-                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400 text-[10px] font-extrabold shrink-0">{i + 1}</div>
+                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-brand-600 dark:text-brand-400 text-[10px] font-extrabold shrink-0">{i + 1}</div>
                     <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 leading-snug">{persona}</span>
                   </div>
                 ))}
@@ -933,26 +973,53 @@ export const StrategyModule = () => {
                 Enter the number of days you would like to generate and populate in your Content Calendar from your Strategy Hub.
               </p>
               
-              <div className="space-y-2">
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <div className="space-y-3">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                   How many days to schedule?
                 </label>
-                <div className="relative">
+
+                {/* Input with side suffix badge */}
+                <div className="flex items-center gap-2">
                   <input
                     type="number"
                     min="1"
-                    max={thirtyDayPlan.length}
+                    max={thirtyDayPlan.length || 30}
                     value={scheduleDays}
                     onChange={(e) => setScheduleDays(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-white font-extrabold text-sm focus:outline-none focus:border-brand-500 transition-colors"
-                    placeholder="e.g. 30"
+                    className="flex-1 px-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-extrabold text-base focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all"
+                    placeholder="Enter days (e.g. 30)"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 uppercase">
+                  <span className="px-4 py-3 rounded-2xl bg-brand-500/10 border border-brand-500/30 text-brand-600 dark:text-brand-400 font-black text-xs uppercase tracking-wider shrink-0">
                     Days
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-500">
-                  Maximum available days from your current strategy: <span className="font-extrabold text-slate-300">{thirtyDayPlan.length} Days</span>.
+
+                {/* Preset Quick Select Pills */}
+                <div className="flex items-center gap-1.5 pt-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase mr-1">Quick Select:</span>
+                  {[7, 14, 21, 30].map(d => {
+                    const maxPlan = thirtyDayPlan.length || 30;
+                    if (d > maxPlan) return null;
+                    const isSelected = String(scheduleDays) === String(d);
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setScheduleDays(String(d))}
+                        className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all border ${
+                          isSelected
+                            ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        {d} Days
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-1">
+                  Maximum available days from your strategy: <span className="font-extrabold text-brand-600 dark:text-brand-400">{thirtyDayPlan.length || 30} Days</span>.
                 </p>
               </div>
             </div>

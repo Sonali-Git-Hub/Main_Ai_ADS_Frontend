@@ -56,12 +56,12 @@ export const CreditTopupModal = () => {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#6B5AED] to-[#7B61FF] flex items-center justify-center text-white shadow-lg shadow-[#7B61FF]/30">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="font-extrabold text-slate-900 text-base sm:text-lg">Visual Credits & Top-Up Engine</h2>
-              <p className="text-xs text-slate-600">Current Balance: <span className="font-extrabold text-[#7B61FF]">{credits.balance} Credits</span></p>
+              <p className="text-xs text-slate-600">Current Balance: <span className="font-extrabold text-brand-600">{credits.balance} Credits</span></p>
             </div>
           </div>
           <button 
@@ -73,8 +73,8 @@ export const CreditTopupModal = () => {
         </div>
 
         {/* Visual Credit Principle Note */}
-        <div className="p-3.5 rounded-2xl bg-[#7B61FF]/10 border border-[#7B61FF]/30 text-xs text-slate-800">
-          <p className="font-bold text-[#7B61FF] mb-0.5">📌 Visual-Credit Monetization Principle:</p>
+        <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/30 text-xs text-slate-800">
+          <p className="font-bold text-brand-600 mb-0.5">📌 Visual-Credit Monetization Principle:</p>
           <p className="text-[11px] text-slate-600 font-medium">Text intelligence (social copy, SEO briefs, blog drafting) is subscription-based. Premium AI image generation & designed carousels require visual credits.</p>
         </div>
 
@@ -86,18 +86,18 @@ export const CreditTopupModal = () => {
               onClick={() => setSelectedPack(p.credits)}
               className={`p-4 rounded-2xl border cursor-pointer relative transition-all ${
                 selectedPack === p.credits 
-                  ? 'bg-[#7B61FF]/10 border-[#7B61FF] shadow-md' 
+                  ? 'bg-brand-500/10 border-brand-500 shadow-md' 
                   : 'bg-slate-50 border-slate-200 hover:border-slate-300'
               }`}
             >
               {p.popular && (
-                <span className="absolute -top-2.5 right-3 bg-[#7B61FF] text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider">
+                <span className="absolute -top-2.5 right-3 bg-brand-600 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider">
                   Popular
                 </span>
               )}
               <div className="text-xs font-bold text-slate-600">{p.label}</div>
-              <div className="text-xl font-extrabold text-slate-900 my-1">+{p.credits} <span className="text-xs font-bold text-[#7B61FF]">Credits</span></div>
-              <div className="text-sm font-bold text-[#7B61FF]">{p.price}</div>
+              <div className="text-xl font-extrabold text-slate-900 my-1">+{p.credits} <span className="text-xs font-bold text-brand-600">Credits</span></div>
+              <div className="text-sm font-bold text-brand-600">{p.price}</div>
             </div>
           ))}
         </div>

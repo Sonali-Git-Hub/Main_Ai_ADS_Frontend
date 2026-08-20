@@ -55,7 +55,7 @@ const getKdColor = (kd) => {
 
 
 export const SeoModule = () => {
-  const { activeWorkspace, setActiveModule, setSeoSearchData, brandDnaData } = useWorkspace();
+  const {activeWorkspace, setActiveModule, setSeoSearchData, brandDnaData, t } = useWorkspace();
   const [seedKeyword, setSeedKeyword] = useState('');
   const [intent, setIntent] = useState('Commercial');
   const [loading, setLoading] = useState(false);
@@ -176,7 +176,7 @@ export const SeoModule = () => {
             <div className="w-8 h-8 rounded-xl bg-cyan-500/10 dark:bg-cyan-500/20 flex items-center justify-center">
               <Search className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
             </div>
-            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">SEO Intelligence & Brief Builder</h1>
+            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">{t('seoTitle', 'SEO Intelligence & Brief Builder')}</h1>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 pl-10">
             Keyword clustering, topic mapping & 8-step brief generation for <strong className="text-slate-800 dark:text-white">{activeWorkspace.brandName}</strong>
@@ -184,6 +184,28 @@ export const SeoModule = () => {
               <span className="ml-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] font-semibold">{activeWorkspace.industryCategory}</span>
             )}
           </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-amber-500/8 border border-amber-500/20 flex items-start gap-2 text-[11px] text-amber-700 dark:text-amber-300 font-medium max-w-sm hidden xl:flex">
+            <ShieldAlert className="w-3.5 h-3.5 shrink-0 text-amber-500 mt-0.5" />
+            <span>AI Ads™ schema & keyword intelligence pipeline.</span>
+          </div>
+          <button
+            onClick={() => {
+              if (setSeoSearchData) {
+                setSeoSearchData({
+                  seedKeyword,
+                  keywordsList,
+                  brief,
+                  brandName: activeWorkspace.brandName
+                });
+              }
+              if (setActiveModule) setActiveModule('strategy');
+            }}
+            className="btn-primary py-2 px-4 text-xs font-bold flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md flex-shrink-0"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" /> {t('generateStrategyFromSeo', 'Generate Campaign Strategy from SEO →')}
+          </button>
         </div>
       </div>
 
@@ -466,7 +488,7 @@ export const SeoModule = () => {
               <div className="space-y-1.5 max-w-xs">
                 <h3 className="text-sm font-extrabold text-slate-700 dark:text-slate-300">No Brief Generated Yet</h3>
                 <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
-                  Enter a seed keyword, select search intent, and click <strong>Generate SEO Brief</strong> to get a structured brief with title tags, outline tree, entity keywords, and JSON-LD schema.
+                  Enter a seed keyword, select search intent, and click <strong>{t('generateSeoBrief', 'Generate SEO Brief')}</strong> to get a structured brief with title tags, outline tree, entity keywords, and JSON-LD schema.
                 </p>
               </div>
             </div>

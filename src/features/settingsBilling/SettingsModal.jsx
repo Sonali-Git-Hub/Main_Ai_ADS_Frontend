@@ -1,128 +1,325 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useWorkspace } from '../../context/WorkspaceContext';
-import { 
-  Settings, 
-  Search, 
-  Sparkles, 
-  Bell, 
-  Database, 
-  User, 
-  CreditCard, 
-  LogOut, 
-  X, 
-  Monitor, 
-  Palette, 
-  Globe, 
-  Languages, 
-  Clock, 
-  ChevronRight, 
-  Check, 
-  ShieldCheck, 
-  Download, 
-  Trash2, 
-  Camera, 
-  Image, 
-  Key, 
-  Mail, 
-  Phone, 
-  Eye, 
-  EyeOff, 
-  Volume2, 
-  Sliders
+import {
+  Settings,
+  Bell,
+  Sparkles,
+  Database,
+  Shield,
+  Lock,
+  User,
+  X,
+  ChevronDown,
+  Globe,
+  Camera,
+  Upload,
+  Scale,
+  AlertCircle,
+  Eye,
+  LogOut,
+  Monitor,
+  Check,
+  HelpCircle,
+  Smartphone,
+  Tablet,
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
+  ShieldCheck,
+  Mail,
+  Volume2,
+  Plus,
+  MessageSquare,
+  Send,
+  Clock,
+  Palette,
+  RefreshCcw,
+  Languages,
+  Crown,
+  CreditCard,
+  Download,
+  Search,
+  Zap,
+  FileText,
+  Key,
+  Building2,
+  Layers,
+  Sliders,
+  CheckCircle2,
+  Sun,
+  Moon
 } from 'lucide-react';
 
+// ──────────────────────────────────────────────
+// FAQ data (AI Ads focused)
+// ──────────────────────────────────────────────
+const faqs = [
+  {
+    category: 'Getting Started',
+    questions: [
+      { question: 'How do I create my first brand workspace?', answer: 'Navigate to Brand DNA from the sidebar, then click "Add New Brand". Use the AI Scraper to automatically pull your brand identity from your website URL.' },
+      { question: 'What is Brand DNA?', answer: 'Brand DNA is your brand\'s core identity — voice tone, audience personas, competitive positioning, and visual guidelines — all ingested and remembered by the AI to generate on-brand content every time.' },
+      { question: 'How do I generate content?', answer: 'Go to Content Studio, select your brand, choose a content type (Social Post, Blog, Email, etc.), and let the AI generate publish-ready copy aligned with your brand voice.' },
+    ],
+  },
+  {
+    category: 'Creative Studio',
+    questions: [
+      { question: 'What are Visual Credits?', answer: 'Visual Credits power AI image generation, carousel creation, and video synthesis. Each AI visual asset costs credits. You can top up anytime from the header or Settings > Billing.' },
+      { question: 'Can I generate images without credits?', answer: 'Text-based content (captions, blogs, emails) is unlimited. Visual credits are only needed for AI image generation, carousels, and video assets.' },
+      { question: 'How do I generate a carousel post?', answer: 'In Creative Studio, select "Carousel" as the format, paste your caption or let AI generate one, then click Generate. Each slide is automatically designed with your brand colors.' },
+    ],
+  },
+  {
+    category: 'Campaigns & Strategy',
+    questions: [
+      { question: 'What is the Campaign Builder?', answer: 'The Campaign Builder lets you create end-to-end marketing campaigns — define your goal, target audience, budget, and the AI will generate a complete multi-channel content calendar.' },
+      { question: 'How does SEO Intelligence work?', answer: 'Enter a topic or keyword cluster, and the AI generates SEO-optimized article briefs, meta tags, structured headings, and a content calendar to dominate search rankings.' },
+      { question: 'What is the Approvals Desk?', answer: 'All AI-generated content goes to the Approvals Desk where team members can review, comment, approve, or reject before publishing — maintaining brand compliance.' },
+    ],
+  },
+  {
+    category: 'Account & Billing',
+    questions: [
+      { question: 'How do I upgrade my plan?', answer: 'Go to Settings > Subscription & Billing and click "Upgrade Plan". Choose from Base, Professional, Agency, or Enterprise tiers.' },
+      { question: 'Can I invite team members?', answer: 'Yes! Navigate to Team & RBAC from the sidebar to invite team members and assign roles (Strategist, SEO Lead, Copywriter, Compliance, Client Reviewer).' },
+      { question: 'Is my data secure?', answer: 'Yes. All workspace data is encrypted at rest and in transit. Brand DNA, generated content, and user data are stored securely and never used to train third-party AI models.' },
+    ],
+  },
+  {
+    category: 'Integrations',
+    questions: [
+      { question: 'Which CMS platforms are supported?', answer: 'WordPress and Webflow webhook integrations are available. Shopify, HubSpot, and Notion integrations are coming soon.' },
+      { question: 'Can I connect social media accounts?', answer: 'Direct social publishing is on the roadmap. Currently you can export content in optimized formats for each platform (Instagram, LinkedIn, Twitter/X, Facebook).' },
+    ],
+  },
+];
+
+const TERMS_CONTENT = `
+**Terms of Service**
+
+Last Updated: January 2026
+
+By using AI Ads Platform ("the Platform"), you agree to the following terms:
+
+**1. Acceptance of Terms**
+By accessing or using our Platform, you confirm that you are at least 18 years old and agree to be bound by these Terms.
+
+**2. Use of AI-Generated Content**
+Content generated by the Platform's AI systems is provided for your use. You are responsible for reviewing, editing, and ensuring compliance of all AI-generated content before publishing.
+
+**3. Intellectual Property**
+You retain ownership of your brand data, uploaded assets, and approved content. AI-generated outputs become your property upon generation.
+
+**4. Prohibited Uses**
+You may not use the Platform to generate misleading, defamatory, or illegal content. We reserve the right to suspend accounts in violation of these terms.
+
+**5. Subscription & Credits**
+Visual Credits are consumed upon generation and are non-refundable. Subscription fees are billed monthly or annually as selected.
+
+**6. Limitation of Liability**
+The Platform is provided "as is." We are not liable for damages resulting from AI-generated content used without review.
+
+**7. Changes to Terms**
+We may update these Terms periodically. Continued use of the Platform constitutes acceptance of updated Terms.
+`;
+
+const PRIVACY_CONTENT = `
+**Privacy Policy**
+
+Last Updated: January 2026
+
+Your privacy is important to us. This policy explains how we collect, use, and protect your information.
+
+**1. Information We Collect**
+- Account information (email, name, role)
+- Workspace and brand data you provide
+- Usage analytics (anonymized)
+- AI generation logs (retained for 90 days)
+
+**2. How We Use Your Data**
+- To provide and improve the Platform
+- To generate personalized AI outputs aligned with your Brand DNA
+- To send important account and billing notifications
+
+**3. Data Storage & Security**
+All data is encrypted using AES-256 at rest and TLS 1.3 in transit. We do not sell your personal data to third parties.
+
+**4. AI Training Policy**
+Your brand data, uploaded assets, and generated content are NEVER used to train any third-party AI models. Your competitive intelligence stays private.
+
+**5. Data Retention**
+You can export or delete your data at any time from Settings > Data Controls. Upon account deletion, all data is permanently removed within 30 days.
+
+**6. Third-Party Services**
+We use Razorpay for payment processing and cloud providers for infrastructure. These services have their own privacy policies.
+
+**7. Contact Us**
+For privacy concerns, email us at privacy@aiads-platform.com
+`;
+
+// ──────────────────────────────────────────────
+// State-of-the-Art Custom Dropdown Component
+// ──────────────────────────────────────────────
+const CustomDropdown = ({ value, onChange, options, icon: Icon = Globe, direction = 'down' }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOpt = options.find(o => (typeof o === 'object' ? o.value : o) === value);
+  const selectedLabel = typeof selectedOpt === 'object' ? selectedOpt.label : (selectedOpt || value);
+  const selectedIcon = typeof selectedOpt === 'object' ? selectedOpt.icon : null;
+
+  return (
+    <div className="relative min-w-[190px]" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl border text-xs font-extrabold transition-all shadow-sm ${
+          isOpen
+            ? 'border-brand-500 bg-brand-500/10 text-brand-600 dark:text-brand-300 ring-2 ring-brand-500/20 shadow-glow'
+            : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 text-slate-800 dark:text-slate-100 hover:border-brand-500/40 hover:bg-slate-50 dark:hover:bg-slate-800/80'
+        }`}
+      >
+        <div className="flex items-center gap-2.5 truncate">
+          {selectedIcon ? (
+            <span className="text-base flex-shrink-0">{selectedIcon}</span>
+          ) : Icon ? (
+            <Icon className="w-4 h-4 text-brand-500 flex-shrink-0" />
+          ) : null}
+          <span className="truncate">{selectedLabel}</span>
+        </div>
+        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180 text-brand-500' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className={`absolute right-0 ${direction === 'up' ? 'bottom-full mb-1.5 animate-in fade-in slide-in-from-bottom-2' : 'top-full mt-1.5 animate-in fade-in zoom-in-95'} w-full min-w-[210px] bg-white dark:bg-[#0c101d] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-1.5 z-50 duration-150 space-y-0.5 max-h-60 overflow-y-auto`}>
+          {options.map((opt) => {
+            const val = typeof opt === 'object' ? opt.value : opt;
+            const lbl = typeof opt === 'object' ? opt.label : opt;
+            const icn = typeof opt === 'object' ? opt.icon : null;
+            const isSelected = val === value;
+
+            return (
+              <button
+                key={val}
+                type="button"
+                onClick={() => {
+                  onChange(val);
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-xs transition-all text-left group ${
+                  isSelected
+                    ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300 font-extrabold border border-brand-500/30'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-brand-500/10 hover:text-brand-600 dark:hover:text-brand-300 font-bold'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  {icn && <span className="text-base flex-shrink-0">{icn}</span>}
+                  <span className="truncate">{lbl}</span>
+                </div>
+                {isSelected && <Check className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ──────────────────────────────────────────────
+// Accent colors with hex codes & labels
+// ──────────────────────────────────────────────
+const ACCENT_COLORS = [
+  { id: 'default', label: 'Indigo Spark', hex: '#6366f1', bgClass: 'bg-indigo-500' },
+  { id: 'purple', label: 'Electric Violet', hex: '#a855f7', bgClass: 'bg-purple-500' },
+  { id: 'blue', label: 'Ocean Cyan', hex: '#0284c7', bgClass: 'bg-cyan-500' },
+  { id: 'emerald', label: 'Emerald Mint', hex: '#10b981', bgClass: 'bg-emerald-500' },
+  { id: 'amber', label: 'Sunset Amber', hex: '#f59e0b', bgClass: 'bg-amber-500' },
+  { id: 'rose', label: 'Neon Rose', hex: '#f43f5e', bgClass: 'bg-rose-500' },
+];
+
+// ──────────────────────────────────────────────
+// Main Component
+// ──────────────────────────────────────────────
 export const SettingsModal = () => {
-  const { 
-    isSettingsModalOpen, 
+  const {
+    isSettingsModalOpen,
     setIsSettingsModalOpen,
     activeSettingsTab,
     setActiveSettingsTab,
-    appearance, 
+    appearance,
     setAppearance,
-    accentColor, 
+    accentColor,
     setAccentColor,
-    region, 
+    region,
     setRegion,
-    language, 
+    language,
     setLanguage,
-    multiScheduleReminder, 
+    multiScheduleReminder,
     setMultiScheduleReminder,
     notificationPreferences,
     setNotificationPreferences,
     dataControlPreferences,
     setDataControlPreferences,
-    userAvatar, 
+    userAvatar,
     setUserAvatar,
-    user, 
+    user,
+    setUser,
     logout,
     credits,
-    setIsCreditModalOpen
+    setIsCreditModalOpen,
+    notifications,
+    setNotifications,
+    activeWorkspace,
+    activeRole,
+    t
   } = useWorkspace();
 
+  const fileInputRef = useRef(null);
+
+  // Mobile view state
+  const [view, setView] = useState('sidebar');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Profile Photo & Name states
+  const [nicknameInput, setNicknameInput] = useState('');
+  useEffect(() => {
+    setNicknameInput(user?.name || user?.fullName || (user?.email ? user.email.split('@')[0] : ''));
+  }, [user]);
+
   const [showPhotoMenu, setShowPhotoMenu] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
+  const [isNameSaved, setIsNameSaved] = useState(false);
 
-  // Password Visibility State
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
 
-  if (!isSettingsModalOpen) return null;
-
-  const getUserName = (u) => {
-    if (!u?.email) return 'Agency User';
-    const prefix = u.email.split('@')[0];
-    return prefix.charAt(0).toUpperCase() + prefix.slice(1);
-  };
-
-  const navItems = [
-    { id: 'personalization', label: 'Personalization', icon: Sparkles },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'datacontrols', label: 'Data controls', icon: Database },
-    { id: 'profile', label: 'Profile & Account', icon: User },
-    { id: 'billing', label: 'Subscription & Billing', icon: CreditCard },
-  ];
-
-  const accentColorOptions = [
-    { id: 'default', label: 'Default', hex: '#6366f1' },
-    { id: 'purple', label: 'Electric Purple', hex: '#a855f7' },
-    { id: 'blue', label: 'Ocean Blue', hex: '#0284c7' },
-    { id: 'emerald', label: 'Emerald Green', hex: '#10b981' },
-    { id: 'amber', label: 'Sunset Amber', hex: '#f59e0b' },
-    { id: 'rose', label: 'Rose Pink', hex: '#f43f5e' },
-  ];
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setUserAvatar(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const startCamera = async () => {
+    setShowPhotoMenu(false);
     setIsCameraOpen(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       streamRef.current = stream;
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      }, 100);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
     } catch (err) {
       console.error("Camera access error:", err);
-      alert("Unable to access camera. Please check permissions.");
+      alert("Unable to access camera. Please verify camera permissions in your browser.");
       setIsCameraOpen(false);
     }
   };
@@ -137,424 +334,1397 @@ export const SettingsModal = () => {
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
-      const context = canvasRef.current.getContext('2d');
-      canvasRef.current.width = videoRef.current.videoWidth;
-      canvasRef.current.height = videoRef.current.videoHeight;
-      context.translate(canvasRef.current.width, 0);
-      context.scale(-1, 1);
-      context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-      const dataUrl = canvasRef.current.toDataURL('image/png');
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/png');
       setUserAvatar(dataUrl);
       stopCamera();
     }
   };
 
+  const handleSaveName = () => {
+    if (!nicknameInput.trim()) return;
+    const newName = nicknameInput.trim();
+    try {
+      localStorage.setItem('aisa_user_name', newName);
+    } catch(e){}
+    setUser(prev => {
+      const updated = prev ? { ...prev, name: newName, fullName: newName } : { name: newName, fullName: newName };
+      try { localStorage.setItem('aisa_user', JSON.stringify(updated)); } catch(e){}
+      return updated;
+    });
+    setIsNameSaved(true);
+    setTimeout(() => setIsNameSaved(false), 2500);
+  };
+
+  // Password reset modal
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetStep, setResetStep] = useState(1);
+  const [resetOtp, setResetOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+
+  // Delete account modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteStep, setDeleteStep] = useState('confirm');
+  const [deleteOtp, setDeleteOtp] = useState('');
+  const [deleteOtpLoading, setDeleteOtpLoading] = useState(false);
+  const [deleteCooldown, setDeleteCooldown] = useState(0);
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    if (deleteCooldown > 0) {
+      timer = setTimeout(() => setDeleteCooldown(prev => prev - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [deleteCooldown]);
+
+  // FAQ states
+  const [selectedFaqCategory, setSelectedFaqCategory] = useState(0);
+  const [faqSearchQuery, setFaqSearchQuery] = useState('');
+  const [faqSubTab, setFaqSubTab] = useState('faq');
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
+
+  // Support ticket
+  const [issueType, setIssueType] = useState('General Inquiry');
+  const [isIssueDropdownOpen, setIsIssueDropdownOpen] = useState(false);
+  const [issueText, setIssueText] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [sendStatus, setSendStatus] = useState(null);
+
+  // Sessions stub
+  const [sessions, setSessions] = useState([
+    { _id: 'sess_current', isCurrent: true, device: 'Desktop', os: 'Windows 11', browser: 'Chrome 122.0', ip: '192.168.1.104', lastActive: new Date().toISOString() },
+  ]);
+
+  // Chat sessions stub
+  const [chatSessions, setChatSessions] = useState([
+    { sessionId: 'chat_001', title: 'Q4 Brand Strategy & Content Angles', lastModified: new Date(Date.now() - 86400000).toISOString() },
+    { sessionId: 'chat_002', title: 'Instagram High-Conversion Hooks', lastModified: new Date(Date.now() - 2 * 86400000).toISOString() },
+    { sessionId: 'chat_003', title: 'SEO Brief & Keyword Cluster Generator', lastModified: new Date(Date.now() - 3 * 86400000).toISOString() },
+  ]);
+  const [expandedDate, setExpandedDate] = useState(null);
+
+  const getUserName = (u) => {
+    if (!u) return 'Agency Strategist';
+    if (u.name) return u.name;
+    if (u.email) {
+      const prefix = u.email.split('@')[0];
+      return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+    }
+    return 'Agency Strategist';
+  };
+
+  // ── Categorized Nav Groups ──────────────────────────────
+  const navSections = [
+    {
+      title: t('platformPreferences', 'PLATFORM PREFERENCES'),
+      items: [
+        { id: 'personalization', label: t('appearanceStyle', 'Appearance & Style'), icon: Sparkles, color: 'from-violet-500 to-purple-600', badge: 'Popular' },
+        { id: 'notifications', label: t('alertsDigest', 'Alerts & Digest'), icon: Bell, color: 'from-blue-500 to-cyan-600' },
+        { id: 'data', label: t('dataControlsBackup', 'Data Controls & Backup'), icon: Database, color: 'from-emerald-500 to-teal-600' },
+      ]
+    },
+    {
+      title: t('accountSecurity', 'ACCOUNT & SECURITY'),
+      items: [
+        { id: 'account', label: t('profileSessions', 'Profile & Sessions'), icon: User, color: 'from-amber-500 to-orange-600' },
+      ]
+    },
+    {
+      title: t('monetizationApi', 'MONETIZATION & API'),
+      items: [
+        { id: 'billing', label: t('billingVisualCredits', 'Billing & Visual Credits'), icon: CreditCard, color: 'from-pink-500 to-rose-600', badge: `${credits?.balance || 0} Credits` },
+      ]
+    },
+    {
+      title: t('helpResources', 'HELP & RESOURCES'),
+      items: [
+        { id: 'help', label: t('helpCenterFaq', 'Help Center & FAQ'), icon: HelpCircle, color: 'from-cyan-500 to-blue-600' },
+        { id: 'feedback', label: t('sendProductFeedback', 'Send Product Feedback'), icon: MessageSquare, color: 'from-indigo-500 to-violet-600' },
+        { id: 'terms', label: t('termsOfService', 'Terms of Service'), icon: FileText, color: 'from-slate-400 to-slate-600' },
+        { id: 'privacy', label: t('privacyPolicy', 'Privacy Policy'), icon: Shield, color: 'from-emerald-400 to-emerald-600' },
+      ]
+    }
+  ];
+
+  const activeTab = activeSettingsTab;
+  const setActiveTab = setActiveSettingsTab;
+
+  const renderSettingRow = (label, description, control) => (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/60 transition-all hover:border-brand-500/30 gap-4">
+      <div className="flex flex-col gap-1 pr-4 flex-1">
+        <span className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">{label}</span>
+        {description && (
+          <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{description}</span>
+        )}
+      </div>
+      <div className="w-full sm:w-auto shrink-0">{control}</div>
+    </div>
+  );
+
+  const renderToggle = (value, onToggle) => (
+    <button
+      onClick={() => onToggle(!value)}
+      className={`w-12 h-6.5 rounded-full p-1 transition-all duration-300 shrink-0 ${value ? 'bg-gradient-to-r from-brand-600 to-indigo-500 shadow-glow' : 'bg-slate-300 dark:bg-slate-800'}`}
+    >
+      <div className={`w-4.5 h-4.5 rounded-full transition-transform duration-300 shadow-md bg-white ${value ? 'translate-x-5.5' : 'translate-x-0'}`} />
+    </button>
+  );
+
+  // Search matching
+  const allSettings = useMemo(() => [
+    { id: 'appearance', tab: 'personalization', label: 'Appearance Theme', keywords: 'dark light theme mode system' },
+    { id: 'accent', tab: 'personalization', label: 'Accent Color Scheme', keywords: 'color design brand identity' },
+    { id: 'region', tab: 'personalization', label: 'Target Region', keywords: 'country location india us uk' },
+    { id: 'language', tab: 'personalization', label: 'Dashboard Language', keywords: 'english hindi spanish translation' },
+    { id: 'reminder', tab: 'personalization', label: 'Multi Schedule Reminder', keywords: 'alarm scheduler calendar' },
+    { id: 'emailDigest', tab: 'notifications', label: 'Weekly Email Digest', keywords: 'email notification weekly' },
+    { id: 'desktopPush', tab: 'notifications', label: 'Desktop Push Alerts', keywords: 'push notification alerts' },
+    { id: 'soundEffects', tab: 'notifications', label: 'Sound Effects Chime', keywords: 'audio sound chime' },
+    { id: 'chatHistory', tab: 'data', label: 'Save AI Chat History', keywords: 'chat history save toggle' },
+    { id: 'export', tab: 'data', label: 'Export Workspace JSON', keywords: 'export download json' },
+    { id: 'nickname', tab: 'account', label: 'Display Name', keywords: 'name profile nickname' },
+    { id: 'password', tab: 'account', label: 'Change Password Security', keywords: 'password security' },
+    { id: 'sessions', tab: 'account', label: 'Active Login Sessions', keywords: 'sessions login devices' },
+    { id: 'billing', tab: 'billing', label: 'Subscription Plan & Credits', keywords: 'plan billing credits tier' },
+  ], []);
+
+  const handleSupportSubmit = async () => {
+    if (!issueText.trim()) return;
+    setIsSending(true);
+    setSendStatus(null);
+    try {
+      await new Promise(r => setTimeout(r, 1000));
+      setSendStatus('success');
+      setIssueText('');
+      setTimeout(() => setSendStatus(null), 3000);
+    } catch (error) {
+      setSendStatus('error');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleSendOtp = async () => {
+    setResetLoading(true);
+    await new Promise(r => setTimeout(r, 800));
+    setResetStep(2);
+    setResetLoading(false);
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetOtp || !newPassword) return;
+    setResetLoading(true);
+    await new Promise(r => setTimeout(r, 800));
+    setShowResetModal(false);
+    setResetStep(1);
+    setResetOtp('');
+    setNewPassword('');
+    setResetLoading(false);
+  };
+
+  const handleInitiateDelete = async () => {
+    setDeleteOtpLoading(true);
+    await new Promise(r => setTimeout(r, 800));
+    setDeleteStep('otp');
+    setDeleteCooldown(60);
+    setDeleteOtpLoading(false);
+  };
+
+  const handleVerifyDeleteOtp = async () => {
+    if (!deleteOtp || deleteOtp.trim().length !== 6) {
+      setDeleteError('Please enter a valid 6-digit code.');
+      return;
+    }
+    setDeleteOtpLoading(true);
+    await new Promise(r => setTimeout(r, 800));
+    setDeleteStep('verified');
+    setDeleteOtpLoading(false);
+  };
+
+  const handleResendDeleteOtp = async () => {
+    if (deleteCooldown > 0) return;
+    setDeleteOtpLoading(true);
+    await new Promise(r => setTimeout(r, 600));
+    setDeleteCooldown(60);
+    setDeleteOtpLoading(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteStep !== 'verified') return;
+    setDeleteLoading(true);
+    await new Promise(r => setTimeout(r, 1000));
+    setShowDeleteModal(false);
+    setDeleteStep('confirm');
+    setDeleteOtp('');
+    logout();
+    setIsSettingsModalOpen(false);
+    setDeleteLoading(false);
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => setUserAvatar(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const groupedSessions = useMemo(() => {
+    const groups = {};
+    chatSessions.forEach(session => {
+      const d = new Date(session.lastModified);
+      const key = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(session);
+    });
+    return groups;
+  }, [chatSessions]);
+
   const triggerExportData = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify({
       user: user?.email,
       appearance,
       accentColor,
       region,
       language,
-      exportedAt: new Date().toISOString()
+      activeWorkspace: activeWorkspace?.brandName,
+      exportedAt: new Date().toISOString(),
     }, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `aisa_workspace_data_${Date.now()}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+    const a = document.createElement('a');
+    a.setAttribute('href', dataStr);
+    a.setAttribute('download', `aiads_workspace_export_${Date.now()}.json`);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
-  // Filter check for search query
-  const matchesSearch = (text) => {
-    if (!searchQuery.trim()) return true;
-    return text.toLowerCase().includes(searchQuery.toLowerCase());
-  };
-
-  return (
-    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[100] flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
-      <div 
-        className="w-full max-w-4xl bg-white dark:bg-[#0d1322] border border-slate-200 dark:border-slate-800/80 rounded-[28px] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[580px] max-h-[90vh] animate-in zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Left Sidebar */}
-        <div className="w-full md:w-72 bg-slate-50/80 dark:bg-[#0a0e1a] border-r border-slate-200 dark:border-slate-800/80 p-5 flex flex-col justify-between flex-shrink-0">
-          <div className="space-y-4">
-            {/* Modal Title */}
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20">
-                <Settings className="w-5 h-5" />
+  // ── Render Content per Tab ──
+  const renderContent = () => {
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const results = allSettings.filter(item =>
+        item.label.toLowerCase().includes(query) || item.keywords.toLowerCase().includes(query)
+      );
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Search Results</h3>
+            <span className="text-xs font-bold text-brand-500">{results.length} found</span>
+          </div>
+          {results.length > 0 ? (
+            <div className="grid grid-cols-1 gap-2">
+              {results.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => { setActiveTab(item.tab); setSearchQuery(''); setView('detail'); }}
+                  className="w-full text-left bg-slate-50 dark:bg-slate-900/40 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800/80 hover:border-brand-500/50 hover:bg-brand-500/5 transition-all group flex items-center justify-between"
+                >
+                  <div>
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-brand-500 transition-colors">{item.label}</p>
+                    <p className="text-xs text-slate-400 mt-0.5 capitalize">Tab: {item.tab}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="py-20 text-center opacity-60">
+              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800/60 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400">
+                <Search className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">Settings</h2>
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No settings found matching "{searchQuery}"</p>
             </div>
+          )}
+        </div>
+      );
+    }
 
-            {/* Search Input Box */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input 
-                type="text"
-                placeholder="Search settings..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white dark:bg-[#121829] border border-slate-200 dark:border-slate-700/60 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/50 transition-all"
-              />
-            </div>
-
-            {/* Navigation List */}
-            <nav className="space-y-1 pt-2">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeSettingsTab === item.id;
-                return (
+    switch (activeTab) {
+      // ── APPEARANCE & STYLE ─────────────────────────
+      case 'personalization':
+        return (
+          <div className="space-y-6">
+            {/* Visual Theme Selector */}
+            <div className="space-y-3">
+              <label className="text-xs font-black uppercase tracking-widest text-slate-400 block">{t('themeMode', 'Theme Mode')}</label>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { id: 'dark', label: t('darkMode', 'Dark Mode'), icon: Moon, desc: t('darkDesc', 'High contrast dark theme'), previewBg: 'bg-[#090d16] border-slate-800' },
+                  { id: 'light', label: t('lightMode', 'Light Mode'), icon: Sun, desc: t('lightDesc', 'Clean white background'), previewBg: 'bg-white border-slate-200' },
+                  { id: 'system', label: t('systemMode', 'System'), icon: Monitor, desc: t('systemDesc', 'Auto sync with OS'), previewBg: 'bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700' },
+                ].map(item => (
                   <button
                     key={item.id}
-                    onClick={() => setActiveSettingsTab(item.id)}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all ${
-                      isActive
-                        ? 'bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/30'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
+                    onClick={() => setAppearance(item.id)}
+                    className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between h-32 ${
+                      appearance === item.id
+                        ? 'border-brand-500 bg-brand-500/10 shadow-glow ring-2 ring-brand-500/20'
+                        : 'border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900/40 hover:border-slate-300 dark:hover:border-slate-700'
                     }`}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <Icon className={`w-4 h-4 ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400'}`} />
-                      <span>{item.label}</span>
+                    <div className="flex items-center justify-between">
+                      <div className={`p-2 rounded-xl ${appearance === item.id ? 'bg-brand-500 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-400'}`}>
+                        <item.icon className="w-4 h-4" />
+                      </div>
+                      {appearance === item.id && (
+                        <span className="w-5 h-5 rounded-full bg-brand-500 text-white flex items-center justify-center">
+                          <Check className="w-3 h-3" />
+                        </span>
+                      )}
                     </div>
-                    <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isActive ? 'text-brand-500 translate-x-0.5' : 'text-slate-400 opacity-60'}`} />
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 dark:text-white block">{item.label}</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400">{item.desc}</span>
+                    </div>
                   </button>
-                );
-              })}
-            </nav>
-          </div>
-
-          {/* Bottom Logout Button */}
-          <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-            <button
-              onClick={logout}
-              className="w-full py-2.5 px-4 rounded-xl border border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95"
-            >
-              <LogOut className="w-4 h-4" />
-              LOG OUT
-            </button>
-          </div>
-        </div>
-
-        {/* Right Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#0d1322] relative overflow-hidden">
-          {/* Header Bar */}
-          <div className="p-6 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-extrabold text-slate-900 dark:text-white capitalize">
-                {navItems.find(i => i.id === activeSettingsTab)?.label || 'Personalization'}
-              </h3>
+                ))}
+              </div>
             </div>
-            <button
-              onClick={() => setIsSettingsModalOpen(false)}
-              className="p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Close Settings"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
 
-          {/* Content Body */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            
-            {/* PERSONALIZATION TAB */}
-            {activeSettingsTab === 'personalization' && (
-              <div className="space-y-6 animate-in fade-in duration-150">
-                
-                {/* 1. Appearance */}
-                {matchesSearch('appearance layout theme dark light system') && (
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60">
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">Appearance</h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Choose your preferred layout theme.</p>
-                    </div>
-                    <div className="relative min-w-[170px]">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                        <Monitor className="w-4 h-4" />
-                      </div>
-                      <select
-                        value={appearance}
-                        onChange={(e) => setAppearance(e.target.value)}
-                        className="w-full pl-9 pr-8 py-2 text-xs font-semibold bg-white dark:bg-[#151c2e] border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/50 appearance-none shadow-sm"
-                      >
-                        <option value="system">System</option>
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
-                        ▼
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 2. Accent Color */}
-                {matchesSearch('accent color theme brand identity color') && (
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60">
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">Accent color</h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Personalize your AI's identity color.</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {/* Active color circle preview */}
-                      <span 
-                        className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm"
-                        style={{ backgroundColor: accentColorOptions.find(o => o.id === accentColor)?.hex || '#6366f1' }}
-                      />
-                      <div className="relative min-w-[170px]">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                          <Palette className="w-4 h-4" />
-                        </div>
-                        <select
-                          value={accentColor}
-                          onChange={(e) => setAccentColor(e.target.value)}
-                          className="w-full pl-9 pr-8 py-2 text-xs font-semibold bg-white dark:bg-[#151c2e] border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/50 appearance-none shadow-sm"
-                        >
-                          {accentColorOptions.map(opt => (
-                            <option key={opt.id} value={opt.id}>{opt.label}</option>
-                          ))}
-                        </select>
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
-                          ▼
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. Region */}
-                {matchesSearch('region filter language country india us uk global') && (
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60">
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">Region</h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Filter languages by region.</p>
-                    </div>
-                    <div className="relative min-w-[170px]">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                        <Globe className="w-4 h-4" />
-                      </div>
-                      <select
-                        value={region}
-                        onChange={(e) => setRegion(e.target.value)}
-                        className="w-full pl-9 pr-8 py-2 text-xs font-semibold bg-white dark:bg-[#151c2e] border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/50 appearance-none shadow-sm"
-                      >
-                        <option value="India">India</option>
-                        <option value="United States">United States</option>
-                        <option value="United Kingdom">United Kingdom</option>
-                        <option value="Global">Global</option>
-                        <option value="Europe">Europe</option>
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
-                        ▼
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. Language */}
-                {matchesSearch('language english hindi spanish french german dashboard') && (
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60">
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">Language</h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Select your preferred dashboard language.</p>
-                    </div>
-                    <div className="relative min-w-[170px]">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                        <Languages className="w-4 h-4" />
-                      </div>
-                      <select
-                        value={language}
-                        onChange={(e) => setLanguage(e.target.value)}
-                        className="w-full pl-9 pr-8 py-2 text-xs font-semibold bg-white dark:bg-[#151c2e] border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/50 appearance-none shadow-sm"
-                      >
-                        <option value="English">English</option>
-                        <option value="Hindi">Hindi (हिंदी)</option>
-                        <option value="Spanish">Spanish (Español)</option>
-                        <option value="French">French (Français)</option>
-                        <option value="German">German (Deutsch)</option>
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
-                        ▼
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 5. Multi Schedule Reminder */}
-                {matchesSearch('multi schedule reminder alarms repeating') && (
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60">
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="w-4 h-4 text-brand-500" />
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">Multi Schedule Reminder</h4>
-                      </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Manage all your repeating schedules and alarms here.</p>
-                    </div>
-                    <div className="relative min-w-[170px]">
-                      <select
-                        value={multiScheduleReminder}
-                        onChange={(e) => setMultiScheduleReminder(e.target.value)}
-                        className="w-full px-3 py-2 text-xs font-semibold bg-white dark:bg-[#151c2e] border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/50 appearance-none shadow-sm"
-                      >
-                        <option value="Enabled">Enabled (All Alarms)</option>
-                        <option value="Disabled">Disabled</option>
-                        <option value="Priority Only">Priority Reminders Only</option>
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
-                        ▼
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            )}
-
-            {/* NOTIFICATIONS TAB */}
-            {activeSettingsTab === 'notifications' && (
-              <div className="space-y-4 animate-in fade-in duration-150">
-                <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">Email Digest</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Receive weekly summaries of brand analytics and campaign performance.</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notificationPreferences.emailDigest}
-                    onChange={(e) => setNotificationPreferences({...notificationPreferences, emailDigest: e.target.checked})}
-                    className="w-5 h-5 text-brand-600 accent-brand-600 rounded cursor-pointer"
-                  />
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">Desktop Push Alerts</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Instant notifications for post approvals and AI scraper finishes.</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notificationPreferences.desktopPush}
-                    onChange={(e) => setNotificationPreferences({...notificationPreferences, desktopPush: e.target.checked})}
-                    className="w-5 h-5 text-brand-600 accent-brand-600 rounded cursor-pointer"
-                  />
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">Sound Effects</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Play audio chime on AI generation completion.</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notificationPreferences.soundEffects}
-                    onChange={(e) => setNotificationPreferences({...notificationPreferences, soundEffects: e.target.checked})}
-                    className="w-5 h-5 text-brand-600 accent-brand-600 rounded cursor-pointer"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* DATA CONTROLS TAB */}
-            {activeSettingsTab === 'datacontrols' && (
-              <div className="space-y-4 animate-in fade-in duration-150">
-                <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">Save AI Chat History</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Retain session context for multi-brand campaign optimization.</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={dataControlPreferences.saveChatHistory}
-                    onChange={(e) => setDataControlPreferences({...dataControlPreferences, saveChatHistory: e.target.checked})}
-                    className="w-5 h-5 text-brand-600 accent-brand-600 rounded cursor-pointer"
-                  />
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">Export Workspace Data</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Download your settings, active brands, and logs as JSON.</p>
-                  </div>
+            {/* Accent Color Scheme */}
+            <div className="space-y-3 pt-2">
+              <label className="text-xs font-black uppercase tracking-widest text-slate-400 block">{t('accentColorTheme', 'Accent Color Theme')}</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {ACCENT_COLORS.map(c => (
                   <button
-                    onClick={triggerExportData}
-                    className="px-3.5 py-2 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 font-semibold text-xs border border-brand-500/20 hover:bg-brand-500/20 transition-all flex items-center gap-1.5"
+                    key={c.id}
+                    onClick={() => setAccentColor(c.id)}
+                    className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${
+                      accentColor === c.id
+                        ? 'border-brand-500 bg-brand-500/10 shadow-sm ring-1 ring-brand-500/30'
+                        : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 hover:border-slate-300 dark:hover:border-slate-700'
+                    }`}
                   >
-                    <Download className="w-4 h-4" />
-                    Export
+                    <div className="flex items-center gap-3">
+                      <span className="w-4 h-4 rounded-full shadow-sm border border-white/20" style={{ backgroundColor: c.hex }} />
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{c.label}</span>
+                    </div>
+                    {accentColor === c.id && <Check className="w-4 h-4 text-brand-500" />}
                   </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Region & Language Selectors */}
+            {renderSettingRow(
+              t('targetRegion', 'Target Region'),
+              t('targetRegionDesc', 'Adjust target market standards and audience metrics.'),
+              <CustomDropdown
+                value={region}
+                onChange={val => setRegion(val)}
+                icon={Globe}
+                options={[
+                  { value: 'India', label: 'India', icon: '🇮🇳' },
+                  { value: 'United States', label: 'United States', icon: '🇺🇸' },
+                  { value: 'United Kingdom', label: 'United Kingdom', icon: '🇬🇧' },
+                  { value: 'Europe', label: 'Europe', icon: '🇪🇺' },
+                  { value: 'Global', label: 'Global', icon: '🌐' }
+                ]}
+              />
+            )}
+
+            {renderSettingRow(
+              t('dashboardLanguage', 'Dashboard Language'),
+              t('languageDesc', 'Interface and prompt default language.'),
+              <CustomDropdown
+                value={language}
+                onChange={val => setLanguage(val)}
+                icon={Languages}
+                direction="up"
+                options={[
+                  { value: 'English', label: 'English (US)', icon: '🇺🇸' },
+                  { value: 'Hindi', label: 'Hindi (हिन्दी)', icon: '🇮🇳' },
+                  { value: 'Bengali', label: 'Bengali (বাংলা)', icon: '🇮🇳' },
+                  { value: 'Marathi', label: 'Marathi (मराठी)', icon: '🇮🇳' },
+                  { value: 'Telugu', label: 'Telugu (తెలుగు)', icon: '🇮🇳' },
+                  { value: 'Tamil', label: 'Tamil (தமிழ்)', icon: '🇮🇳' },
+                  { value: 'Kannada', label: 'Kannada (ಕನ್ನಡ)', icon: '🇮🇳' },
+                  { value: 'Malayalam', label: 'Malayalam (മലയാളം)', icon: '🇮🇳' },
+                  { value: 'Spanish', label: 'Spanish (Español)', icon: '🇪🇸' },
+                  { value: 'French', label: 'French (Français)', icon: '🇫🇷' },
+                  { value: 'German', label: 'German (Deutsch)', icon: '🇩🇪' },
+                  { value: 'Arabic', label: 'Arabic (العربية)', icon: '🇦🇪' }
+                ]}
+              />
+            )}
+
+            {renderSettingRow(
+              t('multiScheduleReminder', 'Multi Schedule Reminder'),
+              t('reminderDesc', 'Automated post publishing alarms and push notifications.'),
+              <CustomDropdown
+                value={multiScheduleReminder}
+                onChange={val => setMultiScheduleReminder(val)}
+                icon={Clock}
+                direction="up"
+                options={[
+                  { value: 'Enabled', label: 'Enabled (Active PWA Alerts)', icon: '⚡' },
+                  { value: 'Disabled', label: 'Disabled (Muted)', icon: '🔕' },
+                  { value: 'Priority Only', label: 'Priority Alerts Only', icon: '🎯' }
+                ]}
+              />
+            )}
+          </div>
+        );
+
+      // ── ALERTS & DIGEST ────────────────────────────
+      case 'notifications':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">System & Event Alerts</h3>
+            </div>
+            <div className="space-y-3">
+              {[
+                { key: 'emailDigest', label: 'Weekly Performance Digest', desc: 'Receive detailed weekly updates on brand analytics, lead scores, and SEO progress.', icon: Mail },
+                { key: 'desktopPush', label: 'Real-Time Desktop Push', desc: 'Get immediate browser notifications when AI generation completes or a post is approved.', icon: Bell },
+                { key: 'soundEffects', label: 'Audio Chime Alerts', desc: 'Play subtle audio confirmation when AI tasks or image generations finish.', icon: Volume2 },
+                { key: 'productUpdates', label: 'Feature Release Announcements', desc: 'Be the first to hear about new AI models, templates, and integration updates.', icon: Sparkles },
+              ].map(({ key, label, desc, icon: Icon }) => (
+                <div key={key} className="p-4 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 flex items-start justify-between gap-4 hover:border-brand-500/30 transition-all">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-brand-500/10 text-brand-500 flex items-center justify-center shrink-0 mt-0.5 border border-brand-500/20">
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">{label}</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-0.5">{desc}</p>
+                    </div>
+                  </div>
+                  {renderToggle(notificationPreferences[key], val => setNotificationPreferences({ ...notificationPreferences, [key]: val }))}
+                </div>
+              ))}
+            </div>
+
+            {/* Notifications log */}
+            {notifications && notifications.length > 0 && (
+              <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Recent Activity Log ({notifications.length})</h4>
+                  <button onClick={() => setNotifications && setNotifications([])} className="text-xs font-bold text-brand-500 hover:underline">Clear</button>
+                </div>
+                <div className="space-y-2">
+                  {notifications.map(n => (
+                    <div key={n.id} className="p-3 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs">
+                      <span className="font-medium text-slate-800 dark:text-slate-200">{n.text}</span>
+                      <span className="text-[10px] text-slate-400 font-mono">{n.time}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
+          </div>
+        );
 
-            {/* PROFILE TAB */}
-            {activeSettingsTab === 'profile' && (
-              <div className="space-y-6 animate-in fade-in duration-150">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden flex items-center justify-center border-2 border-brand-500/30">
+      // ── DATA CONTROLS ──────────────────────────────
+      case 'data':
+        return (
+          <div className="space-y-6">
+            <div className="space-y-3">
+              {renderSettingRow(
+                'Save AI Chat Context',
+                'Persist session memory for multi-channel campaign generation.',
+                renderToggle(dataControlPreferences.saveChatHistory, val =>
+                  setDataControlPreferences({ ...dataControlPreferences, saveChatHistory: val })
+                )
+              )}
+              {renderSettingRow(
+                'Share Workspace Links',
+                'Allow team members with the link to preview draft assets.',
+                renderToggle(dataControlPreferences.shareWorkspaceLinks, val =>
+                  setDataControlPreferences({ ...dataControlPreferences, shareWorkspaceLinks: val })
+                )
+              )}
+              {renderSettingRow(
+                'Anonymized Usage Telemetry',
+                'Help improve AI generation quality by sharing diagnostic logs.',
+                renderToggle(dataControlPreferences.allowAnalytics, val =>
+                  setDataControlPreferences({ ...dataControlPreferences, allowAnalytics: val })
+                )
+              )}
+            </div>
+
+            {/* Export Card */}
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-brand-500/10 via-brand-500/5 to-transparent border border-brand-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Export Workspace Backup</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Download settings, active brands, and logs as JSON format.</p>
+              </div>
+              <button
+                onClick={triggerExportData}
+                className="btn-secondary text-xs px-4 py-2.5 flex items-center gap-2"
+              >
+                <Download className="w-4 h-4 text-brand-500" />
+                Export Data
+              </button>
+            </div>
+
+            {/* Saved Chat Sessions */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">Saved Chat History</h4>
+                {chatSessions.length > 0 && (
+                  <button onClick={() => setChatSessions([])} className="text-xs font-bold text-red-500 hover:underline">Delete All</button>
+                )}
+              </div>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {chatSessions.map(s => (
+                  <div key={s.sessionId} className="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">{s.title}</span>
+                    <button
+                      onClick={() => setChatSessions(prev => prev.filter(x => x.sessionId !== s.sessionId))}
+                      className="p-1 text-slate-400 hover:text-red-500 transition-colors ml-2 shrink-0"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      // ── PROFILE & SESSIONS ─────────────────────────
+      case 'account':
+        return (
+          <div className="space-y-6">
+            {/* Hidden File Input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+
+            {/* User Hero Banner */}
+            <div className="relative rounded-3xl bg-gradient-to-r from-brand-600/20 via-purple-600/10 to-transparent border border-brand-500/30 p-6 z-20">
+              <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10">
+                <div className="relative shrink-0">
+                  <div
+                    className="w-20 h-20 rounded-2xl bg-slate-200 dark:bg-slate-800 border-2 border-brand-500/40 shadow-xl overflow-hidden flex items-center justify-center text-brand-500 font-black text-2xl cursor-pointer group relative"
+                    onClick={() => setShowPhotoMenu(!showPhotoMenu)}
+                  >
                     {userAvatar ? (
-                      <img src={userAvatar} alt="Profile" className="w-full h-full object-cover" />
+                      <img src={userAvatar} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
-                      <User className="w-8 h-8 text-slate-400" />
+                      getUserName(user).charAt(0).toUpperCase()
                     )}
+                    <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Camera className="w-6 h-6 text-white" />
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">{getUserName(user)}</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email}</p>
-                  </div>
+
+                  {/* Camera / Upload Badge Icon Overlay */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowPhotoMenu(!showPhotoMenu);
+                    }}
+                    title="Change Profile Photo (Upload or Camera)"
+                    className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-brand-500 hover:bg-brand-600 text-white flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900 transition-transform hover:scale-110"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* Photo Action Popup Menu */}
+                  {showPhotoMenu && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setShowPhotoMenu(false)} />
+                      <div className="absolute left-0 top-full mt-2.5 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 space-y-1">
+                        <div className="px-3 py-1.5 text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                          <span>Profile Photo Options</span>
+                          <button onClick={() => setShowPhotoMenu(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowPhotoMenu(false);
+                            fileInputRef.current?.click();
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-brand-500/10 hover:text-brand-500 transition-all text-left group"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-500 flex items-center justify-center group-hover:bg-brand-500 group-hover:text-white transition-colors">
+                            <Upload className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <span className="block font-bold">Upload from Device</span>
+                            <span className="text-[10px] text-slate-400 font-normal">Choose PNG, JPG, or WebP</span>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={startCamera}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-brand-500/10 hover:text-brand-500 transition-all text-left group"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-500 flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                            <Camera className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <span className="block font-bold">Take Photo with Camera</span>
+                            <span className="text-[10px] text-slate-400 font-normal">Snap live webcam picture</span>
+                          </div>
+                        </button>
+                        {userAvatar && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowPhotoMenu(false);
+                              setUserAvatar(null);
+                            }}
+                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-500/10 transition-all text-left border-t border-slate-100 dark:border-slate-800/80 mt-1"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                              <Trash2 className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <span className="block font-bold">Remove Photo</span>
+                              <span className="text-[10px] text-rose-400 font-normal">Reset avatar to initials</span>
+                            </div>
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
-                    <input type="text" defaultValue={getUserName(user)} className="w-full glass-input text-xs" />
+                <div className="flex-1 text-center sm:text-left space-y-1">
+                  <div className="flex items-center justify-center sm:justify-start gap-2">
+                    <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">{getUserName(user)}</h3>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30 uppercase">
+                      {activeRole}
+                    </span>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
-                    <input type="email" defaultValue={user?.email || ''} readOnly className="w-full glass-input text-xs bg-slate-100 dark:bg-slate-800/40 cursor-not-allowed" />
-                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{user?.email}</p>
+                  <p className="text-[11px] text-slate-400">Active Workspace: <strong className="text-slate-700 dark:text-slate-200">{activeWorkspace?.brandName || 'Default Agency Workspace'}</strong></p>
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* BILLING TAB */}
-            {activeSettingsTab === 'billing' && (
-              <div className="space-y-6 animate-in fade-in duration-150">
-                <div className="p-5 rounded-2xl bg-gradient-to-r from-brand-600/10 to-purple-600/10 border border-brand-500/30 flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-brand-600 dark:text-brand-400 tracking-wider">Current Active Plan</span>
-                    <h4 className="text-lg font-extrabold text-slate-900 dark:text-white">Agency Pro ($799/mo)</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Visual Credits: <strong className="text-brand-500">{credits?.balance || 250}</strong> remaining</p>
+            {/* Display Name Edit */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Full Name</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={nicknameInput}
+                  onChange={e => setNicknameInput(e.target.value)}
+                  placeholder="Enter full display name"
+                  className="glass-input text-xs flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveName}
+                  className={`text-xs px-5 py-2 font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 ${
+                    isNameSaved
+                      ? 'bg-emerald-500 text-white'
+                      : 'btn-save'
+                  }`}
+                >
+                  {isNameSaved ? <Check className="w-4 h-4" /> : null}
+                  {isNameSaved ? 'Saved!' : 'Save'}
+                </button>
+              </div>
+            </div>
+
+            {/* Active Sessions */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">Active Login Sessions</h4>
+              {sessions.map(s => (
+                <div key={s._id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-3">
+                    <Monitor className="w-5 h-5 text-brand-500" />
+                    <div>
+                      <span className="font-bold text-slate-900 dark:text-white block">{s.os} • {s.browser}</span>
+                      <span className="text-[10px] text-slate-400">IP: {s.ip} • Active Now</span>
+                    </div>
                   </div>
+                  <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Current Device</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Security Actions */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div>
+                <p className="font-bold text-sm text-slate-900 dark:text-white">Account Password</p>
+                <p className="text-xs text-slate-400">Update your login security credentials.</p>
+              </div>
+              <button onClick={() => setShowResetModal(true)} className="btn-secondary text-xs px-4 py-2">
+                Change Password
+              </button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div>
+                <p className="font-bold text-sm text-red-500">Danger Zone</p>
+                <p className="text-xs text-slate-400">Permanently delete your account and brand data.</p>
+              </div>
+              <button onClick={() => setShowDeleteModal(true)} className="px-4 py-2 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 text-xs font-bold hover:bg-red-500 hover:text-white transition-all">
+                Delete Account
+              </button>
+            </div>
+          </div>
+        );
+
+      // ── BILLING & CREDITS ──────────────────────────
+      case 'billing':
+        return (
+          <div className="space-y-6">
+            {/* Featured Active Plan Banner */}
+            <div className="p-6 rounded-3xl bg-gradient-to-r from-violet-600/20 via-brand-500/20 to-cyan-500/20 border border-brand-500/40 relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/20">Active Plan</span>
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-2">Agency Pro Tier</h2>
+                  <p className="text-xs text-slate-400 mt-1">Includes unlimited text generation, team RBAC, and monthly visual credits.</p>
+                </div>
+                <div className="text-left sm:text-right">
+                  <div className="text-xl font-extrabold text-brand-400">{credits?.balance || 120} Visual Credits</div>
                   <button
-                    onClick={() => {
-                      setIsSettingsModalOpen(false);
-                      setIsCreditModalOpen(true);
-                    }}
-                    className="btn-primary text-xs"
+                    onClick={() => { setIsSettingsModalOpen(false); setIsCreditModalOpen(true); }}
+                    className="btn-primary text-xs mt-2"
                   >
                     Top Up Credits
                   </button>
                 </div>
               </div>
+            </div>
+
+            {/* Plans Grid */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">Subscription Tiers</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  { name: 'Base', price: '$99/mo', desc: 'Text intelligence, basic SEO, limit blogs. No visual credits.', credits: '0 Credits' },
+                  { name: 'Professional', price: '$299/mo', desc: 'More brands, SEO clusters, approval workflows, repurposing.', credits: '50 Credits/mo' },
+                  { name: 'Agency Pro', price: '$799/mo', desc: 'Multi-client workspace, team roles, high usage.', credits: '250 Credits/mo', current: true },
+                  { name: 'Enterprise', price: 'Custom', desc: 'Multiple departments, governance API & SLAs.', credits: 'Custom Credits' },
+                ].map(t => (
+                  <div
+                    key={t.name}
+                    className={`p-4 rounded-2xl border flex flex-col justify-between space-y-3 ${
+                      t.current
+                        ? 'bg-brand-500/10 border-brand-500/60 shadow-glow'
+                        : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-extrabold text-slate-900 dark:text-white text-sm">{t.name}</h4>
+                        {t.current && <span className="text-[9px] font-bold uppercase bg-brand-500 text-white px-2 py-0.5 rounded-full">Current</span>}
+                      </div>
+                      <div className="text-lg font-extrabold text-brand-400 my-1">{t.price}</div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{t.desc}</p>
+                    </div>
+                    <button
+                      onClick={() => { setIsSettingsModalOpen(false); setIsCreditModalOpen(true); }}
+                      className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${
+                        t.current ? 'bg-brand-500 text-white shadow-glow' : 'bg-slate-200 dark:bg-slate-800 text-slate-300 hover:bg-slate-700'
+                      }`}
+                    >
+                      {t.current ? 'Active Plan' : 'Switch Tier'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      // ── HELP & FAQ ─────────────────────────────────
+      case 'help':
+        return (
+          <div className="space-y-6">
+            <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+              <button
+                onClick={() => setFaqSubTab('faq')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${faqSubTab === 'faq' ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+              >
+                Browse FAQ
+              </button>
+              <button
+                onClick={() => setFaqSubTab('ticket')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${faqSubTab === 'ticket' ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+              >
+                Submit Ticket
+              </button>
+            </div>
+
+            {faqSubTab === 'faq' ? (
+              <div className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search questions..."
+                    value={faqSearchQuery}
+                    onChange={e => setFaqSearchQuery(e.target.value)}
+                    className="glass-input text-xs pl-10 w-full"
+                  />
+                </div>
+
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {faqs.map((cat, idx) => (
+                    <button
+                      key={cat.category}
+                      onClick={() => { setSelectedFaqCategory(idx); setOpenFaqIndex(null); }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 border transition-all ${
+                        selectedFaqCategory === idx
+                          ? 'bg-brand-500/20 text-brand-400 border-brand-500/40'
+                          : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400'
+                      }`}
+                    >
+                      {cat.category}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="space-y-2 mt-4">
+                  {faqs[selectedFaqCategory].questions
+                    .filter(q => !faqSearchQuery || q.question.toLowerCase().includes(faqSearchQuery.toLowerCase()))
+                    .map((faq, index) => (
+                      <div key={index} className="bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 overflow-hidden">
+                        <button
+                          onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
+                          className="w-full flex justify-between items-center p-4 text-left font-bold text-xs text-slate-800 dark:text-slate-200"
+                        >
+                          <span>{faq.question}</span>
+                          <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${openFaqIndex === index ? 'rotate-180 text-brand-500' : ''}`} />
+                        </button>
+                        {openFaqIndex === index && (
+                          <div className="px-4 pb-4 text-xs text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-200/40 dark:border-slate-800/40 pt-3">
+                            {faq.answer}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4 max-w-md">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase">Category</label>
+                  <CustomDropdown
+                    value={issueType}
+                    onChange={val => setIssueType(val)}
+                    icon={MessageSquare}
+                    options={[
+                      { value: 'General Inquiry', label: 'General Inquiry', icon: '💬' },
+                      { value: 'Technical Support', label: 'Technical Support', icon: '⚡' },
+                      { value: 'Billing', label: 'Billing & Subscriptions', icon: '💳' },
+                      { value: 'Feature Request', label: 'Feature Request', icon: '💡' },
+                      { value: 'Bug Report', label: 'Bug Report', icon: '🐞' }
+                    ]}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-400 uppercase">Message</label>
+                  <textarea
+                    rows={4}
+                    value={issueText}
+                    onChange={e => setIssueText(e.target.value)}
+                    placeholder="Describe your query..."
+                    className="glass-input text-xs w-full resize-none"
+                  />
+                </div>
+                <button onClick={handleSupportSubmit} disabled={isSending || !issueText.trim()} className="btn-primary text-xs w-full py-3">
+                  {isSending ? 'Submitting...' : 'Submit Support Request'}
+                </button>
+                {sendStatus === 'success' && <p className="text-center text-xs text-emerald-400 font-bold">✓ Ticket submitted!</p>}
+              </div>
             )}
-
           </div>
+        );
 
-          {/* Footer Bar */}
-          <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40 flex justify-end gap-3">
-            <button
-              onClick={() => setIsSettingsModalOpen(false)}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
-            >
-              Done
-            </button>
+      // ── FEEDBACK ───────────────────────────────────
+      case 'feedback':
+        return (
+          <div className="space-y-4 max-w-lg">
+            <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">Share Your Product Ideas</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">Tell us how we can make AI Ads Platform even better for your team.</p>
+              <textarea
+                rows={5}
+                value={issueText}
+                onChange={e => setIssueText(e.target.value)}
+                placeholder="What features or improvements would you love to see?"
+                className="glass-input text-xs w-full resize-none p-4"
+              />
+              <button onClick={handleSupportSubmit} disabled={isSending || !issueText.trim()} className="btn-primary text-xs w-full py-3">
+                {isSending ? 'Sending...' : 'Submit Feedback'}
+              </button>
+              {sendStatus === 'success' && <p className="text-center text-xs text-emerald-400 font-bold">✓ Thank you for your feedback!</p>}
+            </div>
           </div>
+        );
 
+      // ── TERMS & PRIVACY ────────────────────────────
+      case 'terms':
+      case 'privacy': {
+        const isPrivacy = activeTab === 'privacy';
+        const content = isPrivacy ? PRIVACY_CONTENT : TERMS_CONTENT;
+        return (
+          <div className="space-y-6">
+            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-brand-500/10 text-brand-500 flex items-center justify-center shrink-0 border border-brand-500/20">
+                {isPrivacy ? <Shield className="w-5 h-5" /> : <Scale className="w-5 h-5" />}
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">{isPrivacy ? 'Privacy Policy' : 'Terms of Service'}</h3>
+                <p className="text-xs text-slate-400">Last updated: January 2026</p>
+              </div>
+            </div>
+            <div className="prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 text-xs leading-relaxed space-y-3">
+              {content.split('\n\n').map((para, i) => (
+                <p key={i} className={para.startsWith('**') ? 'font-bold text-slate-900 dark:text-white text-sm' : ''}>
+                  {para.replace(/\*\*/g, '')}
+                </p>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      default:
+        return null;
+    }
+  };
+
+  // ──────────────────────────────────────────────────────────
+  // Main Render Portal
+  // ──────────────────────────────────────────────────────────
+  if (!isSettingsModalOpen) return null;
+
+  return createPortal(
+    <>
+      <AnimatePresence>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none p-0 sm:p-4">
+          {/* Blur Overlay */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSettingsModalOpen(false)}
+            className="absolute inset-0 bg-slate-950/75 backdrop-blur-md pointer-events-auto"
+          />
+
+          {/* Modal Container */}
+          <motion.div
+            initial={typeof window !== 'undefined' && window.innerWidth < 640 ? { x: '100%' } : { opacity: 0, scale: 0.96, y: 15 }}
+            animate={typeof window !== 'undefined' && window.innerWidth < 640 ? { x: 0 } : { opacity: 1, scale: 1, y: 0 }}
+            exit={typeof window !== 'undefined' && window.innerWidth < 640 ? { x: '100%' } : { opacity: 0, scale: 0.96, y: 15 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+            className="absolute sm:relative top-0 left-0 h-full sm:h-[88vh] w-full sm:max-w-5xl bg-white dark:bg-[#090d16] flex flex-col sm:flex-row shadow-2xl sm:rounded-[28px] border border-slate-200 dark:border-slate-800/80 pointer-events-auto overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              accept="image/*"
+              className="hidden"
+            />
+
+            {/* ── LEFT SIDEBAR NAV ─────────────────────── */}
+            <div className={`flex flex-col h-full w-full sm:w-[320px] bg-slate-50/90 dark:bg-[#0c111d] border-r border-slate-200 dark:border-slate-800/80 shrink-0 transition-all ${view === 'detail' ? 'hidden sm:flex' : 'flex'}`}>
+
+              {/* Sidebar Header */}
+              <div className="p-5 flex items-center justify-between shrink-0 border-b border-slate-200/60 dark:border-slate-800/60">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-500 to-purple-600 text-white flex items-center justify-center shadow-glow">
+                    <Settings className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">AI Ads Preferences</h2>
+                    <span className="text-[10px] font-bold text-brand-400 uppercase tracking-widest block">Platform Settings</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsSettingsModalOpen(false)}
+                  className="sm:hidden p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-all"
+                >
+                  <X size={20} className="text-slate-400" />
+                </button>
+              </div>
+
+              {/* Search Box */}
+              <div className="p-4 shrink-0">
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    className="w-full bg-white dark:bg-[#121827] border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs outline-none focus:border-brand-500 transition-all shadow-sm text-slate-800 dark:text-slate-200 placeholder-slate-400"
+                    placeholder="Search settings..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Categorized Nav Sections */}
+              <nav className="flex-1 px-3 py-2 space-y-5 overflow-y-auto custom-scrollbar">
+                {navSections.map(sec => (
+                  <div key={sec.title} className="space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 block mb-1">
+                      {sec.title}
+                    </span>
+                    {sec.items.map(item => {
+                      const Icon = item.icon;
+                      const isActive = activeTab === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setActiveTab(item.id);
+                            setView('detail');
+                            setSearchQuery('');
+                          }}
+                          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all group ${
+                            isActive
+                              ? 'bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/30 font-bold'
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-7 h-7 rounded-xl flex items-center justify-center transition-all ${
+                              isActive
+                                ? 'bg-brand-500 text-white shadow-glow'
+                                : 'bg-slate-200/70 dark:bg-slate-800/80 text-slate-400 group-hover:text-slate-200'
+                            }`}>
+                              <Icon className="w-4 h-4" />
+                            </div>
+                            <span>{item.label}</span>
+                          </div>
+                          {item.badge ? (
+                            <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">
+                              {item.badge}
+                            </span>
+                          ) : (
+                            <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isActive ? 'text-brand-500 translate-x-0.5' : 'text-slate-400 opacity-40 group-hover:opacity-100'}`} />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </nav>
+
+              {/* Logout Footer */}
+              <div className="p-4 border-t border-slate-200 dark:border-slate-800/80">
+                <button
+                  onClick={() => { logout(); setIsSettingsModalOpen(false); }}
+                  className="w-full py-2.5 px-4 rounded-xl border border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95"
+                >
+                  <LogOut className="w-4 h-4" />
+                  {t('logOut', 'LOG OUT')}
+                </button>
+              </div>
+            </div>
+
+            {/* ── RIGHT DETAIL PANEL ────────────────────── */}
+            <div className={`flex-1 flex flex-col min-w-0 bg-white dark:bg-[#090d16] overflow-hidden ${view === 'sidebar' ? 'hidden sm:flex' : 'flex'}`}>
+
+              {/* Detail Top Header */}
+              <div className="p-5 sm:px-8 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between shrink-0 bg-white/80 dark:bg-[#090d16]/80 backdrop-blur-md">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setView('sidebar')}
+                    className="sm:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
+                  >
+                    <ChevronLeft size={20} className="text-slate-400" />
+                  </button>
+                  <h3 className="text-xl font-extrabold text-slate-900 dark:text-white capitalize">
+                    {searchQuery ? 'Search Results' : navSections.flatMap(s => s.items).find(i => i.id === activeTab)?.label || 'Preferences'}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setIsSettingsModalOpen(false)}
+                  className="p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Scrollable Content Body */}
+              <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 custom-scrollbar">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeTab + searchQuery}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    {renderContent()}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Footer Actions Bar */}
+              <div className="p-4 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40 flex justify-end gap-3 shrink-0">
+                <button
+                  onClick={() => setIsSettingsModalOpen(false)}
+                  className="btn-primary text-xs px-6 py-2"
+                >
+                  {t('saveAndDone', 'Save & Done')}
+                </button>
+              </div>
+            </div>
+          </motion.div>
         </div>
-      </div>
-    </div>
+      </AnimatePresence>
+
+      {/* ── DELETE ACCOUNT MODAL ─────────────────────── */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <div
+            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
+            onClick={() => { setShowDeleteModal(false); setDeleteStep('confirm'); setDeleteOtp(''); setDeleteError(''); }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-[#121827] p-6 sm:p-8 rounded-[2rem] w-full max-w-sm shadow-2xl border border-red-500/20 text-center"
+              onClick={e => e.stopPropagation()}
+            >
+              {deleteStep === 'confirm' && (
+                <>
+                  <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <Trash2 className="w-8 h-8 text-red-500" />
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">Delete Account?</h3>
+                  <p className="text-sm text-slate-400 mb-8 leading-relaxed">
+                    Are you absolutely sure? This will permanently remove your profile, data, and access.{' '}
+                    <strong className="text-red-500">This cannot be undone.</strong>
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={handleInitiateDelete}
+                      disabled={deleteOtpLoading}
+                      className="w-full py-4 bg-red-500 text-white rounded-2xl font-black text-sm tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/25 disabled:opacity-50 active:scale-95 uppercase"
+                    >
+                      {deleteOtpLoading ? 'Sending Code...' : 'Yes, Delete Permanently'}
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteModal(false)}
+                      className="w-full py-4 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-2xl font-black text-sm tracking-widest hover:bg-slate-100 dark:hover:bg-slate-700 transition-all active:scale-95 uppercase"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {deleteStep === 'otp' && (
+                <>
+                  <div className="w-16 h-16 bg-brand-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <ShieldCheck className="w-8 h-8 text-brand-500" />
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">Verify Identity</h3>
+                  <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+                    We sent a 6-digit security code to <strong className="text-slate-700 dark:text-slate-200">{user?.email}</strong>. Please verify it below.
+                  </p>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={deleteOtp}
+                    onChange={e => setDeleteOtp(e.target.value.replace(/\D/g, ''))}
+                    placeholder="••••••"
+                    className="w-full text-center py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl font-black text-2xl tracking-[0.4em] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500 placeholder:text-slate-400 mb-2"
+                  />
+                  {deleteError && (
+                    <p className="text-xs text-red-500 font-bold mb-4 flex items-center justify-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {deleteError}
+                    </p>
+                  )}
+                  <div className="flex flex-col gap-3 mt-4">
+                    <button onClick={handleVerifyDeleteOtp} disabled={deleteOtpLoading || deleteOtp.length !== 6}
+                      className="w-full py-4 bg-brand-500 text-white rounded-2xl font-black text-sm tracking-widest hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/25 disabled:opacity-50 active:scale-95 uppercase"
+                    >
+                      {deleteOtpLoading ? 'Verifying...' : 'Verify Code'}
+                    </button>
+                    <button onClick={handleResendDeleteOtp} disabled={deleteCooldown > 0 || deleteOtpLoading}
+                      className="w-full py-3 text-xs font-black tracking-widest text-brand-500 hover:bg-brand-500/5 rounded-2xl transition-all disabled:opacity-50 uppercase"
+                    >
+                      {deleteCooldown > 0 ? `Resend in ${deleteCooldown}s` : 'Resend Code'}
+                    </button>
+                    <button onClick={() => { setShowDeleteModal(false); setDeleteStep('confirm'); setDeleteOtp(''); setDeleteError(''); }}
+                      className="w-full py-3 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-2xl font-black text-sm tracking-widest hover:bg-slate-100 dark:hover:bg-slate-700 transition-all active:scale-95 uppercase"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {deleteStep === 'verified' && (
+                <>
+                  <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 animate-pulse">
+                    <Eye className="w-8 h-8 text-emerald-500" />
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">Identity Verified</h3>
+                  <p className="text-sm text-slate-400 mb-8 leading-relaxed">
+                    Your identity is verified. Ready to permanently remove all your profile data and access.
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    <button onClick={handleDeleteAccount} disabled={deleteLoading}
+                      className="w-full py-4 bg-red-500 text-white rounded-2xl font-black text-sm tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/25 disabled:opacity-50 active:scale-95 uppercase"
+                    >
+                      {deleteLoading ? 'Deleting Account...' : 'Permanently Delete Account'}
+                    </button>
+                    <button onClick={() => { setShowDeleteModal(false); setDeleteStep('confirm'); setDeleteOtp(''); setDeleteError(''); }}
+                      className="w-full py-4 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-2xl font-black text-sm tracking-widest hover:bg-slate-100 dark:hover:bg-slate-700 transition-all active:scale-95 uppercase"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── PASSWORD RESET MODAL ─────────────────────── */}
+      <AnimatePresence>
+        {showResetModal && (
+          <div
+            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
+            onClick={() => setShowResetModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-[#121827] p-6 sm:p-8 rounded-[2rem] w-full max-w-sm shadow-2xl border border-slate-200 dark:border-slate-800"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 bg-brand-500/10 rounded-2xl flex items-center justify-center text-brand-500 border border-brand-500/20">
+                  <Lock className="w-6 h-6" />
+                </div>
+                <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Reset Password</h3>
+              </div>
+
+              {resetStep === 1 ? (
+                <div className="space-y-6">
+                  <p className="text-sm text-slate-400 leading-relaxed">
+                    We'll send a one-time verification code to your registered email address.
+                  </p>
+                  <button
+                    onClick={handleSendOtp}
+                    disabled={resetLoading}
+                    className="w-full bg-brand-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-brand-500/30 disabled:opacity-50 active:scale-95 transition-all"
+                  >
+                    {resetLoading ? 'Sending...' : 'Send Verification Code'}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Verification Code</label>
+                    <input
+                      type="text"
+                      placeholder="Enter 6-digit OTP"
+                      value={resetOtp}
+                      onChange={e => setResetOtp(e.target.value)}
+                      className="glass-input text-sm w-full p-3.5"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">New Password</label>
+                    <input
+                      type="password"
+                      placeholder="Create strong password"
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      className="glass-input text-sm w-full p-3.5"
+                    />
+                  </div>
+                  <button
+                    onClick={handleResetPassword}
+                    disabled={resetLoading}
+                    className="w-full bg-brand-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-brand-500/30 mt-2 active:scale-95 transition-all"
+                  >
+                    {resetLoading ? 'Updating...' : 'Update Password'}
+                  </button>
+                  <button
+                    onClick={() => setResetStep(1)}
+                    className="w-full py-2 text-xs font-bold text-slate-400 hover:text-brand-500 transition-colors"
+                  >
+                    Resend Code
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── CAMERA STREAM CAPTURE MODAL ───────────────────────── */}
+      <AnimatePresence>
+        {isCameraOpen && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-2xl"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                  <Camera className="w-5 h-5 text-brand-500" /> Snap Profile Photo
+                </h3>
+                <button
+                  onClick={stopCamera}
+                  className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-800"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="relative rounded-2xl overflow-hidden bg-black aspect-video flex items-center justify-center border border-slate-800">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-cover transform -scale-x-100"
+                ></video>
+                <canvas ref={canvasRef} className="hidden"></canvas>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                <button
+                  onClick={stopCamera}
+                  className="px-5 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-sm font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={capturePhoto}
+                  className="px-6 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-sm font-bold shadow-glow transition-colors"
+                >
+                  Capture & Use Photo
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>,
+    document.body
   );
 };
