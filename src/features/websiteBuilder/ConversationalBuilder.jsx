@@ -89,16 +89,27 @@ export const ConversationalBuilder = ({ developerMode = false }) => {
         await new Promise(r => setTimeout(r, 400));
       }
 
-      // Build requirement overrides from answers
+      // Build requirement overrides from user clarification answers
+      let finalPrompt = userPromptText;
+      const answerEntries = Object.entries(answersObj || {}).filter(([_, v]) => Boolean(v));
+      if (answerEntries.length > 0) {
+        const formattedPreferences = answerEntries
+          .map(([k, v]) => `- ${k}: ${v}`)
+          .join('\n');
+        finalPrompt = `${userPromptText}\n\n[USER DESIGN PREFERENCES & FEATURES]:\n${formattedPreferences}`;
+      }
+
       const brandContext = {
         brandName: activeWorkspace?.brandName || '',
-        industryCategory: activeWorkspace?.industryCategory || ''
+        industryCategory: activeWorkspace?.industryCategory || '',
+        userPreferences: answersObj
       };
 
       // Call end-to-end Build Orchestrator
       const res = await websiteBuilderAPI.buildWebsite({
-        prompt: userPromptText,
+        prompt: finalPrompt,
         brandContext,
+        clarificationAnswers: answersObj,
         reqId: `wb_${Math.random().toString(36).substring(2, 8)}`
       });
 

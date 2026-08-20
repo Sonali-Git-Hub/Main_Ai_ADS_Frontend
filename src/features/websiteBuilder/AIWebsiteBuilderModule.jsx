@@ -25,7 +25,8 @@ import {
   Star,
   Plus,
   Command,
-  Zap
+  Zap,
+  Activity
 } from 'lucide-react';
 
 import { BuilderSidebar } from './BuilderSidebar';
@@ -34,18 +35,29 @@ import { BuilderTemplatesView } from './BuilderTemplatesView';
 import { BuilderProjectsView } from './BuilderProjectsView';
 import { BuilderWorkspaceView } from './BuilderWorkspaceView';
 import { ClarificationCard } from './ClarificationCard';
+import { LiveTelemetryPanel } from './LiveTelemetryPanel';
+import { telemetry, initGlobalTelemetryListeners } from '../../services/telemetryClient';
 
 export const AIWebsiteBuilderModule = () => {
   const { activeWorkspace, setActiveModule, theme, toggleTheme, t } = useWorkspace();
 
+  // Telemetry & Activity Debug Panel State
+  const [isTelemetryOpen, setIsTelemetryOpen] = useState(false);
+
+  // Initialize global click tracker
+  useEffect(() => {
+    initGlobalTelemetryListeners();
+  }, []);
+
   // Navigation: 'home' | 'dashboard' | 'projects' | 'templates' | 'assets' | 'brand_dna' | 'connectors' | 'deployments' | 'settings' | 'help'
   const [activeNav, setActiveNav] = useState('home');
   const [collapsed, setCollapsed] = useState(false);
-  const [projectFilter, setProjectFilterState] = useState('all'); // 'all' | 'starred' | 'owned' | 'shared'
+  const [projectFilter, setProjectFilterState] = useState('all'); // 'all' | 'starred' | 'starred' | 'owned' | 'shared'
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState('');
 
   const handleSelectNav = (nav) => {
+    telemetry.trackNavigation(activeNav, nav);
     setActiveProject(null);
     setActiveNav(nav);
     setPrompt('');
@@ -143,6 +155,10 @@ export const AIWebsiteBuilderModule = () => {
     setPrompt(inputPrompt.trim());
     setBuilderState('BUILDING');
 
+    telemetry.trackBuildStart(inputPrompt.trim(), {
+      workspaceId: activeWorkspace?._id || activeWorkspace?.id
+    });
+
     try {
       // Step 1: Check clarification
       const clarifyRes = await websiteBuilderAPI.clarifyRequirement({
@@ -161,6 +177,13 @@ export const AIWebsiteBuilderModule = () => {
       ) {
         setClarificationData(clarifyRes.clarification);
         setBuilderState('CLARIFYING');
+
+        telemetry.trackEvent({
+          component: 'AIWebsiteBuilder',
+          action: 'PROMPT_CLARIFICATION_TRIGGERED',
+          eventType: 'USER_ACTION',
+          metadata: { questionCount: clarifyRes.clarification.questions.length }
+        });
         return;
       }
     } catch (err) {
@@ -175,6 +198,16 @@ export const AIWebsiteBuilderModule = () => {
     setBuilderState('BUILDING');
     setProgressStep(1);
 
+    const buildReqId = `wb_${Math.random().toString(36).substring(2, 8)}`;
+
+    telemetry.trackEvent({
+      component: 'AIWebsiteBuilder',
+      action: 'EXECUTE_BUILD_PIPELINE',
+      eventType: 'USER_ACTION',
+      buildId: buildReqId,
+      metadata: { answersCount: Object.keys(answersObj || {}).length }
+    });
+
     try {
       // Progress simulation
       for (let step = 1; step <= 4; step++) {
@@ -182,14 +215,26 @@ export const AIWebsiteBuilderModule = () => {
         await new Promise((r) => setTimeout(r, 350));
       }
 
+      // Build requirement overrides from user clarification answers
+      let finalPrompt = userPromptText;
+      const answerEntries = Object.entries(answersObj || {}).filter(([_, v]) => Boolean(v));
+      if (answerEntries.length > 0) {
+        const formattedPreferences = answerEntries
+          .map(([k, v]) => `- ${k}: ${v}`)
+          .join('\n');
+        finalPrompt = `${userPromptText}\n\n[USER DESIGN PREFERENCES & FEATURES]:\n${formattedPreferences}`;
+      }
+
       const brandContext = {
         brandName: activeWorkspace?.brandName || '',
-        industryCategory: activeWorkspace?.industryCategory || ''
+        industryCategory: activeWorkspace?.industryCategory || '',
+        userPreferences: answersObj
       };
 
       const res = await websiteBuilderAPI.buildWebsite({
-        prompt: userPromptText,
+        prompt: finalPrompt,
         brandContext,
+        clarificationAnswers: answersObj,
         reqId: `wb_${Math.random().toString(36).substring(2, 8)}`
       });
 
@@ -524,6 +569,7 @@ export const AIWebsiteBuilderModule = () => {
           setPrompt('');
         }}
         onOpenSearchModal={() => setSearchModalOpen(true)}
+        onToggleTelemetry={() => setIsTelemetryOpen(!isTelemetryOpen)}
         activeWorkspace={activeWorkspace}
       />
 
@@ -594,6 +640,16 @@ export const AIWebsiteBuilderModule = () => {
                     <span>Dark</span>
                   </button>
                 </div>
+
+                {/* Live Telemetry Debug Panel Button */}
+                <button
+                  onClick={() => setIsTelemetryOpen(!isTelemetryOpen)}
+                  className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs active:scale-95"
+                  title="Toggle Live Application Telemetry & Activity Debug Panel"
+                >
+                  <Activity className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+                  <span className="hidden md:inline">Telemetry</span>
+                </button>
 
                 {/* Brand DNA Indicator */}
                 {activeWorkspace?.brandName && (
@@ -900,6 +956,12 @@ export const AIWebsiteBuilderModule = () => {
           </div>
         </div>
       )}
+
+      {/* ── REAL-TIME TELEMETRY & LIVE ACTIVITY DEBUG PANEL ── */}
+      <LiveTelemetryPanel
+        isOpen={isTelemetryOpen}
+        onClose={() => setIsTelemetryOpen(false)}
+      />
     </div>
   );
 };
