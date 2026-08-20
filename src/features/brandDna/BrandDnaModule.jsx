@@ -335,34 +335,36 @@ export const BrandDnaModule = () => {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={handleRunAiAnalysis}
-            disabled={analyzing}
-            className="btn-primary py-2 px-5 text-xs flex items-center gap-2 shadow-lg shadow-brand-500/20 disabled:opacity-60"
+            onClick={() => openScraperModal('NEW_BRAND')}
+            className="btn-primary py-2 px-5 text-xs flex items-center gap-2 shadow-lg shadow-brand-500/20"
           >
-            {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-            {analyzing ? 'Analyzing Brand...' : 'Run Deep AI Analysis'}
+            <Sparkles className="w-4 h-4" />
+            Create New Brand
           </button>
           {effectiveProfile && (
-            <>
-              <button
-                onClick={handleSaveProfile}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all border border-slate-200 dark:border-slate-700 flex items-center gap-2"
-              >
-                <Save className="w-3.5 h-3.5 text-emerald-500" /> Save Profile
-              </button>
-              <button
-                onClick={() => {
-                  if (setBrandDnaData) setBrandDnaData(effectiveProfile);
-                  if (setActiveModule) setActiveModule('seo');
-                }}
-                className="btn-primary py-2 px-4 text-xs font-bold flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md"
-              >
-                <Zap className="w-3.5 h-3.5 text-amber-300" /> Run SEO Research from Brand DNA →
-              </button>
-            </>
+            <button
+              onClick={handleSaveProfile}
+              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all border border-slate-200 dark:border-slate-700 flex items-center gap-2"
+            >
+              <Save className="w-3.5 h-3.5 text-emerald-500" /> Save Profile
+            </button>
           )}
         </div>
       </div>
+
+      {effectiveProfile && (
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={() => {
+              if (setBrandDnaData) setBrandDnaData(effectiveProfile);
+              if (setActiveModule) setActiveModule('seo');
+            }}
+            className="btn-primary py-3 px-8 text-sm font-bold flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-xl rounded-full transition-transform hover:scale-105"
+          >
+            <Zap className="w-4 h-4 text-amber-300" /> Run SEO Research from Brand DNA →
+          </button>
+        </div>
+      )}
 
       {savedMsg && (
         <div className="p-4 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold animate-in fade-in flex items-center gap-2">

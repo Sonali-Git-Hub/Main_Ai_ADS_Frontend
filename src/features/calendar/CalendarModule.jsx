@@ -897,7 +897,7 @@ export const CalendarModule = () => {
 
                       setStudioTarget({ platform, topic, postType, type, autoGenerate: true });
                       // Route to Content Studio to generate the content first
-                      setActiveModule('content');
+                      setActiveModule('studio');
                     }}
                     className="w-full py-3 bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2 transition-all active:scale-98"
                   >

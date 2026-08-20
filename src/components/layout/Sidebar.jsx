@@ -19,12 +19,27 @@ import {
   ChevronLeft,
   ChevronRight,
   Send,
-  Zap
+  Zap,
+  User as UserIcon,
+  Shield
 } from 'lucide-react';
 
 export const Sidebar = () => {
-  const { activeModule, setActiveModule, setIsQuickPostOpen, setIsSettingsModalOpen } = useWorkspace();
+  const { activeModule, setActiveModule, setIsQuickPostOpen, setIsSettingsModalOpen, user, userAvatar, activeWorkspace } = useWorkspace();
   const [collapsed, setCollapsed] = useState(false);
+
+  const userName = (() => {
+    if (user?.name && user.name.trim() && user.name.toLowerCase() !== 'user') return user.name;
+    if (user?.username && user.username.trim()) return user.username;
+    if (user?.email) {
+      const prefix = user.email.split('@')[0];
+      return prefix
+        .replace(/[._-]+/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .trim();
+    }
+    return activeWorkspace?.brandName || 'Agency Administrator';
+  })();
 
   const modules = [
     { id: 'dashboard', label: '1. Dashboard', icon: LayoutDashboard },
@@ -36,12 +51,9 @@ export const Sidebar = () => {
     { id: 'websiteBuilder', label: '7. AI Website Builder', icon: Globe },
     { id: 'campaigns', label: '8. Campaigns', icon: Layers },
     { id: 'creative', label: '9. Creative Studio', icon: Palette },
-    { id: 'repurpose', label: '10. Repurpose', icon: Repeat },
-    { id: 'assets', label: '11. Asset Library', icon: FolderKanban },
-    { id: 'approvals', label: '12. Approvals Desk', icon: CheckCircle2 },
-    { id: 'analytics', label: '13. Analytics', icon: BarChart3 },
-    { id: 'team', label: '14. Team & RBAC', icon: Users },
-    { id: 'settings', label: '15. Settings & Billing', icon: Settings },
+    { id: 'assets', label: '10. Asset Library', icon: FolderKanban },
+    { id: 'approvals', label: '11. Approvals Desk', icon: CheckCircle2 },
+    { id: 'settings', label: '12. Settings & Billing', icon: Settings },
   ];
 
   return (
@@ -71,16 +83,19 @@ export const Sidebar = () => {
           </button>
         </div>
 
-        {/* Quick Social Post Button container */}
+        {/* User Greeting container */}
         <div className="p-3">
-          <button
-            onClick={() => setIsQuickPostOpen(true)}
-            className={`w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-brand-600 to-brand-accent hover:from-brand-500 hover:to-purple-500 text-white font-semibold text-xs shadow-glow flex items-center justify-center gap-2 transition-all active:scale-95 ${collapsed ? 'px-0' : ''}`}
-            title="Quick Social Post"
+          <div
+            className={`w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-brand-600 to-brand-accent text-white font-semibold text-xs shadow-glow flex items-center justify-center gap-2 transition-all ${collapsed ? 'px-0' : ''}`}
+            title={`Logged in as ${userName}`}
           >
-            <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
-            {!collapsed && <span>Quick Social Post</span>}
-          </button>
+            {userAvatar ? (
+              <img src={userAvatar} alt="Profile" className="w-4 h-4 rounded-full object-cover shrink-0" />
+            ) : (
+              <UserIcon className="w-4 h-4 text-white shrink-0" />
+            )}
+            {!collapsed && <span className="truncate">{userName}</span>}
+          </div>
         </div>
 
         {/* Navigation List (14 Modules) */}

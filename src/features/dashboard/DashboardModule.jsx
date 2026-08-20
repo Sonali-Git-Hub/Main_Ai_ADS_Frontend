@@ -58,14 +58,6 @@ export const DashboardModule = () => {
 
   const stats = [
     {
-      label: 'Verified Brand DNA Memory',
-      value: (activeWorkspace?.id === 'ws_empty' || !activeWorkspace) ? '0%' : '100%',
-      sub: 'Immutable positioning locked',
-      icon: Dna,
-      color: 'text-brand-600 dark:text-brand-400',
-      bg: 'bg-brand-500/5 dark:bg-brand-500/10 border-brand-500/20 dark:border-brand-500/30'
-    },
-    {
       label: 'Total Campaigns',
       value: analytics?.campaigns?.total || 0,
       sub: `${analytics?.campaigns?.active || 0} currently active`,
@@ -74,10 +66,18 @@ export const DashboardModule = () => {
       bg: 'bg-purple-500/5 dark:bg-purple-500/10 border-purple-500/20 dark:border-purple-500/30'
     },
     {
-      label: 'Fact-Check Verification Rate',
-      value: verificationRate,
-      sub: unverifiedText,
-      icon: ShieldCheck,
+      label: 'Generated Content',
+      value: analytics?.content?.total || 0,
+      sub: 'Total items generated',
+      icon: PenTool,
+      color: 'text-brand-600 dark:text-brand-400',
+      bg: 'bg-brand-500/5 dark:bg-brand-500/10 border-brand-500/20 dark:border-brand-500/30'
+    },
+    {
+      label: 'Downloaded',
+      value: analytics?.downloads?.total || 0,
+      sub: 'Assets downloaded',
+      icon: CheckCircle2,
       color: 'text-emerald-600 dark:text-emerald-400',
       bg: 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20 dark:border-emerald-500/30'
     }
