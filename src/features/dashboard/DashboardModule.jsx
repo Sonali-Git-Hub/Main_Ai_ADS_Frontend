@@ -3,8 +3,8 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { analyticsAPI, approvalsAPI } from '../../services/api';
 
 import {
-  Dna, Search, PenTool, CheckCircle2, ArrowUpRight, TrendingUp, Clock,
-  ShieldCheck, Layers, Zap, Repeat, Loader2, RefreshCw, AlertCircle, Rocket
+  Search, PenTool, CheckCircle2, ArrowUpRight, TrendingUp, Clock,
+  Layers, Zap, Repeat, Loader2, RefreshCw, AlertCircle, Rocket
 } from 'lucide-react';
 
 export const DashboardModule = () => {
@@ -43,41 +43,29 @@ export const DashboardModule = () => {
 
   const filteredQueue = approvalsQueue.filter(item => item.workspaceId === workspaceId);
 
-  let verificationRate = '0%';
-  let unverifiedText = t('itemsUnverified', 'items unverified');
-
-  if (filteredQueue.length > 0) {
-    const passedCount = filteredQueue.filter(item => item.factCheck?.passed).length;
-    verificationRate = Math.round((passedCount / filteredQueue.length) * 100) + '%';
-    const unverifiedCount = filteredQueue.length - passedCount;
-    unverifiedText = `${unverifiedCount} ${t('itemsUnverified', 'items unverified')}`;
-  } else {
-    verificationRate = 'N/A';
-    unverifiedText = t('noItemsGenerated', 'No items generated yet');
-  }
 
   const stats = [
     {
-      label: t('verifiedDnaMemory', 'Verified Brand DNA Memory'),
-      value: (activeWorkspace?.id === 'ws_empty' || !activeWorkspace) ? '0%' : '100%',
-      sub: t('immutablePositioning', 'Immutable positioning locked'),
-      icon: Dna,
-      color: 'text-brand-600 dark:text-brand-400',
-      bg: 'bg-brand-500/5 dark:bg-brand-500/10 border-brand-500/20 dark:border-brand-500/30'
-    },
-    {
-      label: t('totalCampaigns', 'Total Campaigns'),
+      label: 'Total Campaigns',
       value: analytics?.campaigns?.total || 0,
-      sub: `${analytics?.campaigns?.active || 0} ${t('currentlyActive', 'currently active')}`,
+      sub: `${analytics?.campaigns?.active || 0} currently active`,
       icon: Layers,
       color: 'text-brand-600 dark:text-brand-400',
       bg: 'bg-purple-500/5 dark:bg-brand-500/10 border-brand-500/20 dark:border-purple-500/30'
     },
     {
-      label: t('factCheckRate', 'Fact-Check Verification Rate'),
-      value: verificationRate,
-      sub: unverifiedText,
-      icon: ShieldCheck,
+      label: 'Generated Content',
+      value: analytics?.posts?.total || 0,
+      sub: `${analytics?.posts?.generated || 0} generated posts`,
+      icon: PenTool,
+      color: 'text-brand-600 dark:text-brand-400',
+      bg: 'bg-brand-500/5 dark:bg-brand-500/10 border-brand-500/20 dark:border-brand-500/30'
+    },
+    {
+      label: 'Approved Posts',
+      value: analytics?.posts?.approved || 0,
+      sub: `${analytics?.approvalRate || 0}% approval rate`,
+      icon: CheckCircle2,
       color: 'text-emerald-600 dark:text-emerald-400',
       bg: 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20 dark:border-emerald-500/30'
     }
