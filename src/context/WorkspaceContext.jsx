@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { subscribeToAccountEvents } from '../services/telemetryClient';
+import { authAPI } from '../services/api';
 
 const WorkspaceContext = createContext();
 
@@ -1767,6 +1768,15 @@ export const WorkspaceProvider = ({ children }) => {
     setAccentColorState(val);
     try {
       localStorage.setItem('aisa_accent_color', val);
+      setUser(prev => {
+        if (!prev) return prev;
+        const updated = { ...prev, accentColor: val };
+        try { localStorage.setItem('aisa_user', JSON.stringify(updated)); } catch(e){}
+        if (updated.email) {
+          authAPI.updateProfile({ email: updated.email, accentColor: val }).catch(err => console.warn('Failed to sync accent color to DB:', err));
+        }
+        return updated;
+      });
     } catch (e) {}
 
     const palette = ACCENT_COLOR_MAP[val] || ACCENT_COLOR_MAP.purple;
@@ -1936,16 +1946,19 @@ export const WorkspaceProvider = ({ children }) => {
   });
   const [user, setUserState] = useState(() => {
     try {
-      const savedName = localStorage.getItem('aisa_user_name');
       const saved = localStorage.getItem('aisa_user');
+      const savedToken = localStorage.getItem('aisa_token');
+      if (saved && savedToken) {
+        return JSON.parse(saved);
+      }
       const savedEmail = localStorage.getItem('aisa_user_email');
-      let u = { email: 'admin@aiads.io', name: 'Admin', role: 'AgencyAdmin' };
-      if (saved) u = JSON.parse(saved);
-      else if (savedEmail) u = { email: savedEmail, name: savedEmail.split('@')[0], role: 'AgencyAdmin' };
-      if (savedName) u.name = savedName;
-      return u;
+      if (savedEmail && savedToken) {
+        const savedName = localStorage.getItem('aisa_user_name');
+        return { email: savedEmail, name: savedName || savedEmail.split('@')[0], role: 'AgencyAdmin' };
+      }
+      return null;
     } catch (e) {
-      return { email: 'admin@aiads.io', name: 'Admin', role: 'AgencyAdmin' };
+      return null;
     }
   });
 
@@ -1976,6 +1989,32 @@ export const WorkspaceProvider = ({ children }) => {
   const loginUser = (userData) => {
     setUser(userData);
     localStorage.setItem('aisa_user', JSON.stringify(userData));
+    if (userData.token) {
+      localStorage.setItem('aisa_token', userData.token);
+    }
+    if (userData.email) {
+      localStorage.setItem('aisa_user_email', userData.email);
+    }
+    if (userData.name) {
+      localStorage.setItem('aisa_user_name', userData.name);
+    }
+    if (userData.avatar) {
+      localStorage.setItem('aisa_user_avatar', userData.avatar);
+      setUserAvatarState(userData.avatar);
+    } else {
+      localStorage.removeItem('aisa_user_avatar');
+      setUserAvatarState('');
+    }
+    if (userData.accentColor) {
+      localStorage.setItem('aisa_accent_color', userData.accentColor);
+      setAccentColorState(userData.accentColor);
+      const palette = ACCENT_COLOR_MAP[userData.accentColor] || ACCENT_COLOR_MAP.purple;
+      applyPaletteToCSS(palette);
+    }
+    if (userData.appearance) {
+      localStorage.setItem('aisa_appearance', userData.appearance);
+      setAppearanceState(userData.appearance);
+    }
     if (userData.role) {
       setActiveRole(userData.role);
     }
@@ -1989,10 +2028,7 @@ export const WorkspaceProvider = ({ children }) => {
     localStorage.removeItem('aisa_user_avatar');
     localStorage.removeItem('aisa_workspaces');
     localStorage.removeItem('aisa_active_ws_id');
-    localStorage.removeItem('aisa_appearance');
-    localStorage.removeItem('aisa_accent_color');
     localStorage.removeItem('aisa_region');
-    localStorage.removeItem('aisa_language');
     localStorage.removeItem('aisa_multi_schedule_reminder');
     localStorage.removeItem('aisa_last_generated_content');
     localStorage.removeItem('ai_ads_starred_projects');
@@ -2262,14 +2298,29 @@ export const WorkspaceProvider = ({ children }) => {
     return null;
   });
 
+  useEffect(() => {
+    if (user && user.avatar !== undefined) {
+      setUserAvatarState(user.avatar || '');
+      if (user.avatar) {
+        localStorage.setItem('aisa_user_avatar', user.avatar);
+      } else {
+        localStorage.removeItem('aisa_user_avatar');
+      }
+    }
+  }, [user?.avatar, user?.email]);
+
   const setUserAvatar = (avatarData) => {
-    setUserAvatarState(avatarData);
+    const cleanAvatar = avatarData || '';
+    setUserAvatarState(cleanAvatar);
     try {
-      if (avatarData) {
-        localStorage.setItem('aisa_user_avatar', avatarData);
+      if (cleanAvatar) {
+        localStorage.setItem('aisa_user_avatar', cleanAvatar);
         setUser(prev => {
-          const updated = prev ? { ...prev, avatar: avatarData } : { avatar: avatarData };
+          const updated = prev ? { ...prev, avatar: cleanAvatar } : { avatar: cleanAvatar };
           try { localStorage.setItem('aisa_user', JSON.stringify(updated)); } catch(e){}
+          if (updated.email) {
+            authAPI.updateProfile({ email: updated.email, avatar: cleanAvatar }).catch(err => console.warn('Failed to sync avatar to DB:', err));
+          }
           return updated;
         });
       } else {
@@ -2278,11 +2329,14 @@ export const WorkspaceProvider = ({ children }) => {
           if (!prev) return prev;
           const { avatar, ...rest } = prev;
           try { localStorage.setItem('aisa_user', JSON.stringify(rest)); } catch(e){}
+          if (prev.email) {
+            authAPI.updateProfile({ email: prev.email, avatar: '' }).catch(err => console.warn('Failed to sync empty avatar to DB:', err));
+          }
           return rest;
         });
       }
     } catch (e) {
-      console.error("Error saving user avatar to localStorage:", e);
+      console.error("Error saving user avatar:", e);
     }
   };
 

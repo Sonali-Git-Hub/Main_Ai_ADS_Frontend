@@ -9,7 +9,7 @@ import { Globe, Link2, FileText, Zap, ArrowRight, Dna } from 'lucide-react';
  * onboarding prompt instead of the module's content.
  */
 export const NoBrandGate = ({ children, moduleName = 'this feature' }) => {
-  const { activeWorkspace, workspaces, openScraperModal, setActiveModule } = useWorkspace();
+  const { activeWorkspace, workspaces, openScraperModal, setActiveModule, t } = useWorkspace();
 
   const noBrand =
     !activeWorkspace ||
@@ -41,12 +41,12 @@ export const NoBrandGate = ({ children, moduleName = 'this feature' }) => {
 
       {/* Heading */}
       <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3 text-center">
-        No Brand Loaded
+        {t('noBrandLoaded', 'No Brand Loaded')}
       </h2>
       <p className="text-slate-500 dark:text-slate-400 text-center max-w-md mb-10 text-base leading-relaxed">
-        To access{' '}
-        <span className="text-brand-600 dark:text-brand-400 font-semibold">{moduleName}</span>,
-        please load or create a brand first. Choose an option below to get started.
+        {t('toAccess', 'To access')}{' '}
+        <span className="text-brand-600 dark:text-brand-400 font-semibold">{moduleName}</span>,{' '}
+        {t('pleaseLoadOrCreateBrandFirst', 'please load or create a brand first. Choose an option below to get started.')}
       </p>
 
       {/* Action Cards */}
@@ -63,9 +63,9 @@ export const NoBrandGate = ({ children, moduleName = 'this feature' }) => {
             <Globe className="w-5 h-5" />
           </span>
           <div>
-            <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm mb-1">Enter Brand URL</p>
+            <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm mb-1">{t('enterBrandUrl', 'Enter Brand URL')}</p>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
-              AI scrapes your website and builds Brand DNA automatically.
+              {t('aiScrapesWebsite', 'AI scrapes your website and builds Brand DNA automatically.')}
             </p>
           </div>
         </button>
@@ -82,9 +82,9 @@ export const NoBrandGate = ({ children, moduleName = 'this feature' }) => {
             <Link2 className="w-5 h-5" />
           </span>
           <div>
-            <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm mb-1">Activate Your Brand</p>
+            <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm mb-1">{t('activateYourBrand', 'Activate Your Brand')}</p>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
-              Select and activate an existing brand from your workspace list.
+              {t('selectAndActivateExistingBrand', 'Select and activate an existing brand from your workspace list.')}
             </p>
           </div>
         </button>
@@ -101,9 +101,9 @@ export const NoBrandGate = ({ children, moduleName = 'this feature' }) => {
             <FileText className="w-5 h-5" />
           </span>
           <div>
-            <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm mb-1">Upload Brand PDF</p>
+            <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm mb-1">{t('uploadBrandPdf', 'Upload Brand PDF')}</p>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
-              Upload a brand guide or deck — AI extracts your identity.
+              {t('uploadBrandGuideOrDeck', 'Upload a brand guide or deck — AI extracts your identity.')}
             </p>
           </div>
         </button>
@@ -115,12 +115,12 @@ export const NoBrandGate = ({ children, moduleName = 'this feature' }) => {
         className="btn-primary flex items-center gap-2 px-7 py-3.5 rounded-full text-white font-semibold text-sm transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg"
       >
         <Zap className="w-4 h-4" />
-        Create Your Brand DNA Now
+        {t('createYourBrandDnaNow', 'Create Your Brand DNA Now')}
         <ArrowRight className="w-4 h-4" />
       </button>
 
       <p className="mt-5 text-xs text-slate-400 dark:text-slate-600">
-        Takes less than 60 seconds · Powered by AI ADS™ Intelligence Engine
+        {t('takesLessThan60Seconds', 'Takes less than 60 seconds · Powered by AI ADS™ Intelligence Engine')}
       </p>
     </div>
   );

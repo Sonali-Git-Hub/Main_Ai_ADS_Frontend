@@ -220,6 +220,14 @@ export const accountAPI = {
   sendDeleteOTP: (body) => apiFetch('/account/send-delete-otp', { method: 'POST', body }),
   verifyDeleteOTP: (body) => apiFetch('/account/verify-delete-otp', { method: 'POST', body }),
   deleteAccount: (body) => apiFetch('/account/delete', { method: 'POST', body }),
+  sendFeedback: (body) => apiFetch('/feedback', { method: 'POST', body }),
+};
+
+// ─── Auth & User Profile API ─────────────────────────────────────────────────
+export const authAPI = {
+  login: (credentials) => apiFetch('/auth/login', { method: 'POST', body: credentials }),
+  register: (data) => apiFetch('/auth/register', { method: 'POST', body: data }),
+  updateProfile: (data) => apiFetch('/auth/profile', { method: 'PUT', body: data }),
 };
 
 // ─── Auto-Pilot API (SSE Stream) ──────────────────────────────────────────────

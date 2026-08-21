@@ -20,7 +20,7 @@ export const SettingsBillingModule = () => {
     multiScheduleReminder,
     setMultiScheduleReminder,
     setIsSettingsModalOpen, logout, t } = useWorkspace();
-  const [activeTier, setActiveTier] = useState(credits.tier || 'Agency');
+  const [activeTier, setActiveTier] = useState(credits?.tier || 'Agency');
   const [apiKey, setApiKey] = useState('aisa_live_pk_9948271038571029481');
   const [copiedKey, setCopiedKey] = useState(false);
   const [showPhotoMenu, setShowPhotoMenu] = useState(false);

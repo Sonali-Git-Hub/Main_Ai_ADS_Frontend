@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWorkspace } from '../../context/WorkspaceContext';
-import { accountAPI } from '../../services/api';
+import { accountAPI, authAPI } from '../../services/api';
 import {
   Settings,
   Bell,
@@ -286,6 +286,7 @@ export const SettingsModal = () => {
     setNotifications,
     activeWorkspace,
     activeRole,
+    setActiveModule,
     t
   } = useWorkspace();
 
@@ -347,6 +348,23 @@ export const SettingsModal = () => {
     }
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File size exceeds 10MB limit. Please choose a smaller image.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result;
+      if (dataUrl) {
+        setUserAvatar(dataUrl);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSaveName = () => {
     if (!nicknameInput.trim()) return;
     const newName = nicknameInput.trim();
@@ -356,6 +374,9 @@ export const SettingsModal = () => {
     setUser(prev => {
       const updated = prev ? { ...prev, name: newName, fullName: newName } : { name: newName, fullName: newName };
       try { localStorage.setItem('aisa_user', JSON.stringify(updated)); } catch(e){}
+      if (updated.email) {
+        authAPI.updateProfile({ email: updated.email, name: newName }).catch(err => console.warn('Failed to sync name to DB:', err));
+      }
       return updated;
     });
     setIsNameSaved(true);
@@ -511,11 +532,17 @@ export const SettingsModal = () => {
     setIsSending(true);
     setSendStatus(null);
     try {
-      await new Promise(r => setTimeout(r, 1000));
+      await accountAPI.sendFeedback({
+        email: user?.email || localStorage.getItem('aisa_user_email') || 'user@aiads.io',
+        name: user?.name || getUserName(user),
+        feedback: issueText.trim(),
+        category: issueType || 'Product Feedback'
+      });
       setSendStatus('success');
       setIssueText('');
-      setTimeout(() => setSendStatus(null), 3000);
+      setTimeout(() => setSendStatus(null), 5000);
     } catch (error) {
+      console.error('Error submitting feedback:', error);
       setSendStatus('error');
     } finally {
       setIsSending(false);
@@ -619,15 +646,6 @@ export const SettingsModal = () => {
     } finally {
       setDeleteLoading(false);
     }
-  };
-
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = () => setUserAvatar(reader.result);
-    reader.readAsDataURL(file);
   };
 
   const groupedSessions = useMemo(() => {
@@ -1288,13 +1306,22 @@ export const SettingsModal = () => {
                     value={issueText}
                     onChange={e => setIssueText(e.target.value)}
                     placeholder="Describe your query..."
-                    className="glass-input text-xs w-full resize-none"
+                    className="glass-input text-xs w-full resize-none p-4"
                   />
                 </div>
                 <button onClick={handleSupportSubmit} disabled={isSending || !issueText.trim()} className="btn-primary text-xs w-full py-3">
-                  {isSending ? 'Submitting...' : 'Submit Support Request'}
+                  {isSending ? 'Submitting Support Request...' : 'Submit Support Request'}
                 </button>
-                {sendStatus === 'success' && <p className="text-center text-xs text-emerald-400 font-bold">✓ Ticket submitted!</p>}
+                {sendStatus === 'success' && (
+                  <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold text-center animate-in fade-in">
+                    ✓ Support request submitted successfully! Our team will assist you shortly.
+                  </div>
+                )}
+                {sendStatus === 'error' && (
+                  <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold text-center animate-in fade-in">
+                    ❌ Delivery error. Please try again later.
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1305,8 +1332,10 @@ export const SettingsModal = () => {
         return (
           <div className="space-y-4 max-w-lg">
             <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4">
-              <h3 className="text-lg font-black text-slate-900 dark:text-white">Share Your Product Ideas</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">Tell us how we can make AI Ads Platform even better for your team.</p>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">Share Your Product Ideas</h3>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">Tell us how we can make AI Ads Platform even better for your team. Your feedback is sent directly to our executive team.</p>
               <textarea
                 rows={5}
                 value={issueText}
@@ -1315,9 +1344,18 @@ export const SettingsModal = () => {
                 className="glass-input text-xs w-full resize-none p-4"
               />
               <button onClick={handleSupportSubmit} disabled={isSending || !issueText.trim()} className="btn-primary text-xs w-full py-3">
-                {isSending ? 'Sending...' : 'Submit Feedback'}
+                {isSending ? 'Submitting Feedback...' : 'Submit Feedback'}
               </button>
-              {sendStatus === 'success' && <p className="text-center text-xs text-emerald-400 font-bold">✓ Thank you for your feedback!</p>}
+              {sendStatus === 'success' && (
+                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold text-center animate-in fade-in">
+                  ✓ Thank you! Your product feedback has been submitted successfully.
+                </div>
+              )}
+              {sendStatus === 'error' && (
+                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold text-center animate-in fade-in">
+                  ❌ Unable to send feedback. Please try again.
+                </div>
+              )}
             </div>
           </div>
         );
@@ -1568,8 +1606,8 @@ export const SettingsModal = () => {
                   <div className="space-y-2 text-xs text-slate-800 dark:text-slate-200 font-medium">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-slate-900 dark:text-slate-100">Email:</span>
-                      <a href="mailto:admin@uwo24.com" className="text-indigo-600 dark:text-indigo-400 font-bold underline hover:text-indigo-700 transition-colors">
-                        admin@uwo24.com
+                      <a href="mailto:support@aiads.com" className="text-indigo-600 dark:text-indigo-400 font-bold underline hover:text-indigo-700 transition-colors">
+                        support@aiads.com
                       </a>
                     </div>
                     <div className="flex items-center gap-2">
@@ -1813,8 +1851,8 @@ export const SettingsModal = () => {
                   <div className="space-y-2 text-xs text-slate-800 dark:text-slate-200 font-medium">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-slate-900 dark:text-slate-100">Email:</span>
-                      <a href="mailto:admin@uwo24.com" className="text-indigo-600 dark:text-indigo-400 font-bold underline hover:text-indigo-700 transition-colors">
-                        admin@uwo24.com
+                      <a href="mailto:support@aiads.com" className="text-indigo-600 dark:text-indigo-400 font-bold underline hover:text-indigo-700 transition-colors">
+                        support@aiads.com
                       </a>
                     </div>
                     <div className="flex items-center gap-2">
@@ -1837,6 +1875,13 @@ export const SettingsModal = () => {
     }
   };
 
+  const handleCloseSettingsModal = () => {
+    setIsSettingsModalOpen(false);
+    if (setActiveModule) {
+      setActiveModule('dashboard');
+    }
+  };
+
   // ──────────────────────────────────────────────────────────
   // Main Render Portal
   // ──────────────────────────────────────────────────────────
@@ -1851,7 +1896,7 @@ export const SettingsModal = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setIsSettingsModalOpen(false)}
+            onClick={handleCloseSettingsModal}
             className="absolute inset-0 bg-slate-950/75 backdrop-blur-md pointer-events-auto"
           />
 
@@ -1885,7 +1930,7 @@ export const SettingsModal = () => {
                   </div>
                 </div>
                 <button
-                  onClick={() => setIsSettingsModalOpen(false)}
+                  onClick={handleCloseSettingsModal}
                   className="sm:hidden p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-all"
                 >
                   <X size={20} className="text-slate-400" />
@@ -1956,7 +2001,7 @@ export const SettingsModal = () => {
               {/* Logout Footer */}
               <div className="p-4 border-t border-slate-200 dark:border-slate-800/80">
                 <button
-                  onClick={() => { logout(); setIsSettingsModalOpen(false); }}
+                  onClick={() => { logout(); handleCloseSettingsModal(); }}
                   className="w-full py-2.5 px-4 rounded-xl border border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
                   <LogOut className="w-4 h-4" />
@@ -1982,7 +2027,7 @@ export const SettingsModal = () => {
                   </h3>
                 </div>
                 <button
-                  onClick={() => setIsSettingsModalOpen(false)}
+                  onClick={handleCloseSettingsModal}
                   className="p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   <X className="w-5 h-5" />
@@ -2007,7 +2052,7 @@ export const SettingsModal = () => {
               {/* Footer Actions Bar */}
               <div className="p-4 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40 flex justify-end gap-3 shrink-0">
                 <button
-                  onClick={() => setIsSettingsModalOpen(false)}
+                  onClick={handleCloseSettingsModal}
                   className="btn-primary text-xs px-6 py-2"
                 >
                   {t('saveAndDone', 'Save & Done')}
