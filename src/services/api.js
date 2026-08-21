@@ -215,6 +215,13 @@ export const websiteBuilderAPI = {
   deleteProject: (id) => apiFetch(`/website-builder/projects/${id}`, { method: 'DELETE' }),
 };
 
+// ─── Account & Identity Verification API ─────────────────────────────────────
+export const accountAPI = {
+  sendDeleteOTP: (body) => apiFetch('/account/send-delete-otp', { method: 'POST', body }),
+  verifyDeleteOTP: (body) => apiFetch('/account/verify-delete-otp', { method: 'POST', body }),
+  deleteAccount: (body) => apiFetch('/account/delete', { method: 'POST', body }),
+};
+
 // ─── Auto-Pilot API (SSE Stream) ──────────────────────────────────────────────
 export const autopilotAPI = {
   generate: (body, onMessage, onError, onComplete) => {

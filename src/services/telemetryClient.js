@@ -160,3 +160,27 @@ export function initGlobalTelemetryListeners() {
     }
   }, { capture: true, passive: true });
 }
+
+// Connects to SSE telemetry stream for real-time account event dispatches
+export function subscribeToAccountEvents(onEvent) {
+  if (typeof window === 'undefined') return () => {};
+
+  let eventSource = null;
+  try {
+    eventSource = new EventSource(`${BASE_URL}/telemetry/stream`);
+    eventSource.onmessage = (e) => {
+      try {
+        const payload = JSON.parse(e.data);
+        if (onEvent) onEvent(payload);
+      } catch (err) {}
+    };
+  } catch (err) {
+    console.warn('[TelemetryClient] SSE connection error:', err.message);
+  }
+
+  return () => {
+    if (eventSource) {
+      eventSource.close();
+    }
+  };
+}

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { subscribeToAccountEvents } from '../services/telemetryClient';
 
 const WorkspaceContext = createContext();
 
@@ -1980,12 +1981,73 @@ export const WorkspaceProvider = ({ children }) => {
     }
   };
 
+  const purgeAllUserData = () => {
+    localStorage.removeItem('aisa_user');
+    localStorage.removeItem('aisa_token');
+    localStorage.removeItem('aisa_user_email');
+    localStorage.removeItem('aisa_user_name');
+    localStorage.removeItem('aisa_user_avatar');
+    localStorage.removeItem('aisa_workspaces');
+    localStorage.removeItem('aisa_active_ws_id');
+    localStorage.removeItem('aisa_appearance');
+    localStorage.removeItem('aisa_accent_color');
+    localStorage.removeItem('aisa_region');
+    localStorage.removeItem('aisa_language');
+    localStorage.removeItem('aisa_multi_schedule_reminder');
+    localStorage.removeItem('aisa_last_generated_content');
+    localStorage.removeItem('ai_ads_starred_projects');
+  };
+
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('aisa_user');
+    setUserAvatarState('');
+    purgeAllUserData();
     setIsSettingsModalOpen(false);
     setActiveModuleState('dashboard');
   };
+
+  // 1. Cross-Tab Storage Event Sync (Same Device, Multiple Open Browser Tabs)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'aisa_token' || e.key === 'aisa_user_email' || e.key === 'aisa_user') {
+        if (!e.newValue) {
+          console.log('🔒 Auth token cleared in another tab. Syncing logout across tabs...');
+          setUser(null);
+          setUserAvatarState('');
+          purgeAllUserData();
+          setIsSettingsModalOpen(false);
+          setActiveModuleState('dashboard');
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // 2. Real-Time SSE Cross-Device Deletion Sync (All Connected Devices Globally)
+  useEffect(() => {
+    const userEmail = user?.email || (typeof window !== 'undefined' && localStorage.getItem('aisa_user_email'));
+    if (!userEmail) return;
+
+    const unsubscribe = subscribeToAccountEvents((event) => {
+      if (
+        event?.eventType === 'ACCOUNT_DELETED' &&
+        event?.metadata?.deletedEmail &&
+        event.metadata.deletedEmail.toLowerCase() === userEmail.toLowerCase()
+      ) {
+        console.log(`🔒 Real-time account deletion notification received for ${userEmail}. Purging local session on all systems...`);
+        setUser(null);
+        setUserAvatarState('');
+        purgeAllUserData();
+        setIsSettingsModalOpen(false);
+        setActiveModuleState('dashboard');
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [user?.email]);
 
 
   useEffect(() => {

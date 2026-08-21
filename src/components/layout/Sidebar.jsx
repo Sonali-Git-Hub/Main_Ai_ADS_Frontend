@@ -65,9 +65,11 @@ export const Sidebar = () => {
         {/* Logo Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800/80">
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white font-extrabold text-lg shadow-glow flex-shrink-0">
-              AI
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="AI Ads™ Logo" 
+              className="w-10 h-10 rounded-xl object-cover flex-shrink-0 shadow-md border border-slate-200/50 dark:border-slate-800/80 bg-white" 
+            />
             {!collapsed && (
               <div>
                 <div className="flex items-center gap-1">
