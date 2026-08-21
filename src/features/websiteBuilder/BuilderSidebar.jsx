@@ -22,7 +22,8 @@ import {
   Sparkles,
   ExternalLink,
   Check,
-  Globe
+  Globe,
+  Activity
 } from 'lucide-react';
 
 export const BuilderSidebar = ({
@@ -39,6 +40,7 @@ export const BuilderSidebar = ({
   setCollapsed,
   onNewProject,
   onOpenSearchModal,
+  onToggleTelemetry,
   activeWorkspace
 }) => {
   const [workspaceDropdownOpen, setWorkspaceDropdownOpen] = useState(false);
@@ -188,6 +190,26 @@ export const BuilderSidebar = ({
             >
               <PlugZap className={`w-4 h-4 flex-shrink-0 ${activeNav === 'connectors' ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-brand-500'}`} />
               {!collapsed && <span>Connectors</span>}
+            </button>
+
+            {/* Live Telemetry Debug Panel */}
+            <button
+              onClick={() => onToggleTelemetry && onToggleTelemetry()}
+              title={collapsed ? 'Live Telemetry' : undefined}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 group"
+            >
+              <div className="flex items-center gap-3 truncate">
+                <div className="relative flex-shrink-0">
+                  <Activity className="w-4 h-4 text-amber-500 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 absolute -top-0.5 -right-0.5 animate-ping" />
+                </div>
+                {!collapsed && <span className="truncate">Live Telemetry</span>}
+              </div>
+              {!collapsed && (
+                <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 text-[9px] font-extrabold tracking-wider uppercase border border-amber-500/30">
+                  LIVE
+                </span>
+              )}
             </button>
           </div>
 

@@ -4,7 +4,7 @@ import { analyticsAPI, approvalsAPI } from '../../services/api';
 
 import {
   Search, PenTool, CheckCircle2, ArrowUpRight, TrendingUp, Clock,
-  Layers, Zap, Repeat, Loader2, RefreshCw, AlertCircle, Rocket, Dna
+  Layers, Zap, Repeat, Loader2, RefreshCw, AlertCircle, Rocket, Dna, ShieldCheck
 } from 'lucide-react';
 
 export const DashboardModule = () => {

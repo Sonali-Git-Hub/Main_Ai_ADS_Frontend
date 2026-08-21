@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWorkspace } from '../../context/WorkspaceContext';
+import { accountAPI, authAPI } from '../../services/api';
 import {
   Settings,
   Bell,
@@ -285,6 +286,7 @@ export const SettingsModal = () => {
     setNotifications,
     activeWorkspace,
     activeRole,
+    setActiveModule,
     t
   } = useWorkspace();
 
@@ -346,6 +348,23 @@ export const SettingsModal = () => {
     }
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File size exceeds 10MB limit. Please choose a smaller image.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result;
+      if (dataUrl) {
+        setUserAvatar(dataUrl);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSaveName = () => {
     if (!nicknameInput.trim()) return;
     const newName = nicknameInput.trim();
@@ -355,6 +374,9 @@ export const SettingsModal = () => {
     setUser(prev => {
       const updated = prev ? { ...prev, name: newName, fullName: newName } : { name: newName, fullName: newName };
       try { localStorage.setItem('aisa_user', JSON.stringify(updated)); } catch(e){}
+      if (updated.email) {
+        authAPI.updateProfile({ email: updated.email, name: newName }).catch(err => console.warn('Failed to sync name to DB:', err));
+      }
       return updated;
     });
     setIsNameSaved(true);
@@ -471,10 +493,19 @@ export const SettingsModal = () => {
 
   const renderToggle = (value, onToggle) => (
     <button
+      type="button"
       onClick={() => onToggle(!value)}
-      className={`w-12 h-6.5 rounded-full p-1 transition-all duration-300 shrink-0 ${value ? 'bg-gradient-to-r from-brand-600 to-indigo-500 shadow-glow' : 'bg-slate-300 dark:bg-slate-800'}`}
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none active:scale-95 ${
+        value
+          ? 'bg-gradient-to-r from-brand-600 to-indigo-600 shadow-md shadow-brand-500/20'
+          : 'bg-slate-300 dark:bg-slate-700'
+      }`}
     >
-      <div className={`w-4.5 h-4.5 rounded-full transition-transform duration-300 shadow-md bg-white ${value ? 'translate-x-5.5' : 'translate-x-0'}`} />
+      <span
+        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+          value ? 'translate-x-5' : 'translate-x-0'
+        }`}
+      />
     </button>
   );
 
@@ -501,11 +532,17 @@ export const SettingsModal = () => {
     setIsSending(true);
     setSendStatus(null);
     try {
-      await new Promise(r => setTimeout(r, 1000));
+      await accountAPI.sendFeedback({
+        email: user?.email || localStorage.getItem('aisa_user_email') || 'user@aiads.io',
+        name: user?.name || getUserName(user),
+        feedback: issueText.trim(),
+        category: issueType || 'Product Feedback'
+      });
       setSendStatus('success');
       setIssueText('');
-      setTimeout(() => setSendStatus(null), 3000);
+      setTimeout(() => setSendStatus(null), 5000);
     } catch (error) {
+      console.error('Error submitting feedback:', error);
       setSendStatus('error');
     } finally {
       setIsSending(false);
@@ -532,10 +569,20 @@ export const SettingsModal = () => {
 
   const handleInitiateDelete = async () => {
     setDeleteOtpLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    setDeleteStep('otp');
-    setDeleteCooldown(60);
-    setDeleteOtpLoading(false);
+    setDeleteError('');
+    try {
+      const res = await accountAPI.sendDeleteOTP({ email: user?.email });
+      if (res && res.success) {
+        setDeleteStep('otp');
+        setDeleteCooldown(60);
+      } else {
+        setDeleteError(res?.error || 'Failed to send security code. Please try again.');
+      }
+    } catch (err) {
+      setDeleteError(err.message || 'Failed to send security code to your email.');
+    } finally {
+      setDeleteOtpLoading(false);
+    }
   };
 
   const handleVerifyDeleteOtp = async () => {
@@ -544,38 +591,61 @@ export const SettingsModal = () => {
       return;
     }
     setDeleteOtpLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    setDeleteStep('verified');
-    setDeleteOtpLoading(false);
+    setDeleteError('');
+    try {
+      const res = await accountAPI.verifyDeleteOTP({ email: user?.email, otp: deleteOtp.trim() });
+      if (res && res.success) {
+        setDeleteStep('verified');
+      } else {
+        setDeleteError(res?.error || 'Invalid 6-digit security code.');
+      }
+    } catch (err) {
+      setDeleteError(err.message || 'Verification failed. Please check the code and try again.');
+    } finally {
+      setDeleteOtpLoading(false);
+    }
   };
 
   const handleResendDeleteOtp = async () => {
     if (deleteCooldown > 0) return;
     setDeleteOtpLoading(true);
-    await new Promise(r => setTimeout(r, 600));
-    setDeleteCooldown(60);
-    setDeleteOtpLoading(false);
+    setDeleteError('');
+    try {
+      const res = await accountAPI.sendDeleteOTP({ email: user?.email });
+      if (res && res.success) {
+        setDeleteCooldown(60);
+      } else {
+        setDeleteError(res?.error || 'Failed to resend security code.');
+      }
+    } catch (err) {
+      setDeleteError(err.message || 'Failed to resend security code.');
+    } finally {
+      setDeleteOtpLoading(false);
+    }
   };
 
   const handleDeleteAccount = async () => {
     if (deleteStep !== 'verified') return;
     setDeleteLoading(true);
-    await new Promise(r => setTimeout(r, 1000));
-    setShowDeleteModal(false);
-    setDeleteStep('confirm');
-    setDeleteOtp('');
-    logout();
-    setIsSettingsModalOpen(false);
-    setDeleteLoading(false);
-  };
-
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = () => setUserAvatar(reader.result);
-    reader.readAsDataURL(file);
+    setDeleteError('');
+    try {
+      const res = await accountAPI.deleteAccount({ email: user?.email });
+      if (res && res.success) {
+        setShowDeleteModal(false);
+        setDeleteStep('confirm');
+        setDeleteOtp('');
+        localStorage.removeItem('aisa_token');
+        localStorage.removeItem('aisa_user_email');
+        setIsSettingsModalOpen(false);
+        logout();
+      } else {
+        setDeleteError(res?.error || 'Failed to delete account.');
+      }
+    } catch (err) {
+      setDeleteError(err.message || 'An error occurred while deleting account.');
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const groupedSessions = useMemo(() => {
@@ -1236,13 +1306,22 @@ export const SettingsModal = () => {
                     value={issueText}
                     onChange={e => setIssueText(e.target.value)}
                     placeholder="Describe your query..."
-                    className="glass-input text-xs w-full resize-none"
+                    className="glass-input text-xs w-full resize-none p-4"
                   />
                 </div>
                 <button onClick={handleSupportSubmit} disabled={isSending || !issueText.trim()} className="btn-primary text-xs w-full py-3">
-                  {isSending ? 'Submitting...' : 'Submit Support Request'}
+                  {isSending ? 'Submitting Support Request...' : 'Submit Support Request'}
                 </button>
-                {sendStatus === 'success' && <p className="text-center text-xs text-emerald-400 font-bold">✓ Ticket submitted!</p>}
+                {sendStatus === 'success' && (
+                  <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold text-center animate-in fade-in">
+                    ✓ Support request submitted successfully! Our team will assist you shortly.
+                  </div>
+                )}
+                {sendStatus === 'error' && (
+                  <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold text-center animate-in fade-in">
+                    ❌ Delivery error. Please try again later.
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1253,8 +1332,10 @@ export const SettingsModal = () => {
         return (
           <div className="space-y-4 max-w-lg">
             <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4">
-              <h3 className="text-lg font-black text-slate-900 dark:text-white">Share Your Product Ideas</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">Tell us how we can make AI Ads Platform even better for your team.</p>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">Share Your Product Ideas</h3>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">Tell us how we can make AI Ads Platform even better for your team. Your feedback is sent directly to our executive team.</p>
               <textarea
                 rows={5}
                 value={issueText}
@@ -1263,42 +1344,541 @@ export const SettingsModal = () => {
                 className="glass-input text-xs w-full resize-none p-4"
               />
               <button onClick={handleSupportSubmit} disabled={isSending || !issueText.trim()} className="btn-primary text-xs w-full py-3">
-                {isSending ? 'Sending...' : 'Submit Feedback'}
+                {isSending ? 'Submitting Feedback...' : 'Submit Feedback'}
               </button>
-              {sendStatus === 'success' && <p className="text-center text-xs text-emerald-400 font-bold">✓ Thank you for your feedback!</p>}
+              {sendStatus === 'success' && (
+                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold text-center animate-in fade-in">
+                  ✓ Thank you! Your product feedback has been submitted successfully.
+                </div>
+              )}
+              {sendStatus === 'error' && (
+                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold text-center animate-in fade-in">
+                  ❌ Unable to send feedback. Please try again.
+                </div>
+              )}
             </div>
           </div>
         );
 
-      // ── TERMS & PRIVACY ────────────────────────────
-      case 'terms':
+      // ── PRIVACY POLICY ─────────────────────────────
       case 'privacy': {
-        const isPrivacy = activeTab === 'privacy';
-        const content = isPrivacy ? PRIVACY_CONTENT : TERMS_CONTENT;
         return (
-          <div className="space-y-6">
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-brand-500/10 text-brand-500 flex items-center justify-center shrink-0 border border-brand-500/20">
-                {isPrivacy ? <Shield className="w-5 h-5" /> : <Scale className="w-5 h-5" />}
-              </div>
-              <div>
-                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">{isPrivacy ? 'Privacy Policy' : 'Terms of Service'}</h3>
-                <p className="text-xs text-slate-400">Last updated: January 2026</p>
+          <div className="space-y-6 pb-6">
+            {/* Main Header Banner */}
+            <div className="p-6 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-brand-500/10 to-indigo-500/10 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0 border border-emerald-500/30 shadow-glow">
+                  <Shield className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                      ISO-27001 & SOC-2 Governed
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400">v2.4 • Updated August 2026</span>
+                  </div>
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white mt-1">AI Ads™ Platform Privacy Policy & Data Governance</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    How your personal data, Brand DNA, and AI campaign collateral are protected, encrypted, and deleted.
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 text-xs leading-relaxed space-y-3">
-              {content.split('\n\n').map((para, i) => (
-                <p key={i} className={para.startsWith('**') ? 'font-bold text-slate-900 dark:text-white text-sm' : ''}>
-                  {para.replace(/\*\*/g, '')}
-                </p>
-              ))}
+
+            {/* Quick Section Anchors */}
+            <div className="flex flex-wrap gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800/80">
+              <a href="#sec-collection" className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-emerald-500 hover:text-white transition-all border border-slate-200 dark:border-slate-800">
+                1. Data Collection
+              </a>
+              <a href="#sec-usage" className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-emerald-500 hover:text-white transition-all border border-slate-200 dark:border-slate-800">
+                2. AI Usage & Training
+              </a>
+              <a href="#sec-security" className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-emerald-500 hover:text-white transition-all border border-slate-200 dark:border-slate-800">
+                3. Security & AES-256
+              </a>
+              <a href="#sec-deletion" className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-emerald-500 hover:text-white transition-all border border-slate-200 dark:border-slate-800">
+                4. Account Deletion
+              </a>
+              <a href="#sec-rights" className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-emerald-500 hover:text-white transition-all border border-slate-200 dark:border-slate-800">
+                5. Rights & Controls
+              </a>
             </div>
+
+            {/* INFORMATION WE COLLECT */}
+            <div id="sec-collection" className="p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center font-black text-xs border border-blue-500/20">
+                  01
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Information We Collect</h3>
+                  <p className="text-xs text-slate-400">Categories of personal identity, workspace assets, and system telemetry data</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pl-2 sm:pl-11 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    1.1 Personal Identity & Account Credentials
+                  </h4>
+                  <p>
+                    When you register on AI Ads™, we collect your email address, full name, profile avatar, role configuration (<code className="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px]">AgencyAdmin</code>, <code className="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px]">SuperAdmin</code>), and cryptographically salted password hashes.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    1.2 Brand DNA, Claims & Marketing Collateral
+                  </h4>
+                  <p>
+                    To enable tailored AI generation, we store brand positioning rules, value claims, target market parameters, content calendars, and campaign drafts created in your agency workspace.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    1.3 Real-Time Telemetry & Diagnostic Logs
+                  </h4>
+                  <p>
+                    We log user interaction events (such as navigation actions, website generation triggers, and error traces) to maintain system reliability. All sensitive parameters like authorization tokens and passwords are redacted prior to telemetry storage.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* HOW WE USE YOUR INFORMATION */}
+            <div id="sec-usage" className="p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center font-black text-xs border border-purple-500/20">
+                  02
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">How We Use Your Information</h3>
+                  <p className="text-xs text-slate-400">AI prompt tuning, transactional notifications, and service operations</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pl-2 sm:pl-11 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    2.1 AI Campaign & Asset Synthesis
+                  </h4>
+                  <p>
+                    Your Brand DNA claims and target audience settings are passed to Google Vertex AI / Gemini LLMs to synthesize on-brand ad copy, blog posts, and landing page templates.
+                  </p>
+                </div>
+
+                {/* HIGHLIGHT BOX: ZERO MODEL TRAINING GUARANTEE */}
+                <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-900 dark:text-purple-200 space-y-1">
+                  <div className="flex items-center gap-2 font-black text-xs">
+                    <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <span>🔒 ZERO THIRD-PARTY AI MODEL TRAINING GUARANTEE</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-purple-800 dark:text-purple-300">
+                    Your proprietary Brand DNA, uploaded marketing copy, and generated website assets are <strong>NEVER used to train public LLM models</strong>. Your enterprise competitive intelligence remains 100% private to your workspace.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    2.2 Transactional & Security Communications
+                  </h4>
+                  <p>
+                    We send automated 6-digit Security OTP codes for account deletion verification, account creation welcome messages, and password reset notifications via encrypted SMTP services.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* DATA SECURITY & ENCRYPTION */}
+            <div id="sec-security" className="p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-black text-xs border border-emerald-500/20">
+                  03
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Data Security & Encryption Standards</h3>
+                  <p className="text-xs text-slate-400">Enterprise encryption protocols and strict tenant isolation</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pl-2 sm:pl-11 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    3.1 Encryption at Rest and in Transit
+                  </h4>
+                  <p>
+                    All database records in MongoDB Atlas are encrypted at rest using <strong>AES-256 algorithms</strong>. All network communications between your browser and our API servers are encrypted in transit using <strong>TLS 1.3</strong> protocol.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    3.2 Role-Based Access Control (RBAC) & Tenant Isolation
+                  </h4>
+                  <p>
+                    Strict workspace isolation guarantees that team members can only view resources within their assigned tenant organization. JWT authorization tokens expire automatically after 7 days.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* DATA RETENTION & PERMANENT ACCOUNT DELETION */}
+            <div id="sec-deletion" className="p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center font-black text-xs border border-rose-500/20">
+                  04
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Data Retention & Permanent Account Deletion</h3>
+                  <p className="text-xs text-slate-400">6-digit email OTP verification, deep database purge, and global logout</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pl-2 sm:pl-11 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    4.1 6-Digit Email Security OTP Identity Verification
+                  </h4>
+                  <p>
+                    To prevent accidental or malicious account removal, initiating account deletion sends a unique 6-digit security code to your registered email address. This OTP expires after 10 minutes.
+                  </p>
+                </div>
+
+                {/* HIGHLIGHT BOX: TOTAL DEEP PURGE GUARANTEE */}
+                <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-900 dark:text-rose-200 space-y-1">
+                  <div className="flex items-center gap-2 font-black text-xs">
+                    <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                    <span>🗑️ IMMEDIATE TOTAL DATABASE DEEP PURGE</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-rose-800 dark:text-rose-300">
+                    Upon verified account deletion, our backend executes an immediate permanent purge across all MongoDB collections (<code className="bg-rose-500/20 px-1 py-0.5 rounded text-[10px]">Users</code>, <code className="bg-rose-500/20 px-1 py-0.5 rounded text-[10px]">Workspaces</code>, <code className="bg-rose-500/20 px-1 py-0.5 rounded text-[10px]">BrandProfiles</code>, <code className="bg-rose-500/20 px-1 py-0.5 rounded text-[10px]">Campaigns</code>, <code className="bg-rose-500/20 px-1 py-0.5 rounded text-[10px]">WebsiteProjects</code>) and clears all client local storage caches including profile pictures.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    4.2 Real-Time Cross-Device Logout Sync
+                  </h4>
+                  <p>
+                    Account deletion broadcasts a real-time event via Server-Sent Events (SSE) that immediately terminates user sessions across all logged-in devices and browser windows globally.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* USER PRIVACY CONTROLS & RIGHTS */}
+            <div id="sec-rights" className="p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center font-black text-xs border border-cyan-500/20">
+                  05
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">User Privacy Controls & Rights</h3>
+                  <p className="text-xs text-slate-400">JSON data export, telemetry toggles, and compliance contacts</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pl-2 sm:pl-11 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    5.1 Exporting Your Data
+                  </h4>
+                  <p>
+                    You retain full ownership of your data. You may download a full structured JSON backup of your workspace positioning, Brand DNA, and campaign records from <strong>Settings &gt; Data Controls &amp; Backup</strong> at any time.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    5.2 Data Protection Officer Contact
+                  </h4>
+                  <p>
+                    If you have questions regarding our privacy standards or data protection practices, please reach out to our privacy compliance team directly below.
+                  </p>
+                </div>
+
+                {/* Questions About Privacy Card */}
+                <div className="mt-4 p-5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/60 space-y-2.5 shadow-sm">
+                  <h4 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
+                    Questions About Privacy?
+                  </h4>
+                  <div className="space-y-2 text-xs text-slate-800 dark:text-slate-200 font-medium">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900 dark:text-slate-100">Email:</span>
+                      <a href="mailto:support@aiads.com" className="text-indigo-600 dark:text-indigo-400 font-bold underline hover:text-indigo-700 transition-colors">
+                        support@aiads.com
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900 dark:text-slate-100">Phone:</span>
+                      <a href="tel:+918358990909" className="text-indigo-600 dark:text-indigo-400 font-bold underline hover:text-indigo-700 transition-colors">
+                        +91 83589 90909
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        );
+      }
+
+      // ── TERMS OF SERVICE ───────────────────────────
+      case 'terms': {
+        return (
+          <div className="space-y-6 pb-6">
+            {/* Main Header Banner */}
+            <div className="p-6 rounded-2xl bg-gradient-to-r from-brand-500/10 via-purple-500/10 to-indigo-500/10 border border-brand-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-brand-500/20 text-brand-500 flex items-center justify-center shrink-0 border border-brand-500/30 shadow-glow">
+                  <Scale className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-brand-600 dark:text-brand-400 bg-brand-500/15 px-2.5 py-0.5 rounded-full border border-brand-500/30">
+                      Enterprise Legal Governance
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400">v2.4 • Updated August 2026</span>
+                  </div>
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white mt-1">AI Ads™ Platform Terms of Service</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Terms governing workspace licensing, AI generation usage, account obligations, and visual credit allocations.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Section Anchors */}
+            <div className="flex flex-wrap gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800/80">
+              <a href="#terms-licensing" className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-brand-500 hover:text-white transition-all border border-slate-200 dark:border-slate-800">
+                1. Licensing
+              </a>
+              <a href="#terms-ai-ip" className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-brand-500 hover:text-white transition-all border border-slate-200 dark:border-slate-800">
+                2. AI Ownership & IP
+              </a>
+              <a href="#terms-security" className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-brand-500 hover:text-white transition-all border border-slate-200 dark:border-slate-800">
+                3. Security & OTP
+              </a>
+              <a href="#terms-billing" className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-brand-500 hover:text-white transition-all border border-slate-200 dark:border-slate-800">
+                4. Billing & Credits
+              </a>
+              <a href="#terms-termination" className="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-brand-500 hover:text-white transition-all border border-slate-200 dark:border-slate-800">
+                5. Account Termination
+              </a>
+            </div>
+
+            {/* ACCEPTANCE OF TERMS & WORKSPACE LICENSING */}
+            <div id="terms-licensing" className="p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-500 flex items-center justify-center font-black text-xs border border-brand-500/20">
+                  01
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Acceptance of Terms & Workspace Licensing</h3>
+                  <p className="text-xs text-slate-400">Binding license agreement, account registration, and role governance</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pl-2 sm:pl-11 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    1.1 Binding Enterprise License Agreement
+                  </h4>
+                  <p>
+                    By accessing or using the AI Ads™ Enterprise Platform (AISA), creating an account, or initiating AI campaign generation, you agree to be legally bound by these Terms of Service. If you are registering on behalf of an enterprise or agency, you represent that you have authority to bind your organization.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    1.2 Workspace Role-Based Access Control (RBAC)
+                  </h4>
+                  <p>
+                    Workspaces operate under strict RBAC governance. Account owners designated as <code className="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px]">AgencyAdmin</code> or <code className="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px]">SuperAdmin</code> maintain administrative rights to manage visual credits, brand positioning memory, and team access.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* AI CONTENT GENERATION & INTELLECTUAL PROPERTY RIGHTS */}
+            <div id="terms-ai-ip" className="p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center font-black text-xs border border-purple-500/20">
+                  02
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">AI Content Generation & Intellectual Property</h3>
+                  <p className="text-xs text-slate-400">Ownership of AI collateral, generated web apps, and acceptable usage rules</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pl-2 sm:pl-11 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    2.1 Ownership of Generated Collateral & Web Apps
+                  </h4>
+                  <p>
+                    You retain 100% full commercial ownership rights over all ad copy, campaign strategy roadmaps, social posts, visual graphic designs, and web application code generated by AI Ads™ using your Brand DNA.
+                  </p>
+                </div>
+
+                {/* HIGHLIGHT BOX: IP GUARANTEE */}
+                <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-900 dark:text-purple-200 space-y-1">
+                  <div className="flex items-center gap-2 font-black text-xs">
+                    <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <span>🔒 IMMUTABLE COMMERCIAL OWNERSHIP & IP PROTECTION</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-purple-800 dark:text-purple-300">
+                    All website projects and ad creatives synthesized in your workspace belong exclusively to your organization. AI Ads™ makes zero claim of ownership over your input data or generated outputs.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    2.2 Acceptable AI Safety & Usage Compliance
+                  </h4>
+                  <p>
+                    You agree not to use AI Ads™ to synthesize illegal, fraudulent, defamatory, hate speech, or malicious computer code. We reserve the right to suspend workspaces violating safety guidelines.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* USER ACCOUNT SECURITY & IDENTITY GOVERNANCE */}
+            <div id="terms-security" className="p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-black text-xs border border-indigo-500/20">
+                  03
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Account Security & Identity Governance</h3>
+                  <p className="text-xs text-slate-400">Password protection, 6-digit email OTPs, and session governance</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pl-2 sm:pl-11 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    3.1 Session Governance & Authorization
+                  </h4>
+                  <p>
+                    Users are responsible for safeguarding their login credentials. Active sessions are authenticated via JWT tokens with a 7-day security lifespan.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    3.2 6-Digit Email OTP Security Checks
+                  </h4>
+                  <p>
+                    Critical account actions (including permanent account deletion) require identity verification using a 6-digit Security OTP delivered to your registered email address.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* VISUAL CREDITS, BILLING & SUBSCRIPTION TERMS */}
+            <div id="terms-billing" className="p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-black text-xs border border-emerald-500/20">
+                  04
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Visual Credits, Billing & Subscriptions</h3>
+                  <p className="text-xs text-slate-400">Visual credit metering, subscription tier upgrades, and payments</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pl-2 sm:pl-11 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    4.1 Visual Credit Allocation & Metering
+                  </h4>
+                  <p>
+                    AI visual synthesis, graphic ad banner generation, and web app creation consume visual credits based on your subscription tier balance. Additional credits can be purchased via Top-Up.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    4.2 Payments & Encrypted Transactions
+                  </h4>
+                  <p>
+                    All billing transactions are processed securely through PCI-DSS compliant payment gateways using AES-256 encryption. Subscriptions renew automatically unless cancelled.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* ACCOUNT TERMINATION & PERMANENT DATA PURGE */}
+            <div id="terms-termination" className="p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center font-black text-xs border border-rose-500/20">
+                  05
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Account Termination & Data Purge</h3>
+                  <p className="text-xs text-slate-400">Verified deletion, database deep purge, and cross-device logout</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pl-2 sm:pl-11 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    5.1 Total Deep Database & Local Storage Purge
+                  </h4>
+                  <p>
+                    Upon verified account deletion, AI Ads™ permanently purges all records across MongoDB database collections and clears browser local storage caches (including profile avatars).
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide text-brand-600 dark:text-brand-400 mb-1">
+                    5.2 Real-Time Multi-System Session Logout
+                  </h4>
+                  <p>
+                    Account termination dispatches a real-time event that logs out your account across all logged-in devices and browser windows simultaneously.
+                  </p>
+                </div>
+
+                {/* Questions About Terms Card */}
+                <div className="mt-4 p-5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/60 space-y-2.5 shadow-sm">
+                  <h4 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
+                    Questions About Terms of Service?
+                  </h4>
+                  <div className="space-y-2 text-xs text-slate-800 dark:text-slate-200 font-medium">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900 dark:text-slate-100">Email:</span>
+                      <a href="mailto:support@aiads.com" className="text-indigo-600 dark:text-indigo-400 font-bold underline hover:text-indigo-700 transition-colors">
+                        support@aiads.com
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900 dark:text-slate-100">Phone:</span>
+                      <a href="tel:+918358990909" className="text-indigo-600 dark:text-indigo-400 font-bold underline hover:text-indigo-700 transition-colors">
+                        +91 83589 90909
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         );
       }
 
       default:
         return null;
+    }
+  };
+
+  const handleCloseSettingsModal = () => {
+    setIsSettingsModalOpen(false);
+    if (setActiveModule) {
+      setActiveModule('dashboard');
     }
   };
 
@@ -1316,7 +1896,7 @@ export const SettingsModal = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setIsSettingsModalOpen(false)}
+            onClick={handleCloseSettingsModal}
             className="absolute inset-0 bg-slate-950/75 backdrop-blur-md pointer-events-auto"
           />
 
@@ -1343,16 +1923,14 @@ export const SettingsModal = () => {
               {/* Sidebar Header */}
               <div className="p-5 flex items-center justify-between shrink-0 border-b border-slate-200/60 dark:border-slate-800/60">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-500 to-purple-600 text-white flex items-center justify-center shadow-glow">
-                    <Settings className="w-5 h-5" />
-                  </div>
+                  <img src="/logo.png" alt="AI Ads™ Logo" className="w-10 h-10 rounded-2xl object-cover shadow-glow border border-brand-500/20 bg-white" />
                   <div>
                     <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">AI Ads Preferences</h2>
                     <span className="text-[10px] font-bold text-brand-400 uppercase tracking-widest block">Platform Settings</span>
                   </div>
                 </div>
                 <button
-                  onClick={() => setIsSettingsModalOpen(false)}
+                  onClick={handleCloseSettingsModal}
                   className="sm:hidden p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-all"
                 >
                   <X size={20} className="text-slate-400" />
@@ -1423,7 +2001,7 @@ export const SettingsModal = () => {
               {/* Logout Footer */}
               <div className="p-4 border-t border-slate-200 dark:border-slate-800/80">
                 <button
-                  onClick={() => { logout(); setIsSettingsModalOpen(false); }}
+                  onClick={() => { logout(); handleCloseSettingsModal(); }}
                   className="w-full py-2.5 px-4 rounded-xl border border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
                   <LogOut className="w-4 h-4" />
@@ -1449,7 +2027,7 @@ export const SettingsModal = () => {
                   </h3>
                 </div>
                 <button
-                  onClick={() => setIsSettingsModalOpen(false)}
+                  onClick={handleCloseSettingsModal}
                   className="p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   <X className="w-5 h-5" />
@@ -1474,7 +2052,7 @@ export const SettingsModal = () => {
               {/* Footer Actions Bar */}
               <div className="p-4 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40 flex justify-end gap-3 shrink-0">
                 <button
-                  onClick={() => setIsSettingsModalOpen(false)}
+                  onClick={handleCloseSettingsModal}
                   className="btn-primary text-xs px-6 py-2"
                 >
                   {t('saveAndDone', 'Save & Done')}

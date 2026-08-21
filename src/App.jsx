@@ -131,7 +131,7 @@ const MainContent = () => {
           </NoBrandGate>
         );
       case 'team': return <TeamRbacModule />;
-      case 'settings': return <SettingsBillingModule />;
+      case 'settings': return <DashboardModule />;
       case 'adminDashboard': return <AdminDashboardModule />;
       default: return <DashboardModule />;
     }

@@ -3,7 +3,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { X, Dna, Globe, Sparkles, CheckCircle2, ShieldAlert, ArrowRight } from 'lucide-react';
 
 export const ScraperOverlayModal = () => {
-  const { isScraperOpen, setIsScraperOpen, addWorkspace, setActiveModule } = useWorkspace();
+  const { isScraperOpen, setIsScraperOpen, addWorkspace, setActiveModule, t } = useWorkspace();
   const [url, setUrl] = useState('');
   const [brandName, setBrandName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,7 +32,6 @@ export const ScraperOverlayModal = () => {
     }
   };
 
-
   const confirmSaveWorkspace = async () => {
     if (result) {
       await addWorkspace(result);
@@ -46,7 +45,6 @@ export const ScraperOverlayModal = () => {
     }
   };
 
-
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
       <div className="w-full max-w-2xl bg-[#0f172a] border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
@@ -57,8 +55,8 @@ export const ScraperOverlayModal = () => {
               <Dna className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-bold text-white text-base">Domain Web Scraper & Brand DNA Setup</h2>
-              <p className="text-xs text-slate-400">Automated Web Ingestion & Positioning Memory Extraction</p>
+              <h2 className="font-bold text-white text-base">{t('domainWebScraperSetup', 'Domain Web Scraper & Brand DNA Setup')}</h2>
+              <p className="text-xs text-slate-400">{t('tenPointBrandDnaEngine', '10-Point Expert Brand DNA Extraction Engine')}</p>
             </div>
           </div>
           <button 
