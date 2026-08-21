@@ -471,10 +471,19 @@ export const SettingsModal = () => {
 
   const renderToggle = (value, onToggle) => (
     <button
+      type="button"
       onClick={() => onToggle(!value)}
-      className={`w-12 h-6.5 rounded-full p-1 transition-all duration-300 shrink-0 ${value ? 'bg-gradient-to-r from-brand-600 to-indigo-500 shadow-glow' : 'bg-slate-300 dark:bg-slate-800'}`}
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none active:scale-95 ${
+        value
+          ? 'bg-gradient-to-r from-brand-600 to-indigo-600 shadow-md shadow-brand-500/20'
+          : 'bg-slate-300 dark:bg-slate-700'
+      }`}
     >
-      <div className={`w-4.5 h-4.5 rounded-full transition-transform duration-300 shadow-md bg-white ${value ? 'translate-x-5.5' : 'translate-x-0'}`} />
+      <span
+        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+          value ? 'translate-x-5' : 'translate-x-0'
+        }`}
+      />
     </button>
   );
 
