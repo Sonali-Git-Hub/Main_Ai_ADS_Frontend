@@ -13,8 +13,6 @@ import {
   Repeat, 
   FolderKanban, 
   CheckCircle2, 
-  BarChart3, 
-  Users, 
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -54,9 +52,7 @@ export const Sidebar = () => {
     { id: 'repurpose', label: t('repurpose', '10. Repurpose'), icon: Repeat },
     { id: 'assets', label: t('assets', '11. Asset Library'), icon: FolderKanban },
     { id: 'approvals', label: t('approvals', '12. Approvals Desk'), icon: CheckCircle2 },
-    { id: 'analytics', label: t('analytics', '13. Analytics'), icon: BarChart3 },
-    { id: 'team', label: t('team', '14. Team & RBAC'), icon: Users },
-    { id: 'settings', label: t('settings', '15. Settings & Billing'), icon: Settings },
+    { id: 'settings', label: t('settings', '13. Settings & Billing'), icon: Settings },
   ];
 
   return (

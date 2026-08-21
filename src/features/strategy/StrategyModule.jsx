@@ -391,26 +391,28 @@ export const StrategyModule = () => {
             </div>
 
             {/* Tabs */}
-            <div className="flex items-center gap-1 mt-1 bg-slate-100 dark:bg-slate-800/70 rounded-xl p-1 w-fit">
-              {[
-                { id: 'overview',   label: t('overviewTab', 'Overview'),   icon: BarChart2 },
-                { id: 'plan',       label: t('thirtyDayPlanTab', '30-Day Plan'), icon: Calendar  },
-                { id: 'campaigns',  label: t('campaignsTab', 'Campaigns'),  icon: Megaphone },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
-                    activeTab === tab.id
-                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                  }`}
-                >
-                  <tab.icon className="w-3.5 h-3.5" />
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+            {generatedDoc && (
+              <div className="flex items-center gap-1 mt-1 bg-slate-100 dark:bg-slate-800/70 rounded-xl p-1 w-fit">
+                {[
+                  { id: 'overview',   label: t('overviewTab', 'Overview'),   icon: BarChart2 },
+                  { id: 'plan',       label: t('thirtyDayPlanTab', '30-Day Plan'), icon: Calendar  },
+                  { id: 'campaigns',  label: t('campaignsTab', 'Campaigns'),  icon: Megaphone },
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
+                      activeTab === tab.id
+                        ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    <tab.icon className="w-3.5 h-3.5" />
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right: Actions */}
@@ -444,8 +446,27 @@ export const StrategyModule = () => {
         </div>
       </div>
 
+      {/* ══════════ EMPTY STATE (NOT GENERATED) ══════════ */}
+      {!generatedDoc && (
+        <div className="text-center py-20 rounded-3xl glass-card border border-dashed border-slate-200 dark:border-slate-700 mt-6">
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-brand-500/20 to-purple-500/10 flex items-center justify-center mx-auto mb-4">
+            <Rocket className="w-8 h-8 text-brand-500" />
+          </div>
+          <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mb-2">Generate Your Master Strategy</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
+            Click "Generate Master Strategy" to get an AI-powered growth blueprint, channel mix, and 30-day content calendar.
+          </p>
+          <button onClick={handleGenerate} disabled={isGenerating} className="btn-primary text-sm flex items-center gap-2 mx-auto px-6 py-2.5 rounded-xl disabled:opacity-50 shadow-lg shadow-brand-500/20 hover:scale-105 active:scale-95 transition-all">
+            {isGenerating
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating Strategy...</>
+              : <><Zap className="w-4 h-4 text-amber-300 fill-amber-300" /> Generate Master Strategy</>
+            }
+          </button>
+        </div>
+      )}
+
       {/* ══════════ TAB: OVERVIEW ══════════ */}
-      {activeTab === 'overview' && (
+      {generatedDoc && activeTab === 'overview' && (
         <div className="space-y-6">
 
           {/* ROW 1: Objectives + Channel Mix */}
@@ -713,30 +734,8 @@ export const StrategyModule = () => {
       )}
 
       {/* ══════════ TAB: 30-DAY PLAN ══════════ */}
-      {activeTab === 'plan' && (
+      {generatedDoc && activeTab === 'plan' && (
         <div className="space-y-5">
-
-
-          {/* Empty state (Before Master Strategy Generation) */}
-          {thirtyDayPlan.length === 0 && (
-            <div className="text-center py-20 rounded-3xl glass-card border border-dashed border-slate-200 dark:border-slate-700">
-              <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-brand-500/20 to-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                <Rocket className="w-8 h-8 text-brand-500" />
-              </div>
-              <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mb-2">Generate Your 30-Day Plan</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
-                Click "Generate Master Strategy" to get an AI-powered 30-day content calendar with daily topics, platforms, and action items.
-              </p>
-              <button onClick={handleGenerate} disabled={isGenerating} className="btn-primary text-sm flex items-center gap-2 mx-auto px-6 py-2.5 rounded-xl disabled:opacity-50">
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
-                  : <><Zap className="w-4 h-4 text-amber-300 fill-amber-300" /> Generate Master Strategy</>
-                }
-              </button>
-            </div>
-          )}
-
-
 
           {/* Week Summary Cards */}
           {thirtyDayPlan.length > 0 && (
