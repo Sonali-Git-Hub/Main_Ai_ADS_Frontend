@@ -211,24 +211,6 @@ export const SeoModule = () => {
             <ShieldAlert className="w-3.5 h-3.5 shrink-0 text-amber-500 mt-0.5" />
             <span>AI Ads™ schema & keyword intelligence pipeline.</span>
           </div>
-          {keywordsList.length > 0 && (
-            <button
-              onClick={() => {
-                if (setSeoSearchData) {
-                  setSeoSearchData({
-                    seedKeyword,
-                    keywordsList,
-                    brief,
-                    brandName: activeWorkspace.brandName
-                  });
-                }
-                if (setActiveModule) setActiveModule('strategy');
-              }}
-              className="btn-primary py-2 px-4 text-xs font-bold flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md flex-shrink-0"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" /> {t('generateStrategyFromSeo', 'Generate Campaign Strategy from SEO →')}
-            </button>
-          )}
         </div>
       </div>
 

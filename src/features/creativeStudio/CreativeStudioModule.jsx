@@ -67,6 +67,7 @@ const MetaStamp = ({ topic, date, type }) => (
 
 // â”€â”€â”€ 1. AI Visual / Image Generator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const VisualStudio = ({ workspace, credits, deductVisualCredits, setIsCreditModalOpen }) => {
+  const { addGlobalAsset } = useWorkspace();
   const [prompt, setPrompt] = useState('Cyberpunk glassmorphic UI card showing AI metrics and glowing indigo gradients');
   const [style, setStyle] = useState('Glassmorphic Modern 3D');
   const [topic, setTopic] = useState('AI Marketing Campaign Visual');
@@ -85,17 +86,23 @@ const VisualStudio = ({ workspace, credits, deductVisualCredits, setIsCreditModa
         body: JSON.stringify({ prompt, style, creditCost: cost })
       });
       const data = await res.json();
-      if (data.success) setResult(data.asset);
+      if (data.success) {
+        setResult(data.asset);
+        addGlobalAsset({ name: topic || 'AI Generated Image', type: 'IMAGE', url: data.asset.imageUrl || data.asset.url, date: new Date().toISOString(), credits: cost });
+      }
       else throw new Error('API error');
     } catch {
-      setResult({
+      const fallbackUrl = `https://picsum.photos/seed/${Date.now()}/800/800`;
+      const fallbackResult = {
         id: `vis_${Date.now()}`,
         topic,
         prompt,
         style,
-        imageUrl: `https://picsum.photos/seed/${Date.now()}/800/800`,
+        imageUrl: fallbackUrl,
         createdAt: new Date().toISOString()
-      });
+      };
+      setResult(fallbackResult);
+      addGlobalAsset({ name: topic || 'AI Generated Image', type: 'IMAGE', url: fallbackUrl, date: new Date().toISOString(), credits: cost });
     } finally { setGenerating(false); }
   };
 
@@ -180,6 +187,7 @@ const VisualStudio = ({ workspace, credits, deductVisualCredits, setIsCreditModa
 
 // â”€â”€â”€ 2. Carousel Slide Brief Studio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CarouselStudio = ({ workspace }) => {
+  const { addGlobalAsset } = useWorkspace();
   const [topic, setTopic] = useState('5 Ways AI Transforms Brand Marketing');
   const [slides, setSlides] = useState(6);
   const [platform, setPlatform] = useState('instagram');
@@ -190,7 +198,7 @@ const CarouselStudio = ({ workspace }) => {
     setDrafting(true);
     await new Promise(r => setTimeout(r, 1800));
     const brand = workspace?.brandName || 'Brand';
-    setResult({
+    const carouselResult = {
       id: `car_${Date.now()}`,
       topic,
       platform,
@@ -203,7 +211,9 @@ const CarouselStudio = ({ workspace }) => {
         visualCue: `[Visual: ${['Split-screen before/after comparison', 'DNA helix brand identity graphic', 'Multi-platform icons connected by flow lines', 'Dashboard analytics screenshot', 'Approval workflow diagram'][i % 5]}]`
       })),
       ctaSlide: { headline: 'Ready to Transform?', cta: 'Visit aisa.ai â†’ Start Free Trial', brandTag: `@${brand.toLowerCase().replace(/\s/g, '')}` }
-    });
+    };
+    setResult(carouselResult);
+    addGlobalAsset({ name: topic || 'AI Generated Carousel', type: 'CAROUSEL', url: 'Carousel Draft Generated', date: new Date().toISOString(), credits: 0 });
     setDrafting(false);
   };
 
@@ -286,6 +296,7 @@ const CarouselStudio = ({ workspace }) => {
 
 // â”€â”€â”€ 3. Reel / Short Video Script Studio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ReelScriptStudio = ({ workspace }) => {
+  const { addGlobalAsset } = useWorkspace();
   const [topic, setTopic] = useState('Why Every Brand Needs AI Content in 2026');
   const [duration, setDuration] = useState('60');
   const [hook, setHook] = useState('');
@@ -296,7 +307,7 @@ const ReelScriptStudio = ({ workspace }) => {
     setDrafting(true);
     await new Promise(r => setTimeout(r, 2000));
     const brand = workspace?.brandName || 'Brand';
-    setResult({
+    const reelResult = {
       id: `reel_${Date.now()}`,
       topic,
       duration,
@@ -312,7 +323,9 @@ const ReelScriptStudio = ({ workspace }) => {
       ],
       editingNotes: `Total Duration: ${duration}s | Ratio: 9:16 (Vertical) | Music: Upbeat corporate / trending audio | Captions: Auto-generated via CapCut or Premiere | Thumbnail: Freeze frame at 0:01 with bold text overlay`,
       hashtags: ['#AIMarketing', '#ContentCreation', '#BrandGrowth', `#${brand.replace(/\s/g, '')}`, '#ReelsTips', '#MarketingHacks']
-    });
+    };
+    setResult(reelResult);
+    addGlobalAsset({ name: topic || 'AI Reel Script', type: 'DOCUMENT', url: 'Reel Script Generated', date: new Date().toISOString(), credits: 0 });
     setDrafting(false);
   };
 
@@ -402,6 +415,7 @@ const ReelScriptStudio = ({ workspace }) => {
 
 // â”€â”€â”€ 4. Storyboard Studio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const StoryboardStudio = ({ workspace }) => {
+  const { addGlobalAsset } = useWorkspace();
   const [topic, setTopic] = useState('Brand Launch Campaign â€” Premium Product Reveal');
   const [adType, setAdType] = useState('video_ad');
   const [frames, setFrames] = useState(6);
@@ -412,7 +426,7 @@ const StoryboardStudio = ({ workspace }) => {
     setDrafting(true);
     await new Promise(r => setTimeout(r, 1800));
     const brand = workspace?.brandName || 'Brand';
-    setResult({
+    const storyboardResult = {
       id: `sb_${Date.now()}`,
       topic,
       adType,
@@ -445,7 +459,9 @@ const StoryboardStudio = ({ workspace }) => {
           `${brand}. Visit us now.`
         ][Math.min(i, 5)]
       }))
-    });
+    };
+    setResult(storyboardResult);
+    addGlobalAsset({ name: topic || 'AI Storyboard', type: 'DOCUMENT', url: 'Storyboard Generated', date: new Date().toISOString(), credits: 0 });
     setDrafting(false);
   };
 
@@ -530,6 +546,7 @@ const StoryboardStudio = ({ workspace }) => {
 
 // â”€â”€â”€ 5. Brand Visual Kit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const BrandKitStudio = ({ workspace }) => {
+  const { addGlobalAsset } = useWorkspace();
   const [focus, setFocus] = useState('Complete Brand Kit');
   const [drafting, setDrafting] = useState(false);
   const [result, setResult] = useState(null);
@@ -539,7 +556,7 @@ const BrandKitStudio = ({ workspace }) => {
     await new Promise(r => setTimeout(r, 1500));
     const brand = workspace?.brandName || 'Brand';
     const primary = workspace?.primaryColor || '#6366F1';
-    setResult({
+    const kitResult = {
       id: `bk_${Date.now()}`,
       focus,
       createdAt: new Date().toISOString(),
@@ -568,7 +585,9 @@ const BrandKitStudio = ({ workspace }) => {
         doSay: [`"${brand} helps you achieve more."`, '"Our AI understands your brand."', '"Built for performance. Designed for trust."'],
         dontSay: ['"We try to..."', '"Hopefully this works..."', '"Cheap and affordable"']
       }
-    });
+    };
+    setResult(kitResult);
+    addGlobalAsset({ name: focus || 'Brand Visual Kit', type: 'DOCUMENT', url: 'Brand Kit Generated', date: new Date().toISOString(), credits: 0 });
     setDrafting(false);
   };
 

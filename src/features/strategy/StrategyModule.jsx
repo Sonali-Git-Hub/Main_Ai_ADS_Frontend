@@ -95,6 +95,7 @@ const getWeekLabel = (day) => {
 export const StrategyModule = () => {
   const {activeWorkspace, setActiveModule, updateWorkspace, bulkAddCalendarEvents, calendarEvents, setGeneratedStrategy, t } = useWorkspace();
 
+
   // Core strategy fields
   const [businessGoal,      setBusinessGoal]      = useState('');
   const [leadMagnet,        setLeadMagnet]         = useState('');
@@ -118,6 +119,11 @@ export const StrategyModule = () => {
   const [activeTab,     setActiveTab]     = useState('overview'); // overview | plan | campaigns
   const [showSaveToast, setShowSaveToast] = useState(false);
   const [isSavedState,  setIsSavedState]  = useState(false);
+
+  // Build Campaign Modal State
+  const [buildCampaignModal, setBuildCampaignModal] = useState(false);
+  const [selectedCampaignIdea, setSelectedCampaignIdea] = useState(null);
+  const [campaignDuration, setCampaignDuration] = useState('30');
 
   // Schedule Modal State
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -272,6 +278,43 @@ export const StrategyModule = () => {
     }
   };
 
+  // ─── Generate Strategy for Campaign Duration ─────────────────────────────
+  const handleGenerateForCampaign = async (numDays, campaignGoal) => {
+    setIsGenerating(true);
+    try {
+      const days = Number(numDays) || 30;
+      const brandName = activeWorkspace.brandName || 'Brand';
+      const industry = activeWorkspace.industryCategory || activeWorkspace.industry || 'Consumer Products';
+      const topics = (activeWorkspace.contentPillars && activeWorkspace.contentPillars.length > 0)
+        ? activeWorkspace.contentPillars
+        : [`${brandName} Product Value`, `Industry Trends in ${industry}`, `Customer Proof & Reviews`, `How-to Guides`];
+      const platforms = ['SEO Blog', 'LinkedIn', 'Instagram', 'Email Newsletter'];
+
+      const generatedPlan = Array.from({ length: days }, (_, i) => {
+        const day = i + 1;
+        const pillar = topics[i % topics.length];
+        const platform = platforms[i % platforms.length];
+        return {
+          day,
+          title: `Day ${day}: ${pillar} - ${campaignGoal || `Key Insights for ${brandName}`}`,
+          topic: `${pillar} Focus: ${campaignGoal || 'Essential Strategies & Tips'}`,
+          platform,
+          pillar,
+          status: 'PLANNED',
+          action: `Publish ${platform} content highlighting ${brandName}'s core value in ${industry}.`
+        };
+      });
+
+      setThirtyDayPlan(generatedPlan);
+      setGeneratedDoc(true);
+      setActiveTab('plan');
+    } catch (err) {
+      console.log('Campaign strategy generation error:', err.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // ─── Generate Calendar Events ─────────────────────────────────────────────
   const handleGenerateCalendar = () => {
     if (!thirtyDayPlan || thirtyDayPlan.length === 0) {
@@ -395,8 +438,8 @@ export const StrategyModule = () => {
               <div className="flex items-center gap-1 mt-1 bg-slate-100 dark:bg-slate-800/70 rounded-xl p-1 w-fit">
                 {[
                   { id: 'overview',   label: t('overviewTab', 'Overview'),   icon: BarChart2 },
-                  { id: 'plan',       label: t('thirtyDayPlanTab', '30-Day Plan'), icon: Calendar  },
                   { id: 'campaigns',  label: t('campaignsTab', 'Campaigns'),  icon: Megaphone },
+                  { id: 'plan',       label: t('masterStrategyTab', 'Master Strategy (30 Day Strategy)'), icon: Calendar  },
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -895,7 +938,10 @@ export const StrategyModule = () => {
                     </div>
                     <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pl-14">{idea.desc}</p>
                     <div className="pl-14 flex items-center gap-2">
-                      <button className="flex items-center gap-1.5 text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline">
+                      <button
+                        onClick={() => { setSelectedCampaignIdea(idea); setCampaignDuration('30'); setBuildCampaignModal(true); }}
+                        className="flex items-center gap-1.5 text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline transition-all hover:gap-2"
+                      >
                         <ArrowUpRight className="w-3 h-3" /> Build Campaign
                       </button>
                     </div>
@@ -1037,6 +1083,166 @@ export const StrategyModule = () => {
                 className="btn-primary text-xs flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed bg-brand-600 hover:bg-brand-500 text-white"
               >
                 Confirm & Generate
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ══════════ BUILD CAMPAIGN MODAL ══════════ */}
+      {buildCampaignModal && selectedCampaignIdea && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-md animate-in fade-in duration-200 p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-md shrink-0">
+                  <Megaphone className="w-4.5 h-4.5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-base font-extrabold text-slate-900 dark:text-white leading-tight">Build Campaign</h2>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug max-w-xs truncate">{selectedCampaignIdea.title}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setBuildCampaignModal(false)}
+                className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-5">
+
+              {/* Campaign Goal Preview */}
+              <div className="p-3.5 rounded-2xl bg-brand-500/5 dark:bg-brand-500/10 border border-brand-500/20 flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+                  <Target className="w-3.5 h-3.5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-extrabold text-brand-600 dark:text-brand-400 uppercase tracking-widest mb-0.5">Campaign Goal</p>
+                  <p className="text-xs font-semibold text-slate-800 dark:text-white leading-snug">{selectedCampaignIdea.desc}</p>
+                </div>
+              </div>
+
+              {/* Duration Selector */}
+              <div className="space-y-3">
+                <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                  <Calendar className="w-3.5 h-3.5 text-brand-500" />
+                  Campaign Duration
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="365"
+                    value={campaignDuration}
+                    onChange={(e) => setCampaignDuration(e.target.value)}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-extrabold text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all"
+                    placeholder="e.g. 30"
+                  />
+                  <span className="px-3.5 py-2.5 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 font-black text-xs uppercase tracking-wider shrink-0">Days</span>
+                </div>
+                {/* Quick Presets */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Quick:</span>
+                  {[7, 14, 21, 30, 60, 90].map(d => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setCampaignDuration(String(d))}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
+                        campaignDuration === String(d)
+                          ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:text-brand-600'
+                      }`}
+                    >
+                      {d}d
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+      {/* Divider with Optional label */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100 dark:border-slate-800" /></div>
+                <div className="relative flex justify-center">
+                  <span className="px-3 bg-white dark:bg-slate-900 text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                    Or Choose Action
+                    <span className="px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Optional</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Options */}
+              <div className="space-y-3">
+
+                {/* Option 1: Enter Manually */}
+                <button
+                  onClick={() => {
+                    setBuildCampaignModal(false);
+                    setActiveModule('campaigns');
+                  }}
+                  className="w-full group flex items-center gap-3 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-500 bg-slate-50/50 dark:bg-slate-800/40 hover:bg-brand-500/5 dark:hover:bg-brand-500/10 transition-all duration-200 text-left"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-400 to-slate-600 group-hover:from-brand-500 group-hover:to-indigo-600 flex items-center justify-center shadow-sm shrink-0 transition-all duration-200">
+                    <Edit3 className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-extrabold text-slate-800 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">Enter Campaign Manually</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Set up goals, platforms &amp; schedule yourself in Campaign Builder</p>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-brand-500 shrink-0 transition-colors" />
+                </button>
+
+                {/* Option 2: Generate Multiple Campaigns */}
+                <button
+                  onClick={() => {
+                    setBuildCampaignModal(false);
+                    setActiveModule('campaigns');
+                  }}
+                  className="w-full group flex items-center gap-3 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-violet-500 dark:hover:border-violet-500 bg-slate-50/50 dark:bg-slate-800/40 hover:bg-violet-500/5 dark:hover:bg-violet-500/10 transition-all duration-200 text-left"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-sm shrink-0">
+                    <Sparkles className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-extrabold text-slate-800 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">Generate Multiple Campaigns</p>
+                      <span className="px-1.5 py-0.5 rounded-full bg-violet-500/15 text-violet-700 dark:text-violet-300 text-[8px] font-extrabold uppercase tracking-wider">AI · 1 Month</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">AI generates full campaign suite for {activeWorkspace.brandName}</p>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-violet-500 shrink-0 transition-colors" />
+                </button>
+
+              </div>
+            </div>
+
+            {/* Modal Footer — Primary CTA */}
+            <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-3">
+              <button
+                onClick={() => setBuildCampaignModal(false)}
+                className="px-4 py-2.5 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={!campaignDuration || Number(campaignDuration) < 1}
+                onClick={() => {
+                  const days = Number(campaignDuration) || 30;
+                  const goal = selectedCampaignIdea?.desc || '';
+                  setBuildCampaignModal(false);
+                  handleGenerateForCampaign(days, goal);
+                }}
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-sm font-extrabold shadow-lg shadow-brand-500/20 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Rocket className="w-4 h-4" />
+                Proceed to Strategy
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 

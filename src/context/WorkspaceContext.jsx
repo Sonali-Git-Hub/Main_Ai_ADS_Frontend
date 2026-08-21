@@ -2370,6 +2370,11 @@ export const WorkspaceProvider = ({ children }) => {
     setCalendarEvents(prev => [...newEvents, ...prev]);
   };
 
+  const [globalAssets, setGlobalAssets] = useState([]);
+  const addGlobalAsset = (asset) => {
+    setGlobalAssets(prev => [{ id: `ast_${Date.now()}_${Math.random()}`, ...asset }, ...prev]);
+  };
+
   return (
     <WorkspaceContext.Provider value={{
       activeModule, setActiveModule, goBack, canGoBack, navigationHistory,
@@ -2388,6 +2393,7 @@ export const WorkspaceProvider = ({ children }) => {
       isAISAAssistantOpen, setIsAISAAssistantOpen,
       notifications, setNotifications,
       userAvatar, setUserAvatar,
+      globalAssets, addGlobalAsset,
 
       // New Account Settings Modal & Personalization
       isSettingsModalOpen, setIsSettingsModalOpen,

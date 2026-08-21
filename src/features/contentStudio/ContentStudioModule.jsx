@@ -1014,7 +1014,7 @@ export const ContentStudioModule = () => {
             </button>
           </div>
 
-          <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+          <div className="lg:col-span-6 xl:col-span-7 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
             <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Email Copy</h2>
             {emailResult ? (
               <div className="space-y-4 text-xs">
