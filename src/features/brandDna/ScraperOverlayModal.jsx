@@ -38,16 +38,18 @@ export const ScraperOverlayModal = () => {
     formData.append('brandName', brandName || file.name.split('.')[0].toUpperCase());
 
     try {
-      const res = await fetch('http://localhost:5000/api/workspace/upload-doc-preview', {
+      const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000/api/workspace/upload-doc-preview' : '/api/workspace/upload-doc-preview';
+      const res = await fetch(apiUrl, {
         method: 'POST',
         body: formData
       });
       const data = await res.json();
-      if (data.success) {
-        setResult(data.brandProfile);
+      const extractedWorkspace = data.workspace || data.brandProfile;
+      if (data.success && extractedWorkspace) {
+        setResult(extractedWorkspace);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Upload error:', err);
     } finally {
       setLoading(false);
     }
@@ -58,17 +60,19 @@ export const ScraperOverlayModal = () => {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/workspace/scrape-preview', {
+      const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000/api/workspace/scrape-preview' : '/api/workspace/scrape-preview';
+      const res = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ domainUrl: url.trim(), brandName: brandName.trim() })
       });
       const data = await res.json();
-      if (data.success) {
-        setResult(data.brandProfile);
+      const extractedWorkspace = data.workspace || data.brandProfile;
+      if (data.success && extractedWorkspace) {
+        setResult(extractedWorkspace);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Scrape error:', err);
     } finally {
       setLoading(false);
     }
