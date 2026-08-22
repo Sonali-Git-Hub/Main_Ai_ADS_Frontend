@@ -216,16 +216,15 @@ export const DashboardModule = () => {
                       )}
                     </td>
                     <td className="py-3 px-3">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        item.status === 'APPROVED' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30' :
-                        item.status === 'RED_FLAG_CITATION_NEEDED' ? 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 dark:border-rose-500/30' :
-                        'bg-amber-500/10 dark:bg-amber-500/20 text-amber-650 dark:text-amber-300 border border-amber-500/20 dark:border-amber-500/30'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${item.status === 'APPROVED' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30' :
+                          item.status === 'RED_FLAG_CITATION_NEEDED' ? 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 dark:border-rose-500/30' :
+                            'bg-amber-500/10 dark:bg-amber-500/20 text-amber-650 dark:text-amber-300 border border-amber-500/20 dark:border-amber-500/30'
+                        }`}>
                         {item.status}
                       </span>
                     </td>
                     <td className="py-3 px-3 text-right">
-                      <button 
+                      <button
                         onClick={() => setActiveModule('approvals')}
                         className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 underline"
                       >
