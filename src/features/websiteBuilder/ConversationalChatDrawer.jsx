@@ -9,7 +9,9 @@ import {
   X,
   Layers,
   ArrowRight,
-  Globe
+  Globe,
+  Mic,
+  MicOff
 } from 'lucide-react';
 import { VisualAssetsPreviewCard } from './VisualAssetsPreviewCard';
 
@@ -22,7 +24,60 @@ export const ConversationalChatDrawer = ({
   projectData = null
 }) => {
   const [chatInput, setChatInput] = useState('');
+  const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  const handleVoiceCommand = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice input is not supported in this browser. Please use Chrome or Edge.");
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    const initialText = chatInput || '';
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        let currentSpeech = '';
+        for (let i = 0; i < event.results.length; i++) {
+          currentSpeech += event.results[i][0].transcript;
+        }
+        const cleanSpeech = currentSpeech.trim();
+        if (cleanSpeech) {
+          setChatInput(initialText ? `${initialText} ${cleanSpeech}` : cleanSpeech);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (err) {
+      console.error('Speech recognition error:', err);
+      setIsListening(false);
+    }
+  };
 
   const scrollToBottom = (behavior = 'smooth') => {
     if (messagesEndRef.current) {
@@ -91,8 +146,6 @@ export const ConversationalChatDrawer = ({
     'Make the navbar sticky',
     'Create a mobile menu'
   ];
-
-  const textareaRef = useRef(null);
 
   const handleInputChange = (e) => {
     setChatInput(e.target.value);
@@ -246,20 +299,40 @@ export const ConversationalChatDrawer = ({
 
       {/* ── INPUT FORM (MULTI-LINE AUTO-EXPANDING TEXTAREA) ── */}
       <form onSubmit={handleSubmit} className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-end gap-2 flex-shrink-0">
-        <textarea
-          ref={textareaRef}
-          rows={1}
-          value={chatInput}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder={
-            selectedElement
-              ? `Edit ${selectedElement.name} (e.g. Make this button green...)`
-              : 'Ask AI Ads™ (e.g. Add cart section on top in navbar...)'
-          }
-          disabled={isUpdating}
-          className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-500 font-medium resize-none max-h-36 min-h-[40px] leading-relaxed scrollbar-thin"
-        />
+        <div className="relative flex-1">
+          <textarea
+            ref={textareaRef}
+            rows={1}
+            value={chatInput}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder={
+              selectedElement
+                ? `Edit ${selectedElement.name} (e.g. Make this button green...)`
+                : 'Ask AI Ads™ (e.g. Add cart section on top in navbar...)'
+            }
+            disabled={isUpdating}
+            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-500 font-medium resize-none max-h-36 min-h-[40px] leading-relaxed scrollbar-thin"
+          />
+
+          <button
+            type="button"
+            onClick={handleVoiceCommand}
+            className={`absolute right-2 bottom-2 p-1.5 rounded-lg transition-all flex items-center justify-center ${
+              isListening
+                ? 'bg-red-500 text-white animate-pulse shadow-sm shadow-red-500/30'
+                : 'text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-200/60 dark:hover:bg-slate-800'
+            }`}
+            title={isListening ? 'Listening... Click to stop' : 'Voice Command: Speak your edit request'}
+          >
+            {isListening ? (
+              <MicOff className="w-3.5 h-3.5 animate-bounce" />
+            ) : (
+              <Mic className="w-3.5 h-3.5" />
+            )}
+          </button>
+        </div>
+
         <button
           type="submit"
           disabled={!chatInput.trim() || isUpdating}

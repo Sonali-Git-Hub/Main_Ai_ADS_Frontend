@@ -389,7 +389,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
                 </div>
               </div>
               <div className="aspect-square relative bg-slate-900 overflow-hidden">
-                <img src={"https://picsum.photos/seed/aisa_slide_"+activeSlide+"/600/600"} alt={"Slide "+(activeSlide+1)} className="w-full h-full object-cover opacity-70" />
+                <img src={slide.imageUrl || `https://image.pollinations.ai/prompt/${encodeURIComponent((slide.visualPrompt || slide.headline || headline || brand || 'Modern Social Post') + ', 8k studio photography, advertising visual')}?width=800&height=800&nologo=true`} alt={"Slide "+(activeSlide+1)} className="w-full h-full object-cover opacity-70" />
                 <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-sm text-white text-[9px] font-black">{activeSlide+1} / {carouselSlides.length}</div>
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-5 space-y-2">
                   <span className="text-[8px] font-black uppercase tracking-widest text-white/50">{platform.toUpperCase()} SLIDE {slide.slide}</span>

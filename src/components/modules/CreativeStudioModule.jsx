@@ -34,12 +34,14 @@ export const CreativeStudioModule = () => {
         setGeneratedVisual(data.asset);
       }
     } catch (e) {
-      // Fallback preview asset
+      // Fallback preview asset with prompt-matched AI image
+      const seed = Math.floor(Math.random() * 1000000);
+      const enhancedPrompt = `${prompt || 'Modern visual'}, ${style} style, 8k resolution, photorealistic studio photography`;
       setGeneratedVisual({
         id: `asset_${Date.now()}`,
         prompt,
         style,
-        imageUrl: `https://picsum.photos/seed/${Date.now()}/800/800`,
+        imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=1024&height=1024&nologo=true&seed=${seed}`,
         createdAt: new Date().toISOString()
       });
     } finally {

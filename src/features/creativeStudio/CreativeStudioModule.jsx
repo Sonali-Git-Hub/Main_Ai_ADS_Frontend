@@ -88,12 +88,14 @@ const VisualStudio = ({ workspace, credits, deductVisualCredits, setIsCreditModa
       if (data.success) setResult(data.asset);
       else throw new Error('API error');
     } catch {
+      const seed = Math.floor(Math.random() * 1000000);
+      const enhancedPrompt = `${prompt || topic || 'Modern product marketing visual'}, ${style} style, 8k resolution, photorealistic studio photography, highly detailed`;
       setResult({
         id: `vis_${Date.now()}`,
         topic,
         prompt,
         style,
-        imageUrl: `https://picsum.photos/seed/${Date.now()}/800/800`,
+        imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=1024&height=1024&nologo=true&seed=${seed}`,
         createdAt: new Date().toISOString()
       });
     } finally { setGenerating(false); }

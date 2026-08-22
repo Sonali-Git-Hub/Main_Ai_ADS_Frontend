@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Sparkles,
   ArrowRight,
@@ -8,7 +8,9 @@ import {
   Globe,
   Clock,
   CheckCircle2,
-  Plus
+  Plus,
+  Mic,
+  MicOff
 } from 'lucide-react';
 
 export const BuilderHomeView = ({
@@ -21,6 +23,59 @@ export const BuilderHomeView = ({
   onOpenProject,
   onSelectCategory
 }) => {
+  const [isListening, setIsListening] = useState(false);
+
+  const handleVoiceCommand = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice input is not supported in this browser. Please use Chrome or Edge.");
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    const initialText = prompt || '';
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        let currentSpeech = '';
+        for (let i = 0; i < event.results.length; i++) {
+          currentSpeech += event.results[i][0].transcript;
+        }
+        const cleanSpeech = currentSpeech.trim();
+        if (cleanSpeech) {
+          setPrompt(initialText ? `${initialText} ${cleanSpeech}` : cleanSpeech);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (err) {
+      console.error('Speech recognition error:', err);
+      setIsListening(false);
+    }
+  };
+
   const starterCategories = [
     {
       id: 'website',
@@ -91,16 +146,44 @@ export const BuilderHomeView = ({
         </p>
       </div>
 
-      {/* ── CENTRAL LARGE COMPOSER (70% Light / 20% Gray / 10% Purple) ── */}
-      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl dark:shadow-2xl p-4 md:p-6 space-y-4 focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/10 transition-all">
-        <textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          onKeyDown={handleKeyDown}
-          rows={4}
-          placeholder="Describe the website or app you want to build..."
-          className="w-full bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-sm md:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none font-medium resize-none"
-        />
+      {/* ── CENTRAL LARGE COMPOSER ── */}
+      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl dark:shadow-2xl p-4 md:p-6 space-y-4 focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/10 transition-all relative">
+        <div className="relative">
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            onKeyDown={handleKeyDown}
+            rows={4}
+            placeholder="Describe the website or app you want to build..."
+            className="w-full bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 pr-14 text-sm md:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none font-medium resize-none"
+          />
+
+          {/* Voice Command Microphone Button inside prompt box */}
+          <button
+            type="button"
+            onClick={handleVoiceCommand}
+            className={`absolute right-3.5 bottom-3.5 p-2.5 rounded-xl border transition-all flex items-center justify-center ${
+              isListening
+                ? 'bg-red-500 text-white border-red-600 animate-pulse shadow-md shadow-red-500/30 scale-105'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700'
+            }`}
+            title={isListening ? 'Listening... Click to stop' : 'Voice Command: Speak your prompt'}
+          >
+            {isListening ? (
+              <MicOff className="w-4 h-4 animate-bounce" />
+            ) : (
+              <Mic className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+
+        {/* Active Speech Recognition Banner */}
+        {isListening && (
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold animate-pulse">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+            <span>Listening to your voice command... Speak your website description now</span>
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-1">
           <button

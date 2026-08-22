@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Image as ImageIcon,
   Sparkles,
@@ -21,6 +22,17 @@ export const VisualAssetsPreviewCard = ({
 }) => {
   const [selectedAssetIndex, setSelectedAssetIndex] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+  React.useEffect(() => {
+    if (showDetailsModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showDetailsModal]);
 
   if (!Array.isArray(assets) || assets.length === 0) {
     return null;
@@ -79,21 +91,21 @@ export const VisualAssetsPreviewCard = ({
                 setSelectedAssetIndex(idx);
                 setShowDetailsModal(true);
               }}
-              className="group relative aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/60 cursor-pointer shadow-2xs transition-all hover:scale-[1.03] hover:shadow-md"
+              className="group relative aspect-square rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden cursor-pointer border border-slate-200/60 dark:border-slate-800 hover:border-brand-500 transition-all"
             >
               <img
                 src={asset.imageUrl}
                 alt={asset.context || `Asset ${idx + 1}`}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 loading="lazy"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=600&q=80';
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
-                <span className="text-[9px] font-bold text-white truncate drop-shadow-sm">
-                  {asset.context || `Asset ${idx + 1}`}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1.5">
+                <span className="text-[9px] font-bold text-white truncate">
+                  {asset.type || 'Asset'}
                 </span>
               </div>
             </div>
@@ -106,23 +118,12 @@ export const VisualAssetsPreviewCard = ({
                 setSelectedAssetIndex(previewLimit);
                 setShowDetailsModal(true);
               }}
-              className="group relative aspect-square rounded-xl overflow-hidden bg-slate-900 border border-slate-800 cursor-pointer shadow-2xs transition-all hover:scale-[1.03] hover:shadow-md"
+              className="aspect-square rounded-xl bg-slate-100 dark:bg-slate-800 border border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-750 transition-all"
             >
-              {assets[previewLimit] && (
-                <img
-                  src={assets[previewLimit].imageUrl}
-                  alt="More assets"
-                  className="w-full h-full object-cover opacity-35 filter blur-[1px]"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=600&q=80';
-                  }}
-                />
-              )}
-              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white p-1">
-                <span className="text-xs font-black tracking-tight">+{remainingCount} more</span>
-                <span className="text-[8px] opacity-75 font-medium">View gallery</span>
-              </div>
+              <span className="text-xs font-black text-brand-600 dark:text-brand-400">
+                +{remainingCount}
+              </span>
+              <span className="text-[9px] font-bold text-slate-500">More</span>
             </div>
           )}
         </div>
@@ -145,18 +146,19 @@ export const VisualAssetsPreviewCard = ({
         </div>
       </div>
 
-      {/* ── LIGHTBOX / DETAILS MODAL ── */}
-      {showDetailsModal && activeModalAsset && (
+      {/* ── LIGHTBOX / DETAILS MODAL (MOUNTED TO BODY VIA PORTAL) ── */}
+      {showDetailsModal && activeModalAsset && createPortal(
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in"
+          className="fixed inset-0 z-[999999] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-hidden animate-in fade-in"
           onClick={() => setShowDetailsModal(false)}
+          onWheel={(e) => e.stopPropagation()}
         >
           <div
-            className="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-2xl space-y-0 animate-in zoom-in-95 duration-200"
+            className="relative w-full max-w-2xl max-h-[90vh] my-auto flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-2xl space-y-0 animate-in zoom-in-95 duration-200 z-10"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex-shrink-0 bg-white dark:bg-slate-900 z-10">
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 text-white flex items-center justify-center">
                   <Wand2 className="w-3.5 h-3.5" />
@@ -179,93 +181,99 @@ export const VisualAssetsPreviewCard = ({
               </button>
             </div>
 
-            {/* Main Visual Image with Navigation Arrows */}
-            <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden group">
-              <img
-                src={activeModalAsset.imageUrl}
-                alt={activeModalAsset.context}
-                className="w-full h-full object-cover"
-              />
+            {/* Scrollable Modal Content - ONLY THIS SCROLLS ON MOUSE WHEEL */}
+            <div
+              className="flex-1 overflow-y-auto scrollbar-thin"
+              onWheel={(e) => e.stopPropagation()}
+            >
+              {/* Main Visual Image with Navigation Arrows */}
+              <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden group">
+                <img
+                  src={activeModalAsset.imageUrl}
+                  alt={activeModalAsset.context}
+                  className="w-full h-full object-cover"
+                />
 
-              {/* Prev / Next Controls */}
-              {assets.length > 1 && (
-                <>
-                  <button
-                    onClick={handlePrev}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm transition-all"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={handleNext}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm transition-all"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </>
-              )}
+                {/* Prev / Next Controls */}
+                {assets.length > 1 && (
+                  <>
+                    <button
+                      onClick={handlePrev}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm transition-all"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={handleNext}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm transition-all"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
 
-              {/* Bottom tag */}
-              <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-black/70 text-white text-[11px] font-bold backdrop-blur-sm flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Validated & Approved</span>
+                {/* Bottom tag */}
+                <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-black/70 text-white text-[11px] font-bold backdrop-blur-sm flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Validated & Approved</span>
+                </div>
               </div>
-            </div>
 
-            {/* Spec Details */}
-            <div className="p-6 space-y-4 max-h-64 overflow-y-auto scrollbar-thin text-xs">
-              {/* Generation Prompt */}
-              {activeModalAsset.prompt && (
-                <div className="space-y-1">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                    Photographic Generation Prompt
-                  </span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono text-[11px] bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 leading-relaxed">
-                    "{activeModalAsset.prompt}"
-                  </p>
-                </div>
-              )}
-
-              {/* Negative Elements / Must Not Appear */}
-              {Array.isArray(activeModalAsset.mustNotAppear) && activeModalAsset.mustNotAppear.length > 0 && (
-                <div className="space-y-1">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-rose-500 dark:text-rose-400">
-                    Forbidden Subjects (Must Not Appear)
-                  </span>
-                  <div className="flex flex-wrap gap-1.5 pt-0.5">
-                    {activeModalAsset.mustNotAppear.map((neg, nIdx) => (
-                      <span
-                        key={nIdx}
-                        className="px-2.5 py-0.5 rounded-full text-[10px] bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/20"
-                      >
-                        ✕ {neg}
-                      </span>
-                    ))}
+              {/* Spec Details */}
+              <div className="p-6 space-y-4 text-xs">
+                {/* Generation Prompt */}
+                {activeModalAsset.prompt && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                      Photographic Generation Prompt
+                    </span>
+                    <p className="text-slate-800 dark:text-slate-200 font-mono text-[11px] bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 leading-relaxed">
+                      "{activeModalAsset.prompt}"
+                    </p>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Target Page & Location */}
-              <div className="grid grid-cols-2 gap-3 pt-1">
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-0.5">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase">Target Page</span>
-                  <p className="font-bold text-slate-900 dark:text-white truncate">
-                    {activeModalAsset.page || 'Home'}
-                  </p>
-                </div>
+                {/* Negative Elements / Must Not Appear */}
+                {Array.isArray(activeModalAsset.mustNotAppear) && activeModalAsset.mustNotAppear.length > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-rose-500 dark:text-rose-400">
+                      Forbidden Subjects (Must Not Appear)
+                    </span>
+                    <div className="flex flex-wrap gap-1.5 pt-0.5">
+                      {activeModalAsset.mustNotAppear.map((neg, nIdx) => (
+                        <span
+                          key={nIdx}
+                          className="px-2.5 py-0.5 rounded-full text-[10px] bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/20"
+                        >
+                          ✕ {neg}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-0.5">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase">Resolution Mode</span>
-                  <p className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 truncate">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>Dynamic Semantic Synthesis</span>
-                  </p>
+                {/* Target Page & Location */}
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-0.5">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase">Target Page</span>
+                    <p className="font-bold text-slate-900 dark:text-white truncate">
+                      {activeModalAsset.page || 'Home'}
+                    </p>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-0.5">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase">Resolution Mode</span>
+                    <p className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 truncate">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>Dynamic Semantic Synthesis</span>
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Footer Modal Actions */}
-            <div className="flex items-center justify-between px-6 py-3.5 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between px-6 py-3.5 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex-shrink-0">
               <a
                 href={activeModalAsset.imageUrl}
                 target="_blank"
@@ -284,7 +292,8 @@ export const VisualAssetsPreviewCard = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

@@ -5,7 +5,7 @@ import {
   Sparkles,
   FolderKanban,
   LayoutTemplate,
-  Image,
+  Image as ImageIcon,
   Dna,
   PlugZap,
   Rocket,
@@ -241,6 +241,38 @@ export const AIWebsiteBuilderModule = () => {
       if (res && res.success && res.build) {
         setProgressStep(5);
         const build = res.build;
+
+        // Collect all image URLs from approved asset pool + website sections
+        const approvedPool = build.requirement?.approvedAssetPool || {};
+        const imageUrls = Object.values(approvedPool).map((a) => a.imageUrl).filter(Boolean);
+
+        const pages = build.website?.pages || [];
+        pages.forEach((pg) => {
+          (pg.sections || []).forEach((sec) => {
+            if (sec.imageUrl) imageUrls.push(sec.imageUrl);
+            (sec.items || []).forEach((it) => { if (it.imageUrl) imageUrls.push(it.imageUrl); });
+            (sec.services || []).forEach((sv) => { if (sv.imageUrl) imageUrls.push(sv.imageUrl); });
+          });
+        });
+
+        const uniqueUrls = [...new Set(imageUrls)];
+
+        const preloadImage = (url) => new Promise((resolve) => {
+          if (!url || typeof url !== 'string') return resolve(false);
+          const img = new window.Image();
+          const timer = setTimeout(() => resolve(false), 6000);
+          img.onload = () => { clearTimeout(timer); resolve(true); };
+          img.onerror = () => { clearTimeout(timer); resolve(false); };
+          img.src = url;
+        });
+
+        if (uniqueUrls.length > 0) {
+          await Promise.all(uniqueUrls.map(preloadImage));
+        }
+
+        setProgressStep(6);
+        await new Promise((r) => setTimeout(r, 400));
+
         const projectPayload = {
           projectId: build.sourceProject?.projectId || build.website?.websiteId || `site_${Date.now()}`,
           title: build.requirement?.businessType || 'Generated Web Application',
@@ -453,7 +485,8 @@ export const AIWebsiteBuilderModule = () => {
       '2. Planning & generating prompt-tailored visual assets...',
       '3. Formulating bespoke design tokens & multi-page architecture...',
       '4. Synthesizing standalone React application...',
-      '5. Testing runtime sandbox & launching live website...'
+      '5. Preloading & caching high-resolution website images into browser memory...',
+      '6. Testing runtime sandbox & launching live website...'
     ];
     const currentMsg = progressMessages[Math.min(progressStep - 1, progressMessages.length - 1)];
 
@@ -509,7 +542,7 @@ export const AIWebsiteBuilderModule = () => {
   // ── CLARIFICATION QUESTIONS MODAL ──
   if (builderState === 'CLARIFYING' && clarificationData) {
     return (
-      <div className="flex h-screen w-screen bg-[#F8F9FD] dark:bg-[#070A11] items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex h-screen w-screen bg-slate-950/85 backdrop-blur-md items-center justify-center p-4 sm:p-6 overflow-y-auto">
         <ClarificationCard
           questions={clarificationData.questions}
           onComplete={(answers) => executeBuildPipeline(prompt, answers)}
@@ -715,7 +748,7 @@ export const AIWebsiteBuilderModule = () => {
                     </p>
                   </div>
                   <div className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center space-y-3 shadow-sm">
-                    <Image className="w-10 h-10 text-slate-400 mx-auto" />
+                    <ImageIcon className="w-10 h-10 text-slate-400 mx-auto" />
                     <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Brand Assets Synchronized</h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                       All assets, images, and brand palettes are automatically linked to your AI Ads™ workspace.
