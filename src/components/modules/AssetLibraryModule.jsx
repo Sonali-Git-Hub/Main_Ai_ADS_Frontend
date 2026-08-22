@@ -8,12 +8,7 @@ export const AssetLibraryModule = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedId, setCopiedId] = useState(null);
 
-  const assets = [
-    { id: 'ast_1', name: 'Cyberpunk Glassmorphism Background', type: 'IMAGE', url: 'https://picsum.photos/seed/aiads1/800/800', date: '2026-07-25', credits: 5 },
-    { id: 'ast_2', name: 'Brand DNA 101 Carousel Slides', type: 'CAROUSEL', url: 'https://picsum.photos/seed/aiads2/800/800', date: '2026-07-24', credits: 10 },
-    { id: 'ast_3', name: 'SEO Pillar Article Draft (PDF)', type: 'DOCUMENT', url: 'https://picsum.photos/seed/aiads3/800/800', date: '2026-07-22', credits: 0 },
-    { id: 'ast_4', name: 'Modern B2B Executive Persona Visual', type: 'IMAGE', url: 'https://picsum.photos/seed/aiads4/800/800', date: '2026-07-20', credits: 5 }
-  ];
+  const assets = [];
 
   const filteredAssets = assets.filter(a => 
     (filterType === 'ALL' || a.type === filterType) &&

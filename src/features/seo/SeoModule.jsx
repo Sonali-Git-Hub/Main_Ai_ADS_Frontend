@@ -87,8 +87,27 @@ export const SeoModule = () => {
     setKeywordsList(prev => prev.map((kw, i) => i === idx ? pick : kw));
   };
 
+  const saveSeoData = (newBrief, newKeywordsList, newSeed) => {
+    const wsId = activeWorkspace._id || activeWorkspace.id || activeWorkspace.brandName;
+    const storageKey = `aisa_seo_${wsId}`;
+    const kws = newKeywordsList !== undefined ? newKeywordsList : keywordsList;
+    const seed = newSeed !== undefined ? newSeed : seedKeyword;
+    const b = newBrief !== undefined ? newBrief : brief;
+    const obj = {
+      workspaceId: wsId,
+      brandName: activeWorkspace.brandName,
+      seedKeyword: seed,
+      keywordsList: kws,
+      brief: b
+    };
+    if (setSeoSearchData) setSeoSearchData(obj);
+    try { localStorage.setItem(storageKey, JSON.stringify(obj)); } catch (e) {}
+  };
+
   const handleRegenerateAll = () => {
-    setKeywordsList(deriveKeywords(activeWorkspace));
+    const derivedKws = deriveKeywords(activeWorkspace);
+    setKeywordsList(derivedKws);
+    saveSeoData(brief, derivedKws);
   };
 
   const handleInitializeSEO = () => {
@@ -96,30 +115,72 @@ export const SeoModule = () => {
     const derivedKws = deriveKeywords(activeWorkspace);
     setSeedKeyword(derivedSeed);
     setKeywordsList(derivedKws);
-    if (setSeoSearchData) {
-      setSeoSearchData({
-        seedKeyword: derivedSeed,
-        keywordsList: derivedKws,
-        brief: null,
-        brandName: activeWorkspace.brandName
-      });
-    }
+    saveSeoData(null, derivedKws, derivedSeed);
   };
 
   useEffect(() => {
-    if (seoSearchData && seoSearchData.brandName === activeWorkspace.brandName) {
-      setSeedKeyword(seoSearchData.seedKeyword || '');
-      setKeywordsList(seoSearchData.keywordsList || []);
-      setBrief(seoSearchData.brief || null);
-    } else {
-      setSeedKeyword('');
-      setKeywordsList([]);
-      setBrief(null);
+    const wsId = activeWorkspace._id || activeWorkspace.id || activeWorkspace.brandName;
+    const storageKey = `aisa_seo_${wsId}`;
+
+    const derivedSeed = deriveSeedKeyword(activeWorkspace);
+    const derivedKws = deriveKeywords(activeWorkspace);
+    const defaultBrief = {
+      primaryKeyword: derivedSeed,
+      searchIntent: intent,
+      suggestedTitles: [
+        `The Ultimate Guide to ${derivedSeed} in 2026: Strategy & Governance`,
+        `How ${activeWorkspace.brandName} Masters ${derivedSeed}: Actionable Playbook`
+      ],
+      metaTitle: `${derivedSeed} Playbook: 2026 Guide`,
+      metaDescription: `Master ${derivedSeed} with our comprehensive guide for ${activeWorkspace.brandName}. Discover topic cluster mapping, JSON-LD schema, and brand governance frameworks.`,
+      urlSlug: derivedSeed.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      targetWordCount: 2400,
+      headingOutline: [
+        { h2: `Introduction to ${derivedSeed}`, h3s: ['Market Shifts & Trends', `Why ${activeWorkspace.brandName} Leads`] },
+        { h2: `Core Strategy & Operations`, h3s: ['Briefing & Cluster Setup', 'Quality Gates & Fact Checks'] }
+      ],
+      entityKeywords: [derivedSeed, activeWorkspace.brandName, 'Brand Strategy', 'SEO Clusters', 'Schema Markup'],
+      jsonLdSchema: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": `The Ultimate Guide to ${derivedSeed} in 2026`,
+        "keywords": [derivedSeed, activeWorkspace.brandName]
+      }, null, 2)
+    };
+
+    // 1. Check React Context
+    if (seoSearchData && (seoSearchData.brandName === activeWorkspace.brandName || seoSearchData.workspaceId === wsId)) {
+      setSeedKeyword(seoSearchData.seedKeyword || derivedSeed);
+      setKeywordsList(seoSearchData.keywordsList && seoSearchData.keywordsList.length > 0 ? seoSearchData.keywordsList : derivedKws);
+      setBrief(seoSearchData.brief || defaultBrief);
+      return;
     }
-  }, [activeWorkspace.id || activeWorkspace._id, seoSearchData]);
+
+    // 2. Check localStorage per workspace
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.keywordsList && parsed.keywordsList.length > 0) {
+          setSeedKeyword(parsed.seedKeyword || derivedSeed);
+          setKeywordsList(parsed.keywordsList);
+          setBrief(parsed.brief || defaultBrief);
+          if (setSeoSearchData) setSeoSearchData(parsed);
+          return;
+        }
+      }
+    } catch (e) {}
+
+    // 3. Auto-initialize SEO data & Brief for brand if not generated yet
+    setSeedKeyword(derivedSeed);
+    setKeywordsList(derivedKws);
+    setBrief(defaultBrief);
+    saveSeoData(defaultBrief, derivedKws, derivedSeed);
+  }, [activeWorkspace._id || activeWorkspace.id || activeWorkspace.brandName]);
 
   const handleGenerateBrief = async () => {
     setLoading(true);
+    let finalBrief = null;
     try {
       const res = await fetch('http://localhost:5000/api/seo/brief/generate', {
         method: 'POST',
@@ -134,9 +195,8 @@ export const SeoModule = () => {
       });
       const data = await res.json();
       if (data.success && data.brief) {
-        // Map backend response to the UI structure
         const b = data.brief;
-        setBrief({
+        finalBrief = {
           primaryKeyword: b.primaryKeyword || seedKeyword,
           searchIntent: b.searchIntent || intent,
           suggestedTitles: b.suggestedTitles || [],
@@ -155,12 +215,12 @@ export const SeoModule = () => {
             "headline": b.suggestedTitles?.[0] || `The Ultimate Guide to ${seedKeyword}`,
             "keywords": b.secondaryKeywords || [seedKeyword]
           }, null, 2)
-        });
+        };
       } else {
         throw new Error(data.error || 'Generation failed');
       }
     } catch (e) {
-      setBrief({
+      finalBrief = {
         primaryKeyword: seedKeyword,
         searchIntent: intent,
         suggestedTitles: [
@@ -182,8 +242,10 @@ export const SeoModule = () => {
           "headline": `The Ultimate Guide to ${seedKeyword} in 2026`,
           "keywords": [seedKeyword, activeWorkspace.brandName]
         }, null, 2)
-      });
+      };
     } finally {
+      setBrief(finalBrief);
+      saveSeoData(finalBrief);
       setLoading(false);
     }
   };
@@ -271,7 +333,7 @@ export const SeoModule = () => {
                     className="w-full btn-primary py-3 text-xs font-bold"
                   >
                     {loading ? <Sparkles className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    {loading ? 'Synthesizing Brief...' : 'Generate SEO Brief'}
+                    {loading ? 'Synthesizing Brief...' : (brief ? '✨ Regenerate SEO Brief' : 'Generate SEO Brief')}
                   </button>
                 </div>
               </div>
@@ -360,12 +422,6 @@ export const SeoModule = () => {
                   <FileText className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
                   Structured 8-Step SEO Brief Output
                 </h2>
-                {brief && (
-                  <button onClick={() => setActiveModule('strategy')} className="btn-primary text-xs">
-                    <Send className="w-3.5 h-3.5" />
-                    Generate 30 Days Plan
-                  </button>
-                )}
               </div>
 
               {brief ? (

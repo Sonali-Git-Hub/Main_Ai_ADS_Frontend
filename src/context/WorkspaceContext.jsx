@@ -1,6 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { subscribeToAccountEvents } from '../services/telemetryClient';
-import { authAPI } from '../services/api';
 
 const WorkspaceContext = createContext();
 
@@ -159,7 +157,7 @@ export const TRANSLATIONS = {
     "tableVerified": "Verified",
     "tableStatus": "Status",
     "tableView": "View"
-  ,
+    ,
     "brandDnaTitle": "Brand Intelligence & Brand DNA",
     "brandDnaDesc": "Immutable brand memory governing voice, positioning, and content rules for",
     "runDeepAiAnalysis": "Run Deep AI Analysis",
@@ -242,7 +240,8 @@ export const TRANSLATIONS = {
     "analyticsTitle": "Platform Performance Analytics",
     "analyticsDesc": "Track campaign reach, engagement rates, and ROI metrics for",
     "teamRbacTitle": "Team & Role-Based Access Control",
-    "teamRbacDesc": "Manage team workspace members, roles, and security permissions for"},
+    "teamRbacDesc": "Manage team workspace members, roles, and security permissions for"
+  },
   "Hindi": {
     "dashboard": "1. डैशबोर्ड (Dashboard)",
     "brands": "2. ब्रांड डीएनए (Brand DNA)",
@@ -340,7 +339,7 @@ export const TRANSLATIONS = {
     "tableVerified": "सत्यापित",
     "tableStatus": "स्थिति",
     "tableView": "देखें"
-  ,
+    ,
     "brandDnaTitle": "ब्रांड इंटेलिजेंस एवं ब्रांड डीएनए",
     "brandDnaDesc": "आवाज, पोजीशनिंग और कंटेंट नियमों को नियंत्रित करने वाली अपरिवर्तनीय ब्रांड मेमोरी:",
     "runDeepAiAnalysis": "गहन एआई विश्लेषण चलाएं",
@@ -423,7 +422,8 @@ export const TRANSLATIONS = {
     "analyticsTitle": "प्लेटफॉर्म प्रदर्शन एनालिटिक्स",
     "analyticsDesc": "अभियान पहुंच, सहभागिता दर और आरओआई मेट्रिक्स को ट्रैक करें:",
     "teamRbacTitle": "टीम और भूमिका-आधारित पहुंच नियंत्रण",
-    "teamRbacDesc": "टीम वर्कस्पेस सदस्यों, भूमिकाओं और सुरक्षा अनुमतियों को प्रबंधित करें:"},
+    "teamRbacDesc": "टीम वर्कस्पेस सदस्यों, भूमिकाओं और सुरक्षा अनुमतियों को प्रबंधित करें:"
+  },
   "Bengali": {
     "dashboard": "1. ড্যাশবোর্ড (Dashboard)",
     "brands": "2. ব্র্যান্ড ডিএনএ (Brand DNA)",
@@ -521,7 +521,7 @@ export const TRANSLATIONS = {
     "tableVerified": "যাচাইকৃত",
     "tableStatus": "স্থিতি",
     "tableView": "দেখুন"
-  ,
+    ,
     "brandDnaTitle": "ব্র্যান্ড ইন্টেলিজেন্স ও ব্র্যান্ড ডিএনএ",
     "brandDnaDesc": "ভয়েস, পজিশনিং এবং কনটেন্ট নিয়ম নিয়ন্ত্রণকারী অপরিবর্তনীয় ব্র্যান্ড মেমরি:",
     "runDeepAiAnalysis": "গভীর এআই বিশ্লেষণ চালান",
@@ -585,7 +585,8 @@ export const TRANSLATIONS = {
     "openStudio": "স্টুডিও খুলুন",
     "openPage": "পেজ খুলুন →",
     "selectChannelStudio": "শুরু করতে একটি চ্যানেল স্টুডিও নির্বাচন করুন",
-    "selectChannelDesc": "ডেডিকেটেড ড্রাফটিং পেজ খুলতে উপরের যেকোনো চ্যানেল কার্ডে ক্লিক করুন।"},
+    "selectChannelDesc": "ডেডিকেটেড ড্রাফটিং পেজ খুলতে উপরের যেকোনো চ্যানেল কার্ডে ক্লিক করুন।"
+  },
   "Marathi": {
     "dashboard": "1. डॅशबोर्ड (Dashboard)",
     "brands": "2. ब्रँड डीएनए (Brand DNA)",
@@ -683,7 +684,7 @@ export const TRANSLATIONS = {
     "tableVerified": "सत्यापित",
     "tableStatus": "स्थिती",
     "tableView": "पहा"
-  ,
+    ,
     "brandDnaTitle": "ब्रँड इंटेलिजन्स आणि ब्रँड डीएनए",
     "brandDnaDesc": "व्हॉइस आणि पोझिशनिंग नियम नियंत्रित करणारी ब्रँड मेमरी:",
     "runDeepAiAnalysis": "सखोल एआय विश्लेषण चालवा",
@@ -747,7 +748,8 @@ export const TRANSLATIONS = {
     "openStudio": "स्टुडिओ उघडा",
     "openPage": "पृष्ठ उघडा →",
     "selectChannelStudio": "सुरू करण्यासाठी चॅनेल स्टुडिओ निवडा",
-    "selectChannelDesc": "ड्राफ्टिंग पृष्ठ उघडण्यासाठी वरील कोणत्याही चॅनेल कार्डवर क्लिक करा."},
+    "selectChannelDesc": "ड्राफ्टिंग पृष्ठ उघडण्यासाठी वरील कोणत्याही चॅनेल कार्डवर क्लिक करा."
+  },
   "Telugu": {
     "dashboard": "1. డాష్‌బోర్డ్ (Dashboard)",
     "brands": "2. బ్రాండ్ DNA",
@@ -1235,7 +1237,7 @@ export const TRANSLATIONS = {
     "tableVerified": "Verificado",
     "tableStatus": "Estado",
     "tableView": "Ver"
-  ,
+    ,
     "brandDnaTitle": "Inteligencia de Marca y ADN de Marca",
     "brandDnaDesc": "Memoria de marca inmutable que rige la voz y posicionamiento para",
     "runDeepAiAnalysis": "Ejecutar Análisis Profundo de IA",
@@ -1299,7 +1301,8 @@ export const TRANSLATIONS = {
     "openStudio": "Abrir Estudio",
     "openPage": "Abrir Página →",
     "selectChannelStudio": "Selecciona un Estudio de Canal para Comenzar",
-    "selectChannelDesc": "Haz clic en cualquier tarjeta de canal arriba para abrir su página dedicada."},
+    "selectChannelDesc": "Haz clic en cualquier tarjeta de canal arriba para abrir su página dedicada."
+  },
   "French": {
     "dashboard": "1. Tableau de bord",
     "brands": "2. ADN de Marque",
@@ -1647,7 +1650,7 @@ export const WorkspaceProvider = ({ children }) => {
   }, []);
 
   const canGoBack = navigationHistory.length > 0 || activeModule !== 'dashboard';
-  
+
   // Settings Modal & Personalization Preferences State
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [activeSettingsTab, setActiveSettingsTab] = useState('personalization');
@@ -1688,7 +1691,7 @@ export const WorkspaceProvider = ({ children }) => {
     setLanguageState(val);
     try {
       localStorage.setItem('aisa_language', val);
-    } catch (e) {}
+    } catch (e) { }
 
     if (val === 'Arabic') {
       document.documentElement.dir = 'rtl';
@@ -1741,7 +1744,7 @@ export const WorkspaceProvider = ({ children }) => {
     try {
       if (data) localStorage.setItem('aisa_last_generated_content', JSON.stringify(data));
       else localStorage.removeItem('aisa_last_generated_content');
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const [notificationPreferences, setNotificationPreferences] = useState({
@@ -1761,23 +1764,14 @@ export const WorkspaceProvider = ({ children }) => {
     setAppearanceState(val);
     try {
       localStorage.setItem('aisa_appearance', val);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const setAccentColor = (val) => {
     setAccentColorState(val);
     try {
       localStorage.setItem('aisa_accent_color', val);
-      setUser(prev => {
-        if (!prev) return prev;
-        const updated = { ...prev, accentColor: val };
-        try { localStorage.setItem('aisa_user', JSON.stringify(updated)); } catch(e){}
-        if (updated.email) {
-          authAPI.updateProfile({ email: updated.email, accentColor: val }).catch(err => console.warn('Failed to sync accent color to DB:', err));
-        }
-        return updated;
-      });
-    } catch (e) {}
+    } catch (e) { }
 
     const palette = ACCENT_COLOR_MAP[val] || ACCENT_COLOR_MAP.purple;
     applyPaletteToCSS(palette);
@@ -1787,14 +1781,14 @@ export const WorkspaceProvider = ({ children }) => {
     setRegionState(val);
     try {
       localStorage.setItem('aisa_region', val);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const setMultiScheduleReminder = (val) => {
     setMultiScheduleReminderState(val);
     try {
       localStorage.setItem('aisa_multi_schedule_reminder', val);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const toggleTheme = () => {
@@ -1946,19 +1940,16 @@ export const WorkspaceProvider = ({ children }) => {
   });
   const [user, setUserState] = useState(() => {
     try {
+      const savedName = localStorage.getItem('aisa_user_name');
       const saved = localStorage.getItem('aisa_user');
-      const savedToken = localStorage.getItem('aisa_token');
-      if (saved && savedToken) {
-        return JSON.parse(saved);
-      }
       const savedEmail = localStorage.getItem('aisa_user_email');
-      if (savedEmail && savedToken) {
-        const savedName = localStorage.getItem('aisa_user_name');
-        return { email: savedEmail, name: savedName || savedEmail.split('@')[0], role: 'AgencyAdmin' };
-      }
-      return null;
+      let u = { email: 'admin@aiads.io', name: 'Admin', role: 'AgencyAdmin' };
+      if (saved) u = JSON.parse(saved);
+      else if (savedEmail) u = { email: savedEmail, name: savedEmail.split('@')[0], role: 'AgencyAdmin' };
+      if (savedName) u.name = savedName;
+      return u;
     } catch (e) {
-      return null;
+      return { email: 'admin@aiads.io', name: 'Admin', role: 'AgencyAdmin' };
     }
   });
 
@@ -1969,7 +1960,7 @@ export const WorkspaceProvider = ({ children }) => {
         try {
           if (updated.name) localStorage.setItem('aisa_user_name', updated.name);
           localStorage.setItem('aisa_user', JSON.stringify(updated));
-        } catch(e){}
+        } catch (e) { }
       }
       return updated;
     });
@@ -1982,108 +1973,24 @@ export const WorkspaceProvider = ({ children }) => {
         const u = JSON.parse(saved);
         return u.role || 'AgencyAdmin';
       }
-    } catch (e) {}
+    } catch (e) { }
     return 'AgencyAdmin';
   });
 
   const loginUser = (userData) => {
     setUser(userData);
     localStorage.setItem('aisa_user', JSON.stringify(userData));
-    if (userData.token) {
-      localStorage.setItem('aisa_token', userData.token);
-    }
-    if (userData.email) {
-      localStorage.setItem('aisa_user_email', userData.email);
-    }
-    if (userData.name) {
-      localStorage.setItem('aisa_user_name', userData.name);
-    }
-    if (userData.avatar) {
-      localStorage.setItem('aisa_user_avatar', userData.avatar);
-      setUserAvatarState(userData.avatar);
-    } else {
-      localStorage.removeItem('aisa_user_avatar');
-      setUserAvatarState('');
-    }
-    if (userData.accentColor) {
-      localStorage.setItem('aisa_accent_color', userData.accentColor);
-      setAccentColorState(userData.accentColor);
-      const palette = ACCENT_COLOR_MAP[userData.accentColor] || ACCENT_COLOR_MAP.purple;
-      applyPaletteToCSS(palette);
-    }
-    if (userData.appearance) {
-      localStorage.setItem('aisa_appearance', userData.appearance);
-      setAppearanceState(userData.appearance);
-    }
     if (userData.role) {
       setActiveRole(userData.role);
     }
   };
 
-  const purgeAllUserData = () => {
-    localStorage.removeItem('aisa_user');
-    localStorage.removeItem('aisa_token');
-    localStorage.removeItem('aisa_user_email');
-    localStorage.removeItem('aisa_user_name');
-    localStorage.removeItem('aisa_user_avatar');
-    localStorage.removeItem('aisa_workspaces');
-    localStorage.removeItem('aisa_active_ws_id');
-    localStorage.removeItem('aisa_region');
-    localStorage.removeItem('aisa_multi_schedule_reminder');
-    localStorage.removeItem('aisa_last_generated_content');
-    localStorage.removeItem('ai_ads_starred_projects');
-  };
-
   const logout = () => {
     setUser(null);
-    setUserAvatarState('');
-    purgeAllUserData();
+    localStorage.removeItem('aisa_user');
     setIsSettingsModalOpen(false);
     setActiveModuleState('dashboard');
   };
-
-  // 1. Cross-Tab Storage Event Sync (Same Device, Multiple Open Browser Tabs)
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'aisa_token' || e.key === 'aisa_user_email' || e.key === 'aisa_user') {
-        if (!e.newValue) {
-          console.log('🔒 Auth token cleared in another tab. Syncing logout across tabs...');
-          setUser(null);
-          setUserAvatarState('');
-          purgeAllUserData();
-          setIsSettingsModalOpen(false);
-          setActiveModuleState('dashboard');
-        }
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  // 2. Real-Time SSE Cross-Device Deletion Sync (All Connected Devices Globally)
-  useEffect(() => {
-    const userEmail = user?.email || (typeof window !== 'undefined' && localStorage.getItem('aisa_user_email'));
-    if (!userEmail) return;
-
-    const unsubscribe = subscribeToAccountEvents((event) => {
-      if (
-        event?.eventType === 'ACCOUNT_DELETED' &&
-        event?.metadata?.deletedEmail &&
-        event.metadata.deletedEmail.toLowerCase() === userEmail.toLowerCase()
-      ) {
-        console.log(`🔒 Real-time account deletion notification received for ${userEmail}. Purging local session on all systems...`);
-        setUser(null);
-        setUserAvatarState('');
-        purgeAllUserData();
-        setIsSettingsModalOpen(false);
-        setActiveModuleState('dashboard');
-      }
-    });
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [user?.email]);
 
 
   useEffect(() => {
@@ -2095,7 +2002,7 @@ export const WorkspaceProvider = ({ children }) => {
       document.documentElement.classList.add('light');
     }
   }, [theme]);
-  
+
   // Workspace & Brand DNA Memory
   // Workspace & Brand DNA Memory - Persistent User State
   const [workspaces, setWorkspaces] = useState(() => {
@@ -2105,7 +2012,7 @@ export const WorkspaceProvider = ({ children }) => {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
-    } catch (e) {}
+    } catch (e) { }
     return [];
   });
 
@@ -2121,7 +2028,7 @@ export const WorkspaceProvider = ({ children }) => {
   useEffect(() => {
     try {
       localStorage.setItem('aisa_workspaces', JSON.stringify(workspaces));
-    } catch (e) {}
+    } catch (e) { }
   }, [workspaces]);
 
   useEffect(() => {
@@ -2129,7 +2036,7 @@ export const WorkspaceProvider = ({ children }) => {
       if (activeWorkspaceId) {
         localStorage.setItem('aisa_active_ws_id', activeWorkspaceId);
       }
-    } catch (e) {}
+    } catch (e) { }
   }, [activeWorkspaceId]);
 
   // Sync workspaces from MongoDB Atlas Database on Page Load / Refresh / User Login
@@ -2137,7 +2044,7 @@ export const WorkspaceProvider = ({ children }) => {
     const fetchWorkspacesFromDb = async () => {
       try {
         const email = user?.email || localStorage.getItem('aisa_user_email') || '';
-        const url = email 
+        const url = email
           ? `http://localhost:5000/api/workspace/list?userEmail=${encodeURIComponent(email)}`
           : 'http://localhost:5000/api/workspace/list';
 
@@ -2165,7 +2072,7 @@ export const WorkspaceProvider = ({ children }) => {
             try {
               localStorage.removeItem('aisa_workspaces');
               localStorage.removeItem('aisa_active_ws_id');
-            } catch (e) {}
+            } catch (e) { }
           }
         }
       } catch (err) {
@@ -2294,33 +2201,18 @@ export const WorkspaceProvider = ({ children }) => {
         const parsed = JSON.parse(savedUser);
         if (parsed.avatar) return parsed.avatar;
       }
-    } catch (e) {}
+    } catch (e) { }
     return null;
   });
 
-  useEffect(() => {
-    if (user && user.avatar !== undefined) {
-      setUserAvatarState(user.avatar || '');
-      if (user.avatar) {
-        localStorage.setItem('aisa_user_avatar', user.avatar);
-      } else {
-        localStorage.removeItem('aisa_user_avatar');
-      }
-    }
-  }, [user?.avatar, user?.email]);
-
   const setUserAvatar = (avatarData) => {
-    const cleanAvatar = avatarData || '';
-    setUserAvatarState(cleanAvatar);
+    setUserAvatarState(avatarData);
     try {
-      if (cleanAvatar) {
-        localStorage.setItem('aisa_user_avatar', cleanAvatar);
+      if (avatarData) {
+        localStorage.setItem('aisa_user_avatar', avatarData);
         setUser(prev => {
-          const updated = prev ? { ...prev, avatar: cleanAvatar } : { avatar: cleanAvatar };
-          try { localStorage.setItem('aisa_user', JSON.stringify(updated)); } catch(e){}
-          if (updated.email) {
-            authAPI.updateProfile({ email: updated.email, avatar: cleanAvatar }).catch(err => console.warn('Failed to sync avatar to DB:', err));
-          }
+          const updated = prev ? { ...prev, avatar: avatarData } : { avatar: avatarData };
+          try { localStorage.setItem('aisa_user', JSON.stringify(updated)); } catch (e) { }
           return updated;
         });
       } else {
@@ -2328,15 +2220,12 @@ export const WorkspaceProvider = ({ children }) => {
         setUser(prev => {
           if (!prev) return prev;
           const { avatar, ...rest } = prev;
-          try { localStorage.setItem('aisa_user', JSON.stringify(rest)); } catch(e){}
-          if (prev.email) {
-            authAPI.updateProfile({ email: prev.email, avatar: '' }).catch(err => console.warn('Failed to sync empty avatar to DB:', err));
-          }
+          try { localStorage.setItem('aisa_user', JSON.stringify(rest)); } catch (e) { }
           return rest;
         });
       }
     } catch (e) {
-      console.error("Error saving user avatar:", e);
+      console.error("Error saving user avatar to localStorage:", e);
     }
   };
 
@@ -2367,7 +2256,7 @@ export const WorkspaceProvider = ({ children }) => {
       // Persist workspace to MongoDB Atlas ONLY when user clicks "Save & Lock Brand DNA Memory"
       const res = await fetch('http://localhost:5000/api/workspace/save-dna', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'x-user-email': email
         },
@@ -2486,9 +2375,66 @@ export const WorkspaceProvider = ({ children }) => {
     setCalendarEvents(prev => [...newEvents, ...prev]);
   };
 
-  const [globalAssets, setGlobalAssets] = useState([]);
+  // ─── Global Asset Management ────────────────────────────────────────────────
+  const [globalAssets, setGlobalAssets] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`aisa_assets_${activeWorkspaceId}`) || localStorage.getItem('aisa_global_assets');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    if (!activeWorkspaceId) return;
+    try {
+      const saved = localStorage.getItem(`aisa_assets_${activeWorkspaceId}`);
+      if (saved) {
+        setGlobalAssets(JSON.parse(saved));
+      } else {
+        const fallback = localStorage.getItem('aisa_global_assets');
+        setGlobalAssets(fallback ? JSON.parse(fallback) : []);
+      }
+    } catch {
+      setGlobalAssets([]);
+    }
+  }, [activeWorkspaceId]);
+
   const addGlobalAsset = (asset) => {
-    setGlobalAssets(prev => [{ id: `ast_${Date.now()}_${Math.random()}`, ...asset }, ...prev]);
+    const newAsset = {
+      id: asset.id || `asset_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      name: asset.name || asset.title || 'Brand Asset',
+      type: (asset.type || 'DOCUMENT').toUpperCase(), // 'IMAGE' | 'CAROUSEL' | 'DOCUMENT'
+      url: asset.url || '',
+      date: asset.date || new Date().toISOString(),
+      credits: asset.credits || 0,
+      workspaceId: asset.workspaceId || activeWorkspaceId,
+      content: asset.content || asset.caption || '',
+      metadata: asset.metadata || {},
+      category: asset.category || asset.type || 'DOCUMENT'
+    };
+
+    setGlobalAssets(prev => {
+      const updated = [newAsset, ...prev];
+      try {
+        if (activeWorkspaceId) localStorage.setItem(`aisa_assets_${activeWorkspaceId}`, JSON.stringify(updated));
+        localStorage.setItem('aisa_global_assets', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    return newAsset;
+  };
+
+  const removeGlobalAsset = (id) => {
+    setGlobalAssets(prev => {
+      const updated = prev.filter(a => a.id !== id);
+      try {
+        if (activeWorkspaceId) localStorage.setItem(`aisa_assets_${activeWorkspaceId}`, JSON.stringify(updated));
+        localStorage.setItem('aisa_global_assets', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
   };
 
   return (
@@ -2502,6 +2448,7 @@ export const WorkspaceProvider = ({ children }) => {
       credits, deductVisualCredits, topUpCredits,
       approvalsQueue, setApprovalsQueue, updateApprovalStatus,
       calendarEvents, setCalendarEvents, addCalendarEvent, bulkAddCalendarEvents,
+      globalAssets, setGlobalAssets, addGlobalAsset, removeGlobalAsset,
       isQuickPostOpen, setIsQuickPostOpen,
       isScraperOpen, setIsScraperOpen, scraperMode, setScraperMode, openScraperModal,
 
@@ -2509,7 +2456,6 @@ export const WorkspaceProvider = ({ children }) => {
       isAISAAssistantOpen, setIsAISAAssistantOpen,
       notifications, setNotifications,
       userAvatar, setUserAvatar,
-      globalAssets, addGlobalAsset,
 
       // New Account Settings Modal & Personalization
       isSettingsModalOpen, setIsSettingsModalOpen,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Sparkles, Loader2, Copy, Heart, MessageSquare, Share2, Bookmark, MoreHorizontal, Download, CheckCircle2 } from "lucide-react";
+import { Sparkles, Loader2, Copy, Heart, MessageSquare, Share2, Bookmark, MoreHorizontal, Download, CheckCircle2, FolderPlus, ArrowRight } from "lucide-react";
+import { useWorkspace } from "../../context/WorkspaceContext";
 
 const VisualControls = ({ visualStyle, setVisualStyle, generating, onGenerate }) => (
   <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
@@ -32,7 +33,7 @@ const ContentPill = ({ label, value, color = "slate" }) => {
   );
 };
 
-const HeaderRow = ({ platform, topic, formatLabel, isSocial, onPlatformChange }) => (
+const HeaderRow = ({ platform, topic, formatLabel, isSocial, onPlatformChange, onSaveAsset, isSaving }) => (
   <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
     <div className="flex flex-wrap items-center gap-2">
       <span className="px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[10px] font-black uppercase tracking-widest">{platform.toUpperCase()}</span>
@@ -62,7 +63,19 @@ const HeaderRow = ({ platform, topic, formatLabel, isSocial, onPlatformChange })
       </div>
     )}
 
-    <span className="text-[10px] text-slate-500 font-medium hidden md:block">Topic: <strong className="text-slate-800 dark:text-slate-200">"{topic}"</strong></span>
+    <div className="flex items-center gap-3 ml-auto">
+      <span className="text-[10px] text-slate-500 font-medium hidden md:block">Topic: <strong className="text-slate-800 dark:text-slate-200">"{topic}"</strong></span>
+      {onSaveAsset && (
+        <button
+          onClick={onSaveAsset}
+          disabled={isSaving}
+          className="py-2 px-4 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-lg shadow-brand-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60"
+        >
+          {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FolderPlus className="w-3.5 h-3.5" />}
+          {isSaving ? "Saving..." : "Save to Asset Library"}
+        </button>
+      )}
+    </div>
   </div>
 );
 
@@ -358,13 +371,77 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
   const isNewspaper = rawType==="NEWSPAPER" || platform==="newspaper" || platform==="press_release";
   const isBlog      = rawType==="BLOG"      || platform==="blog"      || platform==="seo";
   const formatLabel = isCarousel?"Carousel":isEmail?"Email Template":isNewspaper?"Newspaper / Press":isBlog?"SEO Blog Article":"Single Image Post";
+
+  // ─── Save Asset to Library & Redirect ─────────────────────────────────────
+  const [isSavingAsset, setIsSavingAsset] = useState(false);
+  const { addGlobalAsset, setActiveModule } = useWorkspace();
+
+  const handleSaveToAssetLibrary = () => {
+    setIsSavingAsset(true);
+    let assetType = 'DOCUMENT';
+    let assetName = topic || 'Brand Asset';
+    let assetUrl = visualUrl || '';
+    let assetContent = '';
+
+    if (isBlog) {
+      assetType = 'BLOG';
+      assetName = generatedContent?.title || hook || topic || 'SEO Blog Article';
+      assetContent = generatedContent?.content || longCap || caption || '';
+      assetUrl = visualUrl;
+    } else if (isEmail) {
+      assetType = 'EMAIL';
+      assetName = `Email: ${generatedContent?.subject || hook || topic}`;
+      assetContent = `Subject: ${generatedContent?.subject || hook}\nPreheader: ${generatedContent?.preheader || shortCap}\n\n${generatedContent?.body || longCap || caption}`;
+      assetUrl = visualUrl;
+    } else if (isNewspaper) {
+      assetType = 'NEWSPAPER';
+      assetName = `Press Release: ${generatedContent?.headline || hook || topic}`;
+      assetContent = `${generatedContent?.leadParagraph || ''}\n\n${generatedContent?.bodyContent || longCap || caption}`;
+      assetUrl = visualUrl;
+    } else if (isCarousel) {
+      assetType = 'CAROUSEL';
+      assetName = `Carousel Deck: ${topic || 'Brand Carousel'}`;
+      assetUrl = 'https://picsum.photos/seed/aisa_slide_0/600/600';
+      assetContent = carouselSlides.map(s => `[Slide ${s.slide}] ${s.headline}\n${s.body}`).join('\n\n');
+    } else {
+      // Social / Visual Post
+      assetType = 'SOCIAL';
+      assetName = `${platform.toUpperCase()} Post: ${topic || hook}`;
+      assetUrl = visualUrl;
+      assetContent = `${hook}\n\n${caption}\n\n${cta}\n${hashtags}`;
+    }
+
+    addGlobalAsset({
+      name: assetName,
+      type: assetType,
+      url: assetUrl,
+      content: assetContent,
+      date: new Date().toISOString(),
+      credits: 0,
+      metadata: {
+        platform,
+        formatLabel,
+        topic,
+        brand
+      }
+    });
+
+    setTimeout(() => {
+      setIsSavingAsset(false);
+      setActiveModule('assets');
+      if (window.location.pathname !== '/asset-library') {
+        window.history.pushState({ module: 'assets' }, '', '/asset-library');
+      }
+    }, 300);
+  };
+
   // ── A. CAROUSEL ──
   if (isCarousel) {
     const slide = carouselSlides[activeSlide]||carouselSlides[0];
     const isLast = activeSlide===carouselSlides.length-1;
     return (
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
-        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} />
+        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4 space-y-4">
             <VisualControls visualStyle={visualStyle} setVisualStyle={setVisualStyle} generating={generating} onGenerate={handleGenerateVisual} />
@@ -422,34 +499,28 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
     const domain       = (workspace?.domainUrl||"").replace(/https?:\/\//,"") || "brand.com";
     return (
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
-        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} />
+        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="space-y-4">
-            <CopySidebar hook={hook} story={story} shortCap={shortCap} longCap={longCap} cta={cta} hashtags={hashtags} extras={[{label:"Email Subject",value:emailSubject,color:"amber"},{label:"Preheader",value:emailPre,color:"slate"}]} />
+            <CopySidebar hook={hook} story={story} shortCap={shortCap} longCap={longCap} cta={cta} extras={[{label:"Email Subject",value:emailSubject,color:"amber"},{label:"Preheader",value:emailPre,color:"slate"}]} />
           </div>
           <div className="lg:col-span-2">
             <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-2xl font-sans">
-              <div className="bg-slate-100 dark:bg-slate-800 px-5 py-3 border-b border-slate-200 dark:border-slate-700 space-y-1.5">
+              <div className="bg-slate-100 dark:bg-slate-800 px-5 py-3.5 border-b border-slate-200 dark:border-slate-700 space-y-1.5">
                 <div className="flex items-center gap-1.5 mb-2"><div className="w-3 h-3 rounded-full bg-red-400"/><div className="w-3 h-3 rounded-full bg-amber-400"/><div className="w-3 h-3 rounded-full bg-emerald-400"/></div>
-                <div className="grid grid-cols-[40px_1fr] gap-1 text-[10px] text-slate-600 dark:text-slate-300">
-                  <span className="font-black uppercase text-slate-400">From:</span><span className="font-semibold">{brand} (noreply@{domain})</span>
-                  <span className="font-black uppercase text-slate-400">To:</span><span className="font-semibold">Subscribers and Audience List</span>
-                  <span className="font-black uppercase text-slate-400">Sub:</span><span className="font-bold text-slate-900 dark:text-white">{emailSubject}</span>
+                <div className="grid grid-cols-[45px_1fr] gap-1 text-[11px] text-slate-600 dark:text-slate-300">
+                  <span className="font-black uppercase text-slate-400">From:</span><span className="font-semibold">{brand} &lt;noreply@{domain}&gt;</span>
+                  <span className="font-black uppercase text-slate-400">To:</span><span className="font-semibold">Subscribers & Audience List</span>
+                  <span className="font-black uppercase text-slate-400">Sub:</span><span className="font-extrabold text-slate-900 dark:text-white">{emailSubject}</span>
                   {emailPre && <><span className="font-black uppercase text-slate-400">Pre:</span><span className="italic text-slate-500">{emailPre}</span></>}
                 </div>
               </div>
               <div className="bg-white dark:bg-slate-900 p-6 space-y-5">
-                <div className="w-full rounded-2xl overflow-hidden aspect-video relative bg-slate-100 dark:bg-slate-800">
-                  <img src={visualUrl} alt={topic} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent flex items-end p-5"><h2 className="text-white font-extrabold text-lg leading-tight">{hook}</h2></div>
-                </div>
-                <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">Dear Valued Customer,</p>
-                <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap border-l-4 border-brand-500/30 pl-4">{emailBody||caption}</div>
+                <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-sans">{emailBody||caption}</div>
                 {story && (<div className="p-4 rounded-xl bg-brand-500/5 border border-brand-500/20"><span className="text-[8px] font-black uppercase tracking-widest text-brand-500 block mb-1">Storytelling Angle</span><p className="text-xs text-slate-700 dark:text-slate-300 italic leading-relaxed">{story}</p></div>)}
-                {shortCap && (<div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"><span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block mb-0.5">P.S.</span><p className="text-xs text-slate-600 dark:text-slate-400 italic">{shortCap}</p></div>)}
-                <div className="text-center py-2"><button className="py-3 px-8 rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 text-white font-bold text-xs shadow-lg">{cta}</button></div>
-                <div className="flex flex-wrap gap-1.5 pt-1">{hashArr.map((h,i)=><span key={i} className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[9px] font-bold">{h}</span>)}</div>
-                <div className="pt-3 border-t border-slate-100 dark:border-slate-800"><p className="text-xs text-slate-400 whitespace-pre-wrap">{"Warm regards,\n"+brand+" Marketing Team"}</p></div>
+                {shortCap && (<div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"><span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">P.S.</span><p className="text-xs text-slate-600 dark:text-slate-400 italic">{shortCap}</p></div>)}
+                {cta && <div className="text-center py-3"><button className="py-3 px-8 rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 text-white font-bold text-xs shadow-lg hover:shadow-xl transition-all">{cta}</button></div>}
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 whitespace-pre-wrap"><p className="font-medium">{"Warm regards,\n"+brand+" Team"}</p></div>
               </div>
             </div>
           </div>
@@ -466,7 +537,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
     const bodyContent = generatedContent?.bodyContent   || longCap || caption;
     return (
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
-        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} />
+        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="space-y-4">
             <CopySidebar hook={hook} story={story} shortCap={shortCap} longCap={longCap} cta={cta} hashtags={hashtags}
@@ -510,7 +581,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
     const metaDesc    = generatedContent?.metaDescription || shortCap || "";
     return (
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
-        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} />
+        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="space-y-4">
             <VisualControls visualStyle={visualStyle} setVisualStyle={setVisualStyle} generating={generating} onGenerate={handleGenerateVisual} />
@@ -535,7 +606,17 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
                 <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{blogContent}</div>
                 {shortCap && shortCap!==blogContent && <p className="text-xs text-slate-500 dark:text-slate-400 italic">{shortCap}</p>}
                 <div className="flex flex-wrap gap-1.5 pt-2">{hashArr.map((h,i)=><span key={i} className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-[9px] font-bold">{h}</span>)}</div>
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800"><button className="py-2.5 px-6 rounded-xl bg-brand-600 text-white font-bold text-xs">{cta}</button></div>
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                  <button className="py-2.5 px-6 rounded-xl bg-brand-600 text-white font-bold text-xs shadow-md">{cta}</button>
+                  <button
+                    onClick={handleSaveToAssetLibrary}
+                    disabled={isSavingAsset}
+                    className="py-2 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-colors"
+                  >
+                    <FolderPlus className="w-3.5 h-3.5 text-brand-500" />
+                    Save Blog to Assets
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -590,7 +671,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
 
   return (
     <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
-      <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} isSocial={true} onPlatformChange={setPlatform} />
+      <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} isSocial={true} onPlatformChange={setPlatform} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 space-y-4">
           <VisualControls visualStyle={visualStyle} setVisualStyle={setVisualStyle} generating={generating} onGenerate={handleGenerateVisual} />
@@ -623,7 +704,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
               </div>
             </div>
 
-            {/* Direct Action Bar: Download & Share */}
+            {/* Direct Action Bar: Download, Share, Save */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <button
                 onClick={handleDownloadImage}
@@ -643,15 +724,12 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
               </button>
 
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(visualUrl);
-                  setCopiedShare(true);
-                  setTimeout(() => setCopiedShare(false), 2000);
-                }}
-                className="py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs uppercase tracking-wider border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                onClick={handleSaveToAssetLibrary}
+                disabled={isSavingAsset}
+                className="py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
               >
-                <Copy className="w-4 h-4 text-slate-400" />
-                Copy Image URL
+                {isSavingAsset ? <Loader2 className="w-4 h-4 animate-spin" /> : <FolderPlus className="w-4 h-4" />}
+                {isSavingAsset ? "Saving..." : "Save to Library"}
               </button>
             </div>
 
