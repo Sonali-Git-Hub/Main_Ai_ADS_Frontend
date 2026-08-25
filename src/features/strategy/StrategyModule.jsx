@@ -458,34 +458,7 @@ export const StrategyModule = () => {
             )}
           </div>
 
-          {/* Right: Actions */}
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className={`btn-save transition-all duration-200 ${
-                isSavedState ? '!bg-emerald-500 !border-emerald-400 !text-white' : ''
-              }`}
-            >
-              {isSaving ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
-              ) : isSavedState ? (
-                <><CheckCircle2 className="w-4 h-4 text-white" /> Saved!</>
-              ) : (
-                <><Save className="w-4 h-4" /> {t('saveBtn', 'Save')}</>
-              )}
-            </button>
-            <button
-              onClick={handleGenerate}
-              disabled={isGenerating}
-              className="btn-primary text-xs flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold disabled:opacity-50"
-            >
-              {isGenerating
-                ? <><Loader2 className="w-4 h-4 animate-spin text-amber-300" /> {t('generatingPlan', 'Generating 30-Day Plan...')}</>
-                : <><Zap className="w-4 h-4 text-amber-300 fill-amber-300" /> {t('generateMasterStrategy', 'Generate Master Strategy')}</>
-              }
-            </button>
-          </div>
+          {/* Right: Actions (Removed as requested) */}
         </div>
       </div>
 
