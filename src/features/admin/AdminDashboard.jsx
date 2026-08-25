@@ -4,227 +4,382 @@ import {
   Users, CreditCard, Layers, Zap, Search, ChevronDown, ChevronUp,
   ArrowLeft, RefreshCw, Crown, Shield, Eye, Package, TrendingUp,
   Activity, BarChart3, Clock, CheckCircle2, XCircle, User as UserIcon,
-  Sparkles, Globe, Image as ImageIcon, Video, FileText, Hash
+  Sparkles, Globe, Image as ImageIcon, Video, FileText, Hash,
+  MessageSquare, DollarSign, ShieldAlert, FileCode, Headphones,
+  Sliders, Lock, Settings, Save, Plus, Trash2, Edit3, ExternalLink,
+  Sun, Moon, ArrowUpRight, IndianRupee, HelpCircle, Check, Filter,
+  Mail, Bot
 } from 'lucide-react';
 import { adminAPI } from '../../services/api';
 import { useWorkspace } from '../../context/WorkspaceContext';
 
-// ─── Stat Card ─────────────────────────────────────────────────────────────────
-const StatCard = ({ icon: Icon, label, value, sub, gradient, delay = 0 }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay, duration: 0.5, ease: 'easeOut' }}
-    className="relative overflow-hidden rounded-2xl border border-slate-800/60 bg-[#0d0f1a]/80 backdrop-blur-xl p-5 group hover:border-slate-700/80 transition-all duration-300"
-  >
-    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `linear-gradient(135deg, ${gradient}10 0%, transparent 60%)` }} />
-    <div className="relative z-10">
-      <div className="flex items-center justify-between mb-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center`} style={{ background: `linear-gradient(135deg, ${gradient}30, ${gradient}10)` }}>
-          <Icon className="w-5 h-5" style={{ color: gradient }} />
-        </div>
-        <TrendingUp className="w-4 h-4 text-emerald-400 opacity-60" />
+// ─── DYNAMIC SVG LINE/AREA CHART COMPONENT ────────────────────────────────────
+const DynamicAreaChart = ({ data = [], color = '#6366F1', gradientId = 'purpleGradient' }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div className="h-36 w-full flex items-center justify-center text-slate-400 text-xs font-semibold">
+        No telemetry chart data available
       </div>
-      <p className="text-2xl font-bold text-white tracking-tight">{value}</p>
-      <p className="text-xs text-slate-400 mt-1 font-medium">{label}</p>
-      {sub && <p className="text-[10px] text-slate-500 mt-0.5">{sub}</p>}
+    );
+  }
+
+  const maxVal = Math.max(...data.map(d => d.val || 0), 1);
+  const width = 440;
+  const height = 80;
+
+  const points = data.map((d, i) => {
+    const x = (i / Math.max(data.length - 1, 1)) * width;
+    const y = height - ((d.val || 0) / maxVal) * (height - 15);
+    return { x, y, date: d.date, val: d.val };
+  });
+
+  const pathD = points.reduce((acc, p, i) => {
+    if (i === 0) return `M ${p.x},${p.y}`;
+    const prev = points[i - 1];
+    const cx = (prev.x + p.x) / 2;
+    return `${acc} C ${cx},${prev.y} ${cx},${p.y} ${p.x},${p.y}`;
+  }, '');
+
+  const areaD = `${pathD} L ${width},100 L 0,100 Z`;
+
+  const firstDate = data[0]?.date || '—';
+  const midDate = data[Math.floor(data.length / 2)]?.date || '—';
+  const lastDate = data[data.length - 1]?.date || '—';
+
+  return (
+    <div className="h-36 w-full pt-2">
+      <svg className="w-full h-full overflow-visible" viewBox="0 0 440 100">
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.35" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.0" />
+          </linearGradient>
+        </defs>
+        <path d={areaD} fill={`url(#${gradientId})`} />
+        <path d={pathD} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" />
+        {points.map((p, idx) => (
+          <circle key={idx} cx={p.x} cy={p.y} r={p.val > 0 ? "3.5" : "2"} fill="#ffffff" stroke={color} strokeWidth={p.val > 0 ? "2.5" : "1.5"} />
+        ))}
+      </svg>
+      <div className="flex justify-between text-[10px] font-extrabold text-slate-400 pt-1">
+        <span>{firstDate}</span>
+        <span>{midDate}</span>
+        <span>{lastDate}</span>
+      </div>
     </div>
+  );
+};
+
+// ─── LIGHT THEME STAT CARD ───────────────────────────────────────────────────
+const StatCard = ({ icon: Icon, label, value, sub, badgeText, colorClass, delay = 0 }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 15 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay, duration: 0.4, ease: 'easeOut' }}
+    className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm hover:shadow-md transition-all duration-300 group"
+  >
+    <div className="flex items-center justify-between mb-3">
+      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${colorClass || 'bg-brand-50 text-brand-600'}`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      {badgeText && (
+        <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-extrabold border border-emerald-200/60 flex items-center gap-1">
+          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+          {badgeText}
+        </span>
+      )}
+    </div>
+    <h3 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">{value}</h3>
+    <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mt-1">{label}</p>
+    {sub && <p className="text-[11px] font-medium text-slate-500 mt-0.5">{sub}</p>}
   </motion.div>
 );
 
-// ─── Plan Badge ────────────────────────────────────────────────────────────────
+// ─── PLAN BADGE (LIGHT THEME) ────────────────────────────────────────────────
 const PlanBadge = ({ plan }) => {
   const config = {
-    free: { bg: 'bg-slate-800/60', text: 'text-slate-300', border: 'border-slate-700/50' },
-    starter: { bg: 'bg-blue-950/40', text: 'text-blue-300', border: 'border-blue-800/40' },
-    pro: { bg: 'bg-purple-950/40', text: 'text-purple-300', border: 'border-purple-800/40' },
-    enterprise: { bg: 'bg-amber-950/40', text: 'text-amber-300', border: 'border-amber-800/40' },
+    free: { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-300' },
+    starter: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+    pro: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+    enterprise: { bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-200' },
   };
-  const c = config[plan] || config.free;
+  const c = config[plan?.toLowerCase()] || config.free;
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${c.bg} ${c.text} ${c.border}`}>
-      {plan === 'enterprise' && <Crown className="w-3 h-3" />}
-      {plan === 'pro' && <Sparkles className="w-3 h-3" />}
-      {plan}
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border ${c.bg} ${c.text} ${c.border}`}>
+      {plan?.toLowerCase() === 'enterprise' && <Crown className="w-3 h-3 text-amber-600" />}
+      {plan?.toLowerCase() === 'pro' && <Sparkles className="w-3 h-3 text-purple-600" />}
+      {plan || 'Free'}
     </span>
   );
 };
 
-// ─── Post Type Icon ────────────────────────────────────────────────────────────
-const PostTypeIcon = ({ type }) => {
-  const icons = {
-    image: ImageIcon,
-    carousel: Layers,
-    video: Video,
-    reel: Video,
-    story: Zap,
-    static: FileText,
-  };
-  const Icon = icons[type] || FileText;
-  return <Icon className="w-3.5 h-3.5 text-slate-400" />;
-};
-
-// ─── User Detail Drawer ────────────────────────────────────────────────────────
-const UserDetailDrawer = ({ userId, onClose }) => {
+// ─── USER DETAIL DRAWER (LIGHT THEME) ─────────────────────────────────────────
+const UserDetailDrawer = ({ userId, onClose, onUserUpdated }) => {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [creditsInput, setCreditsInput] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState('free');
+  const [saveSuccess, setSaveSuccess] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
     setLoading(true);
     adminAPI.getUserDetail(userId)
-      .then(res => setDetail(res.data))
+      .then(res => {
+        setDetail(res.data);
+        if (res.data?.user) {
+          setCreditsInput(res.data.user.credits ?? 0);
+          setSelectedPlan(res.data.user.plan || 'free');
+        }
+      })
       .catch(err => console.error('User detail error:', err))
       .finally(() => setLoading(false));
   }, [userId]);
+
+  const handleSaveUserChanges = async () => {
+    if (!detail?.user) return;
+    setSaving(true);
+    try {
+      const res = await adminAPI.updateUserQuota(userId, {
+        credits: parseInt(creditsInput, 10) || 0,
+        plan: selectedPlan
+      });
+      if (res?.success) {
+        setDetail(prev => ({
+          ...prev,
+          user: {
+            ...prev.user,
+            credits: parseInt(creditsInput, 10) || 0,
+            plan: selectedPlan
+          }
+        }));
+        setSaveSuccess('User credentials & quota updated in database!');
+        setTimeout(() => setSaveSuccess(''), 3500);
+        if (onUserUpdated) onUserUpdated();
+      }
+    } catch (err) {
+      console.error('Error saving user quota:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex"
+      className="fixed inset-0 z-[99999] flex"
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Panel */}
       <motion.div
         initial={{ x: '100%' }}
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
-        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-        className="relative ml-auto w-full max-w-2xl h-full bg-[#0a0c15] border-l border-slate-800/60 overflow-y-auto"
+        transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+        className="relative ml-auto w-full max-w-2xl h-full bg-white border-l border-slate-200 overflow-y-auto shadow-2xl flex flex-col text-slate-900 z-10"
       >
-        {/* Close / Back */}
-        <div className="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-xl border-b border-slate-800/60 px-6 py-4 flex items-center gap-3">
-          <button onClick={onClose} className="p-2 rounded-xl bg-slate-800/60 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors">
-            <ArrowLeft className="w-4 h-4" />
+        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={onClose} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <h2 className="text-lg font-black text-slate-900">User Profile &amp; Control</h2>
+          </div>
+          <button onClick={onClose} className="text-xs font-extrabold text-slate-400 hover:text-slate-700">
+            Close ✕
           </button>
-          <h2 className="text-lg font-bold text-white">User Details</h2>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="w-8 h-8 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-3 border-brand-500/20 border-t-brand-600 rounded-full animate-spin" />
           </div>
         ) : detail ? (
-          <div className="p-6 space-y-6">
-            {/* User Header */}
-            <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-900/50 border border-slate-800/50">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-600 to-purple-600 flex items-center justify-center text-white text-lg font-bold shadow-lg shadow-brand-500/20">
+          <div className="p-6 space-y-6 flex-1 overflow-y-auto">
+            {saveSuccess && (
+              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>{saveSuccess}</span>
+              </div>
+            )}
+
+            {/* Profile Header */}
+            <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white text-xl font-black shadow-md shadow-brand-500/20">
                 {(detail.user.name || detail.user.email || '?')[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-white font-bold text-base truncate">{detail.user.name || detail.user.email.split('@')[0]}</h3>
-                <p className="text-xs text-slate-400 truncate">{detail.user.email}</p>
+                <h3 className="text-slate-900 font-extrabold text-base truncate">{detail.user.name || detail.user.email.split('@')[0]}</h3>
+                <p className="text-xs text-slate-500 font-medium truncate">{detail.user.email}</p>
                 <div className="flex items-center gap-2 mt-1.5">
                   <PlanBadge plan={detail.user.plan} />
-                  <span className="text-[10px] text-slate-500">Joined {new Date(detail.user.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  <span className="text-[11px] text-slate-400 font-medium">Joined {detail.user.createdAt ? new Date(detail.user.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently'}</span>
                 </div>
               </div>
             </div>
 
             {/* Quick Stats */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/40 text-center">
-                <p className="text-xl font-bold text-white">{detail.user.credits ?? 0}</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">Credits Left</p>
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                <p className="text-2xl font-black text-brand-600">{detail.user.credits ?? 0}</p>
+                <p className="text-[11px] font-bold text-slate-500 uppercase mt-0.5">Credits Left</p>
               </div>
-              <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/40 text-center">
-                <p className="text-xl font-bold text-white">{detail.brands?.length || 0}</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">Active Brands</p>
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                <p className="text-2xl font-black text-slate-900">{detail.brands?.length || 0}</p>
+                <p className="text-[11px] font-bold text-slate-500 uppercase mt-0.5">Active Workspaces</p>
               </div>
-              <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/40 text-center">
-                <p className="text-xl font-bold text-white">{detail.generations?.length || 0}</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">Generations</p>
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                <p className="text-2xl font-black text-indigo-600">{detail.generations?.length || 0}</p>
+                <p className="text-[11px] font-bold text-slate-500 uppercase mt-0.5">Generations</p>
               </div>
             </div>
 
-            {/* Brands List */}
+            {/* Admin Management Controls */}
+            <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-3">
+              <h4 className="text-xs font-black text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Sliders className="w-4 h-4 text-indigo-600" />
+                Admin Quota &amp; Plan Override
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-extrabold text-slate-700 mb-1">Set Credits</label>
+                  <input
+                    type="number"
+                    value={creditsInput}
+                    onChange={(e) => setCreditsInput(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-extrabold text-slate-700 mb-1">Assign Plan</label>
+                  <select
+                    value={selectedPlan}
+                    onChange={(e) => setSelectedPlan(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-500"
+                  >
+                    <option value="free">Free Tier</option>
+                    <option value="starter">Starter Plan</option>
+                    <option value="pro">Pro Plan</option>
+                    <option value="enterprise">Enterprise</option>
+                  </select>
+                </div>
+              </div>
+              <button
+                onClick={handleSaveUserChanges}
+                disabled={saving}
+                className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-md shadow-brand-500/20 flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {saving ? 'Saving Changes...' : 'Save Quota & Plan'}
+              </button>
+            </div>
+
+            {/* Active Workspaces */}
             <div>
-              <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                <Globe className="w-4 h-4 text-brand-400" />
-                Active Brands ({detail.brands?.length || 0})
+              <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <Globe className="w-4 h-4 text-brand-600" />
+                Active Workspaces ({detail.brands?.length || 0})
               </h4>
               {detail.brands?.length > 0 ? (
                 <div className="space-y-2">
                   {detail.brands.map((brand, i) => (
-                    <div key={brand._id || i} className="flex items-center gap-3 p-3 rounded-xl bg-slate-900/30 border border-slate-800/30 hover:border-slate-700/50 transition-colors">
-                      <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-brand-600/30 to-purple-600/20 flex items-center justify-center text-brand-400 text-xs font-bold flex-shrink-0">
+                    <div key={brand._id || i} className="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-brand-300 transition-colors shadow-sm">
+                      <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center text-xs font-black flex-shrink-0">
                         {(brand.brandName || brand.companyName || '?')[0].toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-white truncate">{brand.brandName || brand.companyName || 'Unnamed Brand'}</p>
-                        <p className="text-[10px] text-slate-500 truncate">{brand.domainUrl || brand.website || '—'}</p>
+                        <p className="text-xs font-extrabold text-slate-900 truncate">{brand.brandName || brand.companyName || 'Unnamed Brand'}</p>
+                        <p className="text-[10px] text-slate-400 font-medium truncate">{brand.domainUrl || brand.website || '—'}</p>
                       </div>
-                      <span className="text-[10px] text-slate-500">{new Date(brand.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-slate-500 p-3 bg-slate-900/20 rounded-xl text-center">No brands created yet</p>
-              )}
-            </div>
-
-            {/* Generation History */}
-            <div>
-              <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                <Activity className="w-4 h-4 text-cyan-400" />
-                Generation History ({detail.generations?.length || 0})
-              </h4>
-              {detail.generations?.length > 0 ? (
-                <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-                  {detail.generations.map((gen, i) => (
-                    <div key={gen._id || i} className="flex items-center gap-3 p-3 rounded-xl bg-slate-900/30 border border-slate-800/30">
-                      <PostTypeIcon type={gen.type} />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-white truncate">{gen.hook || gen.captionShort || gen.type}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] text-slate-500 capitalize">{gen.platform}</span>
-                          <span className="w-1 h-1 rounded-full bg-slate-700" />
-                          <span className="text-[10px] text-slate-500">{gen.status}</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-slate-500 whitespace-nowrap">
-                        {new Date(gen.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-500 p-3 bg-slate-900/20 rounded-xl text-center">No content generated yet</p>
+                <p className="text-xs text-slate-400 p-4 bg-slate-50 rounded-xl text-center font-medium">No workspaces created yet</p>
               )}
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-center h-64 text-sm text-slate-500">User not found</div>
+          <div className="flex items-center justify-center h-64 text-xs font-bold text-slate-400">User details unavailable</div>
         )}
       </motion.div>
     </motion.div>
   );
 };
 
-// ─── Main Admin Dashboard ──────────────────────────────────────────────────────
+// ─── MAIN ADMIN DASHBOARD (100% REAL DYNAMIC DATABASE DATA) ─────────────────
 export const AdminDashboardModule = () => {
-  const { user } = useWorkspace();
+  const [activeTab, setActiveTab] = useState('overview');
   const [summary, setSummary] = useState(null);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedPlanFilter, setSelectedPlanFilter] = useState('ALL');
   const [sortField, setSortField] = useState('createdAt');
   const [sortDir, setSortDir] = useState('desc');
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Chat Sessions Filter & Drawer State
+  const [sessionSearch, setSessionSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [modeFilter, setModeFilter] = useState('ALL');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [selectedChatSession, setSelectedChatSession] = useState(null);
+  const [chatSessionsData, setChatSessionsData] = useState(null);
+
+  // Legal Content State
+  const [selectedLegalDoc, setSelectedLegalDoc] = useState('terms');
+  const [legalContent, setLegalContent] = useState({ terms: '', privacy: '', refund: '' });
+  const [legalSaving, setLegalSaving] = useState(false);
+  const [legalSuccess, setLegalSuccess] = useState('');
+
+  // Help Desk Tickets State
+  const [helpDeskTickets, setHelpDeskTickets] = useState([]);
+
+  // Quota & Rate Limit State
+  const [toolLimits, setToolLimits] = useState({
+    aiChatDaily: { free: 0, starter: 0, pro: 0, enterprise: 'Unlimited' },
+    websiteBuilds: { free: 0, starter: 0, pro: 0, enterprise: 'Unlimited' },
+    creativeImages: { free: 0, starter: 0, pro: 0, enterprise: 'Unlimited' }
+  });
+  const [toolLimitsSaving, setToolLimitsSaving] = useState(false);
+  const [toolLimitsSuccess, setToolLimitsSuccess] = useState('');
+
+  // Dynamically compute authenticated admin user initials
+  const adminInitials = useMemo(() => {
+    try {
+      const stored = localStorage.getItem('aisa_user');
+      if (stored) {
+        const u = JSON.parse(stored);
+        const name = u.name || u.email || 'Admin';
+        return name.slice(0, 2).toUpperCase();
+      }
+    } catch (e) {}
+    return 'AD';
+  }, []);
+
   const fetchData = async () => {
     try {
-      const [summaryRes, usersRes] = await Promise.all([
-        adminAPI.getDashboardSummary(),
-        adminAPI.getAllUserStats(),
+      const [summaryRes, usersRes, chatRes, legalRes, limitsRes, ticketsRes] = await Promise.all([
+        adminAPI.getDashboardSummary().catch(() => ({ success: false })),
+        adminAPI.getAllUserStats().catch(() => ({ success: false })),
+        adminAPI.getChatSessions().catch(() => ({ success: false })),
+        adminAPI.getLegalPages().catch(() => ({ success: false })),
+        adminAPI.getToolLimits().catch(() => ({ success: false })),
+        adminAPI.getHelpDeskTickets().catch(() => ({ success: false }))
       ]);
-      if (summaryRes.success) setSummary(summaryRes.data);
-      if (usersRes.success) setUsers(usersRes.data);
+
+      if (summaryRes?.success) setSummary(summaryRes.data);
+      if (usersRes?.success) setUsers(usersRes.data);
+      if (chatRes?.success) setChatSessionsData(chatRes.data);
+      if (legalRes?.success) setLegalContent(legalRes.data);
+      if (limitsRes?.success) setToolLimits(limitsRes.data);
+      if (ticketsRes?.success) setHelpDeskTickets(ticketsRes.data);
     } catch (err) {
       console.error('Admin dashboard fetch error:', err);
     } finally {
@@ -235,7 +390,6 @@ export const AdminDashboardModule = () => {
 
   useEffect(() => {
     fetchData();
-    // Auto-refresh every 30 seconds
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -245,11 +399,86 @@ export const AdminDashboardModule = () => {
     fetchData();
   };
 
-  // Filter & Sort
+  const handleSaveLegalContent = async () => {
+    setLegalSaving(true);
+    try {
+      const res = await adminAPI.updateLegalPages(legalContent);
+      if (res?.success) {
+        setLegalSuccess('Legal document published & saved to database!');
+        setTimeout(() => setLegalSuccess(''), 3500);
+      }
+    } catch (err) {
+      console.error('Error saving legal content:', err);
+    } finally {
+      setLegalSaving(false);
+    }
+  };
+
+  const handleSaveToolLimits = async () => {
+    setToolLimitsSaving(true);
+    try {
+      const res = await adminAPI.updateToolLimits(toolLimits);
+      if (res?.success) {
+        setToolLimitsSuccess('Tool limits updated & saved to database!');
+        setTimeout(() => setToolLimitsSuccess(''), 3500);
+      }
+    } catch (err) {
+      console.error('Error saving tool limits:', err);
+    } finally {
+      setToolLimitsSaving(false);
+    }
+  };
+
+  const handleUpdateTicketStatus = async (ticketId, newStatus) => {
+    try {
+      const res = await adminAPI.updateTicketStatus(ticketId, newStatus);
+      if (res?.success) {
+        setHelpDeskTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: newStatus } : t));
+        fetchData();
+      }
+    } catch (err) {
+      console.error('Error updating ticket status:', err);
+    }
+  };
+
+  // Filter & Sort Chat Sessions (100% Dynamic Database Records)
+  const filteredChatSessions = useMemo(() => {
+    let list = chatSessionsData?.sessions || [];
+
+    if (sessionSearch.trim()) {
+      const q = sessionSearch.toLowerCase();
+      list = list.filter(s =>
+        (s.sessionId && s.sessionId.toLowerCase().includes(q)) ||
+        (s.user && s.user.toLowerCase().includes(q)) ||
+        (s.email && s.email.toLowerCase().includes(q))
+      );
+    }
+
+    if (statusFilter !== 'ALL') {
+      list = list.filter(s => (s.status || 'COMPLETED').toUpperCase() === statusFilter.toUpperCase());
+    }
+
+    if (modeFilter !== 'ALL') {
+      list = list.filter(s => s.mode === modeFilter);
+    }
+
+    if (fromDate) {
+      const fromTs = new Date(fromDate).getTime();
+      list = list.filter(s => s.rawTimestamp >= fromTs);
+    }
+
+    if (toDate) {
+      const toTs = new Date(toDate).setHours(23, 59, 59, 999);
+      list = list.filter(s => s.rawTimestamp <= toTs);
+    }
+
+    return list;
+  }, [chatSessionsData, sessionSearch, statusFilter, modeFilter, fromDate, toDate]);
+
+  // Filter & Sort Users
   const filteredUsers = useMemo(() => {
     let list = [...users];
 
-    // Search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(u =>
@@ -259,7 +488,10 @@ export const AdminDashboardModule = () => {
       );
     }
 
-    // Sort
+    if (selectedPlanFilter !== 'ALL') {
+      list = list.filter(u => (u.plan || 'free').toUpperCase() === selectedPlanFilter.toUpperCase());
+    }
+
     list.sort((a, b) => {
       let aVal = a[sortField];
       let bVal = b[sortField];
@@ -275,222 +507,911 @@ export const AdminDashboardModule = () => {
     });
 
     return list;
-  }, [users, searchQuery, sortField, sortDir]);
+  }, [users, searchQuery, selectedPlanFilter, sortField, sortDir]);
 
-  const toggleSort = (field) => {
-    if (sortField === field) {
-      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDir('desc');
-    }
-  };
-
-  const SortIcon = ({ field }) => {
-    if (sortField !== field) return <ChevronDown className="w-3 h-3 text-slate-600" />;
-    return sortDir === 'asc'
-      ? <ChevronUp className="w-3 h-3 text-brand-400" />
-      : <ChevronDown className="w-3 h-3 text-brand-400" />;
-  };
+  const navTabs = [
+    { id: 'overview', label: 'Overview', icon: BarChart3 },
+    { id: 'users', label: 'USERS', icon: Users },
+    { id: 'chat-sessions', label: 'Chat Sessions', icon: MessageSquare },
+    { id: 'analytics', label: 'Analytics', icon: Clock },
+    { id: 'plans', label: 'PLANS', icon: CreditCard },
+    { id: 'finance', label: 'Finance', icon: TrendingUp },
+    { id: 'tool-limit', label: 'Tool Limit', icon: Shield },
+    { id: 'legal-pages', label: 'Legal Pages', icon: FileText },
+    { id: 'help-desk', label: 'HELP DESK', icon: Headphones },
+  ];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-[3px] border-brand-500/20 border-t-brand-500 rounded-full animate-spin" />
-          <p className="text-sm text-slate-400 animate-pulse">Loading Admin Dashboard...</p>
+      <div className="flex items-center justify-center min-h-[60vh] bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-3 border-brand-500/20 border-t-brand-600 rounded-full animate-spin" />
+          <p className="text-xs font-bold text-slate-500 animate-pulse">Loading Platform Management Console...</p>
         </div>
       </div>
     );
   }
 
+  const toolIconMap = {
+    'AI Chat': MessageSquare,
+    'AI Website Builder': Globe,
+    'Creative Studio': ImageIcon,
+    'Social Media Copy Generator': FileText,
+    'SEO Brief Generator': Search,
+    'Brand DNA Web Scraper': Sliders,
+  };
+
+  const toolColorMap = {
+    'AI Chat': 'bg-indigo-50 text-indigo-600',
+    'AI Website Builder': 'bg-brand-50 text-brand-600',
+    'Creative Studio': 'bg-purple-50 text-purple-600',
+    'Social Media Copy Generator': 'bg-emerald-50 text-emerald-600',
+    'SEO Brief Generator': 'bg-amber-50 text-amber-600',
+    'Brand DNA Web Scraper': 'bg-teal-50 text-teal-600',
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-      >
-        <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-purple-600 flex items-center justify-center shadow-lg shadow-brand-500/20">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            Admin Dashboard
-          </h1>
-          <p className="text-xs text-slate-500 mt-1 ml-[52px]">Real-time overview of all users, subscriptions, and generations</p>
-        </div>
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 text-sm text-slate-300 font-medium transition-all hover:text-white"
-        >
-          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? 'Refreshing...' : 'Refresh'}
-        </button>
-      </motion.div>
-
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Users} label="Total Users" value={summary?.totalUsers ?? 0} gradient="#6366F1" delay={0.05} />
-        <StatCard icon={Layers} label="Total Brands" value={summary?.totalBrands ?? 0} gradient="#8B5CF6" delay={0.1} />
-        <StatCard icon={Zap} label="Total Generations" value={summary?.totalGenerations ?? 0} gradient="#06B6D4" delay={0.15} />
-        <StatCard
-          icon={Crown}
-          label="Plan Breakdown"
-          value={Object.entries(summary?.planDistribution || {}).map(([k, v]) => `${k}: ${v}`).join(', ') || '—'}
-          gradient="#F59E0B"
-          delay={0.2}
-        />
-      </div>
-
-      {/* User Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
-        className="rounded-2xl border border-slate-800/60 bg-[#0d0f1a]/80 backdrop-blur-xl overflow-hidden"
-      >
-        {/* Table Header / Search */}
-        <div className="p-4 border-b border-slate-800/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <Users className="w-4 h-4 text-brand-400" />
-            All Users
-            <span className="ml-1 text-xs font-normal text-slate-500">({filteredUsers.length})</span>
-          </h2>
-          <div className="relative max-w-xs w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search users by email, name, or plan..."
-              className="w-full bg-slate-900/40 border border-slate-800/60 rounded-xl py-2.5 pl-9 pr-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
-            />
+    <div className="min-h-screen bg-slate-50 text-slate-900 p-4 sm:p-6 md:p-8 space-y-6 font-sans">
+      {/* ── TOP HEADER ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
+            <Shield className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Admin Dashboard</h1>
+            <p className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400">
+              Platform Management Console
+            </p>
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-800/40">
-                {[
-                  { key: 'email', label: 'User' },
-                  { key: 'plan', label: 'Plan' },
-                  { key: 'credits', label: 'Credits' },
-                  { key: 'brandCount', label: 'Brands' },
-                  { key: 'generationCount', label: 'Generations' },
-                  { key: 'createdAt', label: 'Joined' },
-                ].map(col => (
-                  <th
-                    key={col.key}
-                    onClick={() => toggleSort(col.key)}
-                    className="text-left px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-slate-300 transition-colors select-none"
-                  >
-                    <span className="inline-flex items-center gap-1">
-                      {col.label}
-                      <SortIcon field={col.key} />
-                    </span>
-                  </th>
-                ))}
-                <th className="text-right px-4 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <AnimatePresence>
-                {filteredUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="text-center py-12 text-sm text-slate-500">
-                      {searchQuery ? 'No users match your search' : 'No users found'}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredUsers.map((u, idx) => (
-                    <motion.tr
-                      key={u.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.03 }}
-                      className="border-b border-slate-800/20 hover:bg-slate-800/20 transition-colors group cursor-pointer"
-                      onClick={() => setSelectedUserId(u.id)}
-                    >
-                      {/* User */}
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600/30 to-purple-600/20 flex items-center justify-center text-brand-400 text-xs font-bold flex-shrink-0">
-                            {(u.name || u.email || '?')[0].toUpperCase()}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-white truncate max-w-[200px]">
-                              {u.name || u.email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                            </p>
-                            <p className="text-[10px] text-slate-500 truncate max-w-[200px]">{u.email}</p>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Plan */}
-                      <td className="px-4 py-3.5">
-                        <PlanBadge plan={u.plan} />
-                      </td>
-
-                      {/* Credits */}
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="w-3.5 h-3.5 text-slate-500" />
-                          <span className={`text-sm font-semibold ${u.credits > 100 ? 'text-emerald-400' : u.credits > 20 ? 'text-amber-400' : 'text-red-400'}`}>
-                            {u.credits ?? 0}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Brands */}
-                      <td className="px-4 py-3.5">
-                        <span className="text-sm text-slate-300 font-medium">{u.brandCount ?? 0}</span>
-                      </td>
-
-                      {/* Generations */}
-                      <td className="px-4 py-3.5">
-                        <span className="text-sm text-slate-300 font-medium">{u.generationCount ?? 0}</span>
-                      </td>
-
-                      {/* Joined */}
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="w-3 h-3 text-slate-600" />
-                          <span className="text-xs text-slate-400">
-                            {u.createdAt
-                              ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                              : '—'}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-4 py-3.5 text-right">
-                        <button
-                          onClick={e => { e.stopPropagation(); setSelectedUserId(u.id); }}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand-600/10 hover:bg-brand-600/20 text-brand-400 text-xs font-semibold border border-brand-600/20 hover:border-brand-500/40 transition-all"
-                        >
-                          <Eye className="w-3 h-3" />
-                          View
-                        </button>
-                      </td>
-                    </motion.tr>
-                  ))
-                )}
-              </AnimatePresence>
-            </tbody>
-          </table>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="p-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 transition-all shadow-sm flex items-center gap-2 text-xs font-extrabold"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <span>{refreshing ? 'Syncing...' : 'Sync Data'}</span>
+          </button>
+          <div className="w-9 h-9 rounded-full bg-slate-900 text-white font-black text-xs flex items-center justify-center shadow-md">
+            {adminInitials}
+          </div>
         </div>
-      </motion.div>
+      </div>
+
+      {/* ── SCROLLABLE NAVIGATION TAB BAR ── */}
+      <div className="relative border-b border-slate-200">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-2 pt-1">
+          {navTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs transition-all flex-shrink-0 font-extrabold ${
+                  isActive
+                    ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/20 scale-[1.02]'
+                    : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200/80 shadow-sm'
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="h-0.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-transparent w-full rounded-full mt-1" />
+      </div>
+
+      {/* ── TAB 1: OVERVIEW (100% REAL DYNAMIC DATABASE AGGREGATION) ── */}
+      {activeTab === 'overview' && (
+        <div className="space-y-6 animate-in fade-in">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
+              <Activity className="w-4 h-4 text-brand-600 animate-pulse" />
+              <span>Live Database Telemetry</span>
+            </div>
+            <button onClick={handleRefresh} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+
+          {/* 5 KPI Stat Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <StatCard
+              icon={Users}
+              label="TOTAL USERS"
+              value={summary?.totalUsers ?? 0}
+              colorClass="bg-purple-50 text-purple-600"
+              delay={0.05}
+            />
+            <StatCard
+              icon={Activity}
+              label="ACTIVE SUBSCRIPTIONS"
+              value={summary?.activeSubscriptions ?? 0}
+              colorClass="bg-emerald-50 text-emerald-600"
+              delay={0.1}
+            />
+            <StatCard
+              icon={IndianRupee}
+              label="TOTAL REVENUE"
+              value={summary?.totalRevenue != null ? `₹${summary.totalRevenue.toLocaleString('en-IN')}` : '₹0'}
+              colorClass="bg-amber-50 text-amber-600"
+              delay={0.15}
+            />
+            <StatCard
+              icon={Headphones}
+              label="SUPPORT"
+              value={summary?.supportTicketsCount ?? 0}
+              badgeText={summary?.supportTicketsCount ? `${summary.supportTicketsCount} Open` : 'All Clear'}
+              colorClass="bg-indigo-50 text-indigo-600"
+              delay={0.2}
+            />
+            <StatCard
+              icon={CheckCircle2}
+              label="RESOLVED QUERIES"
+              value={summary?.resolvedQueriesCount ?? 0}
+              colorClass="bg-teal-50 text-teal-600"
+              delay={0.25}
+            />
+          </div>
+
+          {/* Tool Usage Analytics Section */}
+          <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-base font-extrabold text-slate-900">Tool Usage Analytics</h3>
+              <span className="text-xs font-bold text-brand-600 bg-brand-50 px-3 py-1 rounded-full border border-brand-200">
+                Real Database Execution Telemetry
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {(summary?.toolUsage || []).map((tool, idx) => {
+                const IconComp = toolIconMap[tool.name] || Layers;
+                const colorClass = toolColorMap[tool.name] || 'bg-slate-50 text-slate-600';
+                return (
+                  <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-brand-200 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${colorClass}`}>
+                        <IconComp className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-extrabold text-slate-900">{tool.name}</span>
+                    </div>
+                    <span className="text-xs font-black text-brand-600">{(tool.uses || 0).toLocaleString()} uses</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 2: USERS ── */}
+      {activeTab === 'users' && (
+        <div className="space-y-6 animate-in fade-in">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+            <div className="relative flex-1 w-full max-w-md">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search users by name, email, or plan..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-500 font-medium"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-xs font-bold text-slate-500">Plan Filter:</span>
+              {['ALL', 'FREE', 'STARTER', 'PRO', 'ENTERPRISE'].map((plan) => (
+                <button
+                  key={plan}
+                  onClick={() => setSelectedPlanFilter(plan)}
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-extrabold transition-all ${
+                    selectedPlanFilter === plan
+                      ? 'bg-brand-600 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {plan}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-extrabold uppercase tracking-wider">
+                  <tr>
+                    <th className="p-4">User Details</th>
+                    <th className="p-4">Plan Tier</th>
+                    <th className="p-4">Credits</th>
+                    <th className="p-4">Brands</th>
+                    <th className="p-4">Generations</th>
+                    <th className="p-4">Joined Date</th>
+                    <th className="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium">
+                  {filteredUsers.length > 0 ? (
+                    filteredUsers.map((u) => (
+                      <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center font-black">
+                              {(u.name || u.email || '?')[0].toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-extrabold text-slate-900">{u.name || u.email.split('@')[0]}</p>
+                              <p className="text-[11px] text-slate-400">{u.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <PlanBadge plan={u.plan} />
+                        </td>
+                        <td className="p-4 font-black text-brand-600">{u.credits ?? 0}</td>
+                        <td className="p-4 font-bold text-slate-700">{u.brandCount ?? 0}</td>
+                        <td className="p-4 font-bold text-indigo-600">{u.generationCount ?? 0}</td>
+                        <td className="p-4 text-slate-500">
+                          {u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                        </td>
+                        <td className="p-4 text-right">
+                          <button
+                            onClick={() => setSelectedUserId(u.id)}
+                            className="px-3.5 py-1.5 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-600 border border-brand-200 font-extrabold text-[11px] transition-colors"
+                          >
+                            Manage User
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="p-8 text-center text-xs font-bold text-slate-400">
+                        No registered users found matching filter
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 3: CHAT SESSIONS (100% REAL DATABASE METRICS & DYNAMIC CHARTS) ── */}
+      {activeTab === 'chat-sessions' && (
+        <div className="space-y-6 animate-in fade-in">
+          {/* 9 Metric KPI Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-3">
+            {[
+              { label: 'TOTAL SESSIONS', val: chatSessionsData?.metrics?.totalSessions ?? 0, icon: MessageSquare, color: 'text-indigo-600 bg-indigo-50' },
+              { label: 'ACTIVE NOW', val: chatSessionsData?.metrics?.activeNow ?? 0, icon: Activity, color: 'text-emerald-600 bg-emerald-50' },
+              { label: 'COMPLETED', val: chatSessionsData?.metrics?.completed ?? 0, icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-50' },
+              { label: 'ABANDONED', val: chatSessionsData?.metrics?.abandoned ?? 0, icon: ShieldAlert, color: 'text-amber-600 bg-amber-50' },
+              { label: 'FAILED', val: chatSessionsData?.metrics?.failed ?? 0, icon: XCircle, color: 'text-rose-600 bg-rose-50' },
+              { label: 'TOTAL MESSAGES', val: chatSessionsData?.metrics?.totalMessages ?? 0, icon: Layers, color: 'text-purple-600 bg-purple-50' },
+              { label: 'AVG MSGS/SESS', val: chatSessionsData?.metrics?.avgMessagesPerSession ?? 0, icon: TrendingUp, color: 'text-blue-600 bg-blue-50' },
+              { label: 'AVG DURATION', val: chatSessionsData?.metrics?.avgDuration ?? '0s', icon: Clock, color: 'text-pink-600 bg-pink-50' },
+              { label: 'GUEST SESSIONS', val: chatSessionsData?.metrics?.guestSessions ?? 0, icon: Users, color: 'text-orange-600 bg-orange-50' },
+            ].map((kpi, idx) => {
+              const IconComp = kpi.icon;
+              return (
+                <div key={idx} className="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-1 text-left">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${kpi.color}`}>
+                    <IconComp className="w-4 h-4" />
+                  </div>
+                  <p className="text-xl font-black text-slate-900 tracking-tight pt-1">{kpi.val}</p>
+                  <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 leading-tight">{kpi.label}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 2 Dynamic Analytics Trend Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Chart: DAILY ACTIVE SESSIONS */}
+            <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block">DAILY ACTIVE SESSIONS</span>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-3xl font-black text-slate-900">{chatSessionsData?.dailyActiveSessions?.dailyAvg ?? 0}</span>
+                    <span className="text-[11px] font-bold text-slate-400 uppercase">DAILY AVG</span>
+                  </div>
+                  <p className="text-xs font-semibold text-slate-500 mt-0.5">Total {chatSessionsData?.dailyActiveSessions?.total7Days ?? 0} in the last 7 days</p>
+                </div>
+                <div className="w-9 h-9 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+              </div>
+
+              <DynamicAreaChart
+                data={chatSessionsData?.dailyActiveSessions?.chartData || []}
+                color="#6366F1"
+                gradientId="purpleGradient"
+              />
+            </div>
+
+            {/* Right Chart: DAILY USER SIGNUPS */}
+            <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block">DAILY USER SIGNUPS</span>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-3xl font-black text-slate-900">{chatSessionsData?.dailyUserSignups?.dailyAvg ?? 0}</span>
+                    <span className="text-[11px] font-bold text-slate-400 uppercase">DAILY AVG</span>
+                  </div>
+                  <p className="text-xs font-semibold text-slate-500 mt-0.5">Total {chatSessionsData?.dailyUserSignups?.total7Days ?? 0} in the last 7 days</p>
+                </div>
+                <div className="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <Users className="w-5 h-5" />
+                </div>
+              </div>
+
+              <DynamicAreaChart
+                data={chatSessionsData?.dailyUserSignups?.chartData || []}
+                color="#10B981"
+                gradientId="emeraldGradient"
+              />
+            </div>
+          </div>
+
+          {/* Search & Filter Controls */}
+          <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
+            <div className="relative flex-1 w-full">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              <input
+                type="text"
+                value={sessionSearch}
+                onChange={(e) => setSessionSearch(e.target.value)}
+                placeholder="Search by name, email or session ID..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-500 font-medium"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto text-xs font-bold text-slate-600">
+              <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase">STATUS</span>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="bg-transparent text-slate-900 font-bold focus:outline-none"
+                >
+                  <option value="ALL">All Statuses</option>
+                  <option value="COMPLETED">COMPLETED</option>
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="FAILED">FAILED</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase">MODE</span>
+                <select
+                  value={modeFilter}
+                  onChange={(e) => setModeFilter(e.target.value)}
+                  className="bg-transparent text-slate-900 font-bold focus:outline-none"
+                >
+                  <option value="ALL">All Modes</option>
+                  <option value="NORMAL CHAT">NORMAL CHAT</option>
+                  <option value="GENERATE IMAGE">GENERATE IMAGE</option>
+                  <option value="WEBSITE BUILDER">WEBSITE BUILDER</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                <span className="text-[10px] font-extrabold uppercase text-slate-400">FROM</span>
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="bg-transparent text-slate-900 text-xs font-semibold focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                <span className="text-[10px] font-extrabold uppercase text-slate-400">TO</span>
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="bg-transparent text-slate-900 text-xs font-semibold focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Chat Sessions Data Table */}
+          <div className="rounded-2xl border border-slate-200/90 bg-white overflow-hidden shadow-sm">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-brand-600" />
+                Chat Sessions
+                <span className="text-xs font-semibold text-slate-400">({filteredChatSessions.length} total in database)</span>
+              </h3>
+              <button onClick={handleRefresh} className="p-1.5 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50">
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                  <tr>
+                    <th className="p-3.5">SESSION ID</th>
+                    <th className="p-3.5">USER</th>
+                    <th className="p-3.5">EMAIL</th>
+                    <th className="p-3.5">MODE</th>
+                    <th className="p-3.5">START TIME</th>
+                    <th className="p-3.5">DURATION</th>
+                    <th className="p-3.5">TOTAL</th>
+                    <th className="p-3.5 text-blue-600">USER</th>
+                    <th className="p-3.5 text-emerald-600">AI</th>
+                    <th className="p-3.5 text-center">STATUS</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium">
+                  {filteredChatSessions.length > 0 ? (
+                    filteredChatSessions.map((s, idx) => (
+                      <tr
+                        key={s.sessionId || idx}
+                        onClick={() => setSelectedChatSession(s)}
+                        className="hover:bg-slate-50/80 transition-colors cursor-pointer"
+                      >
+                        <td className="p-3.5 font-mono text-brand-600 font-bold hover:underline">{s.sessionId}</td>
+                        <td className="p-3.5 font-bold text-slate-900">{s.user}</td>
+                        <td className="p-3.5 text-slate-500 font-mono">{s.email}</td>
+                        <td className="p-3.5 font-semibold text-slate-700">{s.mode}</td>
+                        <td className="p-3.5 text-slate-500">{s.startTime}</td>
+                        <td className="p-3.5 text-slate-600 font-semibold">{s.duration}</td>
+                        <td className="p-3.5 font-black text-slate-900">{s.totalMessages}</td>
+                        <td className="p-3.5 font-black text-blue-600">{s.userMessages}</td>
+                        <td className="p-3.5 font-black text-emerald-600">{s.aiMessages}</td>
+                        <td className="p-3.5 text-center">
+                          <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black border border-emerald-300 uppercase">
+                            {s.status || 'COMPLETED'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="10" className="p-8 text-center text-xs font-bold text-slate-400">
+                        No chat sessions matching filters in database
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Session Detail Modal */}
+          <AnimatePresence>
+            {selectedChatSession && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
+              >
+                <div
+                  className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                  onClick={() => setSelectedChatSession(null)}
+                />
+
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0, y: 15 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.95, opacity: 0, y: 15 }}
+                  transition={{ type: 'spring', damping: 26, stiffness: 300 }}
+                  className="relative w-full max-w-3xl bg-white rounded-[2rem] p-8 shadow-2xl z-10 max-h-[88vh] overflow-y-auto font-sans flex flex-col gap-6 text-slate-900 border border-slate-100"
+                >
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                        <MessageSquare className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-black text-slate-900 leading-tight">Session Detail</h3>
+                        <p className="text-xs font-mono text-slate-400 font-semibold">{selectedChatSession.sessionId}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedChatSession(null)}
+                      className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors text-sm font-bold"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-y-6 gap-x-6 text-xs bg-white p-2 rounded-2xl">
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-1">USER</span>
+                      <p className="font-extrabold text-slate-900 text-sm">{selectedChatSession.user}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-1">EMAIL</span>
+                      <p className="font-bold text-slate-900 text-xs truncate">{selectedChatSession.email}</p>
+                      <a
+                        href={`mailto:${selectedChatSession.email}`}
+                        className="mt-1.5 inline-flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200/80 text-[10px] font-black px-3 py-1 rounded-xl transition-colors shadow-xs"
+                      >
+                        <Mail className="w-3 h-3" />
+                        SEND MAIL
+                      </a>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-1">STATUS</span>
+                      <span className="inline-block px-3 py-1 rounded-full bg-emerald-50 text-emerald-500 border border-emerald-300/80 text-[10px] font-black uppercase">
+                        {selectedChatSession.status || 'COMPLETED'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-1">MODE</span>
+                      <p className="font-bold text-slate-900 text-xs">{selectedChatSession.mode || 'Normal Chat'}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-1">DURATION</span>
+                      <p className="font-bold text-slate-900 text-xs">{selectedChatSession.duration || '0s'}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-1">START TIME</span>
+                      <p className="font-bold text-slate-900 text-xs">{selectedChatSession.startTime}</p>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-1">LAST ACTIVITY</span>
+                      <p className="font-bold text-slate-900 text-xs">{selectedChatSession.startTime}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-1">TOTAL MESSAGES</span>
+                      <p className="font-bold text-slate-900 text-xs">{selectedChatSession.totalMessages ?? 0}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-1">USER / AI</span>
+                      <p className="font-bold text-slate-900 text-xs">{selectedChatSession.userMessages ?? 0} / {selectedChatSession.aiMessages ?? 0}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-4 border-t border-slate-100">
+                    <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-wider">
+                      CONVERSATION HISTORY
+                    </h4>
+
+                    {selectedChatSession.messages && selectedChatSession.messages.length > 0 ? (
+                      <div className="space-y-4 pt-2">
+                        {selectedChatSession.messages.map((m, idx) => {
+                          const isUser = m.sender === 'user' || m.role === 'user';
+                          return (
+                            <div
+                              key={idx}
+                              className={`flex items-start gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+                            >
+                              <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold shadow-xs ${
+                                  isUser
+                                    ? 'bg-blue-100 text-blue-500'
+                                    : 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                                }`}
+                              >
+                                {isUser ? <UserIcon className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                              </div>
+
+                              <div
+                                className={`p-4 rounded-3xl text-xs space-y-1.5 max-w-[82%] shadow-sm ${
+                                  isUser
+                                    ? 'bg-indigo-100/90 text-slate-900 rounded-tr-none'
+                                    : 'bg-white text-slate-800 border border-slate-100 rounded-tl-none'
+                                }`}
+                              >
+                                <p className="leading-relaxed font-medium whitespace-pre-wrap">
+                                  {m.text || m.content || '(No message content)'}
+                                </p>
+                                {m.timestamp && (
+                                  <p className={`text-[10px] text-right font-semibold ${isUser ? 'text-indigo-400' : 'text-slate-300'}`}>
+                                    {m.timestamp}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center text-xs font-bold text-slate-400 bg-slate-50 rounded-3xl border border-slate-200">
+                        No conversation history stored in database for this session.
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* ── TAB 4: ANALYTICS (DYNAMIC DATABASE METRICS) ── */}
+      {activeTab === 'analytics' && (
+        <div className="space-y-6 animate-in fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatCard
+              icon={TrendingUp}
+              label="Monthly Active Users (MAU)"
+              value={summary?.analytics?.mau ?? summary?.totalUsers ?? 0}
+              sub="Real count of platform accounts"
+              colorClass="bg-brand-50 text-brand-600"
+            />
+            <StatCard
+              icon={Clock}
+              label="Average Generation Latency"
+              value={summary?.analytics?.avgLatency ?? '0s'}
+              sub="Platform API telemetry target"
+              colorClass="bg-purple-50 text-purple-600"
+            />
+            <StatCard
+              icon={CheckCircle2}
+              label="System Uptime SLA"
+              value={summary?.analytics?.systemUptime ?? '100%'}
+              sub="Core microservices operational status"
+              colorClass="bg-emerald-50 text-emerald-600"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 5: PLANS ── */}
+      {activeTab === 'plans' && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 animate-in fade-in">
+          {[
+            { key: 'free', title: 'Free Tier', price: '₹0 / mo', desc: 'Personal experimentation & trial access', color: 'border-slate-200' },
+            { key: 'starter', title: 'Starter Plan', price: '₹999 / mo', desc: 'Solopreneurs & early stage brands', color: 'border-blue-300' },
+            { key: 'pro', title: 'Pro Plan', price: '₹2,499 / mo', desc: 'Growing agencies & digital studios', color: 'border-brand-300' },
+            { key: 'enterprise', title: 'Enterprise', price: '₹7,579 / mo', desc: 'Dedicated corporate infrastructure', color: 'border-purple-300' }
+          ].map((plan, i) => {
+            const count = summary?.planDistribution?.[plan.key] ?? 0;
+            return (
+              <div key={i} className={`p-6 rounded-3xl bg-white border ${plan.color} shadow-sm space-y-4 flex flex-col justify-between`}>
+                <div>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-black text-slate-900">{plan.title}</h3>
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full text-[10px] font-extrabold uppercase">
+                      {count} {count === 1 ? 'User' : 'Users'}
+                    </span>
+                  </div>
+                  <p className="text-2xl font-black text-brand-600 mt-2">{plan.price}</p>
+                  <p className="text-xs text-slate-500 font-medium mt-1">{plan.desc}</p>
+                </div>
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs transition-colors"
+                >
+                  Manage Subscriber Accounts
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── TAB 6: FINANCE (DYNAMIC REVENUE METRICS) ── */}
+      {activeTab === 'finance' && (
+        <div className="space-y-6 animate-in fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatCard
+              icon={IndianRupee}
+              label="Total Gross Revenue"
+              value={summary?.finance?.grossRevenue != null ? `₹${summary.finance.grossRevenue.toLocaleString('en-IN')}` : '₹0'}
+              sub="Calculated from active subscription tiers"
+              colorClass="bg-amber-50 text-amber-700"
+            />
+            <StatCard
+              icon={TrendingUp}
+              label="Monthly Recurring Revenue (MRR)"
+              value={summary?.finance?.mrr != null ? `₹${summary.finance.mrr.toLocaleString('en-IN')}` : '₹0'}
+              sub="Active recurring monthly subscription value"
+              colorClass="bg-emerald-50 text-emerald-600"
+            />
+            <StatCard
+              icon={CreditCard}
+              label="Average Revenue Per User (ARPU)"
+              value={summary?.finance?.arpu != null ? `₹${summary.finance.arpu.toLocaleString('en-IN')}` : '₹0'}
+              sub="Calculated across all registered accounts"
+              colorClass="bg-indigo-50 text-indigo-600"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 7: TOOL LIMIT (PERSISTED IN DATABASE) ── */}
+      {activeTab === 'tool-limit' && (
+        <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6 animate-in fade-in">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900">Per-Plan Quota &amp; Rate Limits</h3>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">Persisted dynamically in MongoDB system settings</p>
+            </div>
+            {toolLimitsSuccess && (
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                {toolLimitsSuccess}
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            {Object.entries(toolLimits).map(([key, limit]) => (
+              <div key={key} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
+                <span className="text-xs font-black text-slate-900 uppercase tracking-wider">{key.replace(/([A-Z])/g, ' $1')}</span>
+                <div className="flex flex-wrap items-center gap-3 text-xs font-bold">
+                  <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                    <span className="text-slate-400 text-[10px]">Free:</span>
+                    <input
+                      type="text"
+                      value={limit.free}
+                      onChange={(e) => setToolLimits(prev => ({ ...prev, [key]: { ...prev[key], free: e.target.value } }))}
+                      className="w-14 bg-transparent text-slate-900 text-xs font-bold focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                    <span className="text-slate-400 text-[10px]">Starter:</span>
+                    <input
+                      type="text"
+                      value={limit.starter}
+                      onChange={(e) => setToolLimits(prev => ({ ...prev, [key]: { ...prev[key], starter: e.target.value } }))}
+                      className="w-14 bg-transparent text-slate-900 text-xs font-bold focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                    <span className="text-slate-400 text-[10px]">Pro:</span>
+                    <input
+                      type="text"
+                      value={limit.pro}
+                      onChange={(e) => setToolLimits(prev => ({ ...prev, [key]: { ...prev[key], pro: e.target.value } }))}
+                      className="w-14 bg-transparent text-slate-900 text-xs font-bold focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-brand-50 px-3 py-1.5 rounded-lg border border-brand-200">
+                    <span className="text-brand-600 text-[10px]">Enterprise:</span>
+                    <input
+                      type="text"
+                      value={limit.enterprise}
+                      onChange={(e) => setToolLimits(prev => ({ ...prev, [key]: { ...prev[key], enterprise: e.target.value } }))}
+                      className="w-20 bg-transparent text-brand-700 text-xs font-black focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={handleSaveToolLimits}
+            disabled={toolLimitsSaving}
+            className="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-md shadow-brand-500/20 flex items-center gap-2 transition-all disabled:opacity-50"
+          >
+            <Save className="w-4 h-4" />
+            {toolLimitsSaving ? 'Saving Limits...' : 'Save Tool Limits to Database'}
+          </button>
+        </div>
+      )}
+
+      {/* ── TAB 8: LEGAL PAGES (PERSISTED IN DATABASE) ── */}
+      {activeTab === 'legal-pages' && (
+        <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4 animate-in fade-in">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900">Legal Content &amp; Policy Management</h3>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">Stored &amp; fetched dynamically from backend database</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {legalSuccess && (
+                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  {legalSuccess}
+                </span>
+              )}
+              <div className="flex gap-2">
+                {['terms', 'privacy', 'refund'].map(doc => (
+                  <button
+                    key={doc}
+                    onClick={() => setSelectedLegalDoc(doc)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold uppercase transition-all ${
+                      selectedLegalDoc === doc ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {doc}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <textarea
+            rows={10}
+            value={legalContent[selectedLegalDoc] || ''}
+            onChange={(e) => setLegalContent(prev => ({ ...prev, [selectedLegalDoc]: e.target.value }))}
+            placeholder={`Enter dynamic content for ${selectedLegalDoc}...`}
+            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono text-slate-800 leading-relaxed focus:outline-none focus:border-brand-500"
+          />
+          <button
+            onClick={handleSaveLegalContent}
+            disabled={legalSaving}
+            className="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-md shadow-brand-500/20 flex items-center gap-2 transition-all disabled:opacity-50"
+          >
+            <Save className="w-4 h-4" />
+            {legalSaving ? 'Publishing...' : 'Publish Legal Document to Database'}
+          </button>
+        </div>
+      )}
+
+      {/* ── TAB 9: HELP DESK (REAL SUPPORT TICKETS FROM DATABASE) ── */}
+      {activeTab === 'help-desk' && (
+        <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4 animate-in fade-in">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-base font-extrabold text-slate-900">Help Desk Support Ticket Queue</h3>
+            <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-extrabold border border-emerald-200 flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              {helpDeskTickets.filter(t => t.status === 'Open').length > 0
+                ? `${helpDeskTickets.filter(t => t.status === 'Open').length} Open Ticket(s)`
+                : 'All Clear'}
+            </span>
+          </div>
+
+          {helpDeskTickets.length > 0 ? (
+            <div className="space-y-3">
+              {helpDeskTickets.map((ticket) => (
+                <div key={ticket.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                  <div className="space-y-1 max-w-xl">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black text-brand-600 font-mono">{ticket.id}</span>
+                      <span className="text-xs font-extrabold text-slate-900">— {ticket.subject}</span>
+                      <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold">
+                        {ticket.category}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 font-medium leading-relaxed">{ticket.message}</p>
+                    <p className="text-[11px] text-slate-400 font-medium">{ticket.email} {ticket.name ? `(${ticket.name})` : ''} • {ticket.date}</p>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={ticket.status}
+                      onChange={(e) => handleUpdateTicketStatus(ticket.id, e.target.value)}
+                      className="px-3 py-1.5 rounded-xl text-xs font-extrabold border border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-brand-500"
+                    >
+                      <option value="Open">Open</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Resolved">Resolved</option>
+                      <option value="Closed">Closed</option>
+                    </select>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-12 text-center text-xs font-extrabold text-slate-400 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+              <Headphones className="w-8 h-8 text-slate-300 mx-auto" />
+              <p>No support or feedback tickets submitted yet.</p>
+              <p className="text-[11px] font-medium text-slate-400">Tickets submitted through the feedback endpoint will automatically appear here in real time.</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* User Detail Drawer */}
       <AnimatePresence>
         {selectedUserId && (
-          <UserDetailDrawer userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
+          <UserDetailDrawer
+            userId={selectedUserId}
+            onClose={() => setSelectedUserId(null)}
+            onUserUpdated={fetchData}
+          />
         )}
       </AnimatePresence>
     </div>

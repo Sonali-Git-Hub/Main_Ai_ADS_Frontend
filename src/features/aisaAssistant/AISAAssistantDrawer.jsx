@@ -155,12 +155,25 @@ export const AISAAssistantDrawer = () => {
     history.push({ role: 'user', content: promptText });
 
     try {
+      let currentUserEmail = activeWorkspace?.userEmail || null;
+      let currentUserName = null;
+      try {
+        const savedUserStr = localStorage.getItem('aisa_user');
+        if (savedUserStr) {
+          const u = JSON.parse(savedUserStr);
+          if (u.email) currentUserEmail = u.email;
+          if (u.name) currentUserName = u.name;
+        }
+      } catch (e) {}
+
       const result = await chatAPI.sendMessage({
         message: promptText,
         sessionId,
         model: selectedModel,
         history,
         workspaceId: activeWorkspace?._id || activeWorkspace?.id,
+        userEmail: currentUserEmail,
+        userName: currentUserName,
         brandContext: activeWorkspace?.brandVoiceTone || activeWorkspace?.positioningSummary || '',
         systemInstruction: `You are AI Ads™ Assistant, the official AI copilot embedded inside the AI Ads™ Platform for ${activeWorkspace?.brandName || 'the brand'}.
 
@@ -209,7 +222,7 @@ Keep your response short, concise, and to the point. DO NOT give long detailed r
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">AI Ads™ Assistant</h3>
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">AI Ads™ Chatbot Assistant</h3>
                 <select
                   value={selectedModel}
                   onChange={(e) => setSelectedModel(e.target.value)}

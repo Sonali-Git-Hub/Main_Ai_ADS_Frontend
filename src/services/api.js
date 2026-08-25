@@ -282,6 +282,14 @@ export const adminAPI = {
   getDashboardSummary: () => adminApiFetch('/admin/dashboard-summary'),
   getAllUserStats: () => adminApiFetch('/admin/users-stats'),
   getUserDetail: (userId) => adminApiFetch(`/admin/user/${userId}`),
+  updateUserQuota: (userId, data) => adminApiFetch(`/admin/user/${userId}/quota`, { method: 'PUT', body: data }),
+  getChatSessions: () => adminApiFetch('/admin/chat-sessions'),
+  getLegalPages: () => adminApiFetch('/admin/legal'),
+  updateLegalPages: (data) => adminApiFetch('/admin/legal', { method: 'POST', body: data }),
+  getToolLimits: () => adminApiFetch('/admin/tool-limits'),
+  updateToolLimits: (data) => adminApiFetch('/admin/tool-limits', { method: 'POST', body: data }),
+  getHelpDeskTickets: () => adminApiFetch('/admin/help-desk'),
+  updateTicketStatus: (ticketId, status) => adminApiFetch(`/admin/help-desk/${ticketId}/status`, { method: 'PATCH', body: { status } }),
 };
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
