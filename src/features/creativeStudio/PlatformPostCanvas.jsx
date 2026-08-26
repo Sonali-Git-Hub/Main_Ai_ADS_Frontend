@@ -132,9 +132,19 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
       category = 'SEO_PRESS';
     }
 
+    const escapeXml = (str = '') => {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+    };
+
     const titleText = promptText.trim() || topic || 'AI Commercial Campaign Visual';
-    const displayTitle = titleText.length > 55 ? titleText.slice(0, 52) + '...' : titleText;
-    const bName = brandName || brand || "Haldiram's";
+    const displayTitle = escapeXml(titleText.length > 55 ? titleText.slice(0, 52) + '...' : titleText);
+    const bName = escapeXml(brandName || brand || "AISA");
+    const safeStyle = escapeXml(styleName);
 
     let bgGradient = '';
     let accentGrad = '';
@@ -270,6 +280,8 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
       `;
     }
 
+    const safeCategory = escapeXml(categoryBadge);
+
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="100%" height="100%">
       <defs>
         ${bgGradient}
@@ -300,7 +312,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
       ${centerPieceSvg}
 
       <rect x="320" y="80" width="440" height="50" rx="25" fill="rgba(15, 23, 42, 0.85)" stroke="url(#accent)" stroke-width="2" filter="url(#shadow)"/>
-      <text x="540" y="113" fill="#FCD34D" font-family="'Plus Jakarta Sans', sans-serif" font-size="18" font-weight="800" text-anchor="middle" letter-spacing="2.5">${bName.toUpperCase()} • ${categoryBadge}</text>
+      <text x="540" y="113" fill="#FCD34D" font-family="'Plus Jakarta Sans', sans-serif" font-size="18" font-weight="800" text-anchor="middle" letter-spacing="2.5">${bName.toUpperCase()} • ${safeCategory}</text>
 
       <g transform="translate(90, 710)" filter="url(#shadow)">
         <rect x="0" y="0" width="900" height="280" rx="32" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(255, 255, 255, 0.15)" stroke-width="2"/>
@@ -310,15 +322,15 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
         <text x="150" y="59" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="14" font-weight="800" text-anchor="middle" letter-spacing="1.5">AI CREATIVE ASSET</text>
 
         <text x="40" y="125" fill="#F8FAFC" font-family="'Plus Jakarta Sans', sans-serif" font-size="30" font-weight="800">${displayTitle}</text>
-        <text x="40" y="175" fill="#94A3B8" font-family="'Plus Jakarta Sans', sans-serif" font-size="20" font-weight="500">Style: ${styleName} | 4K HDR Vector Render</text>
+        <text x="40" y="175" fill="#94A3B8" font-family="'Plus Jakarta Sans', sans-serif" font-size="20" font-weight="500">Style: ${safeStyle} | 4K HDR Vector Render</text>
 
         <line x1="40" y1="215" x2="860" y2="215" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
 
-        <text x="40" y="248" fill="#FCD34D" font-family="'Plus Jakarta Sans', sans-serif" font-size="16" font-weight="700">⚡ Powered by Google Cloud Vertex AI (Gemini 3.5 Engine)</text>
+        <text x="40" y="248" fill="#FCD34D" font-family="'Plus Jakarta Sans', sans-serif" font-size="16" font-weight="700">⚡ Powered by Google Cloud Vertex AI (Gemini 3.1 Image Engine)</text>
         <text x="860" y="248" fill="#64748B" font-family="'Plus Jakarta Sans', sans-serif" font-size="16" font-weight="600" text-anchor="end">1080 x 1080 px</text>
       </g>
     </svg>`;
-    return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.trim())}`;
   };
 
   const rawImagePrompt = contentData?.imagePrompt || `${brand} ${topic} ${hook}`.slice(0, 150);
@@ -349,21 +361,41 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
     const cost = 5;
     if ((credits?.balance ?? 0) < cost) { setIsCreditModalOpen(true); return; }
     setGenerating(true);
-    deductVisualCredits(cost, "AI Visual: " + topic.slice(0,30));
-    const activePrompt = contentData?.imagePrompt || `${brand} ${topic} ${hook}`;
+    deductVisualCredits(cost, "AI Visual: " + topic.slice(0, 30));
+
+    // Build rich brand context so backend AI can generate a perfect prompt
+    const brandPayload = {
+      prompt:         contentData?.imagePrompt || topic,
+      topic:          topic,
+      hook:           hook,
+      brand:          brand,
+      platform:       platform,
+      style:          visualStyle,
+      strategyPillar: generatedContent?.strategyPillar || generatedContent?.pillar || contentData?.strategyPillar || '',
+      industry:       workspace?.industry || workspace?.niche || '',
+      brandColors:    workspace?.brandColors || [],
+      aspect:         platform === 'linkedin' ? '16:9' : platform === 'story' ? '9:16' : '1:1',
+      creditCost:     cost,
+    };
+
     try {
-      const res  = await fetch("http://localhost:5000/api/creative/visual/generate", {
+      const res = await fetch("http://localhost:5000/api/creative/visual/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: activePrompt, style: visualStyle, platform })
+        body: JSON.stringify(brandPayload),
       });
       const data = await res.json();
-      if (data.success && data.asset?.imageUrl) setVisualUrl(data.asset.imageUrl);
-      else throw new Error("fallback");
-    } catch {
-      setVisualUrl(generateVertexAISvgDataUrl(activePrompt, brand));
+      if (data.success && data.asset?.imageUrl) {
+        setVisualUrl(data.asset.imageUrl);
+      } else {
+        throw new Error(data.error || "API returned no image");
+      }
+    } catch (err) {
+      console.warn("[Creative Studio] Image generation fallback:", err.message);
+      setVisualUrl(generateVertexAISvgDataUrl(topic, brand));
+    } finally {
+      setGenerating(false);
     }
-    finally { setGenerating(false); }
   };
 
   const isCarousel  = rawPostType.includes("carousel");
@@ -466,7 +498,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
                 </div>
               </div>
               <div className="aspect-square relative bg-slate-900 overflow-hidden">
-                <img src={slide.imageUrl || `https://image.pollinations.ai/prompt/${encodeURIComponent((slide.visualPrompt || slide.headline || headline || brand || 'Modern Social Post') + ', 8k studio photography, advertising visual')}?width=800&height=800&nologo=true`} alt={"Slide "+(activeSlide+1)} className="w-full h-full object-cover opacity-70" />
+                <img src={slide.imageUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80"} alt={"Slide "+(activeSlide+1)} className="w-full h-full object-cover opacity-70" />
                 <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-sm text-white text-[9px] font-black">{activeSlide+1} / {carouselSlides.length}</div>
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-5 space-y-2">
                   <span className="text-[8px] font-black uppercase tracking-widest text-white/50">{platform.toUpperCase()} SLIDE {slide.slide}</span>

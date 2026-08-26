@@ -72,15 +72,15 @@ export const DashboardModule = () => {
   ];
 
   return (
-    <div className="space-y-6 animate-in fade-in max-w-7xl mx-auto p-6">
+    <div className="space-y-4 animate-in fade-in max-w-7xl mx-auto px-6 pt-1 pb-6">
       {/* Banner */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-brand-50 via-white to-purple-50 dark:from-brand-900/60 dark:via-slate-900 dark:to-purple-950/60 border border-brand-200 dark:border-brand-500/30 shadow-xl relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="relative z-10 space-y-1">
+      <div className="p-3 rounded-2xl bg-gradient-to-r from-brand-50 via-white to-purple-50 dark:from-brand-900/60 dark:via-slate-900 dark:to-purple-950/60 border border-brand-200 dark:border-brand-500/30 shadow-lg relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+        <div className="relative z-10 space-y-0.5">
           <div className="flex items-center gap-2">
             <span className="text-xs uppercase font-extrabold tracking-widest text-brand-600 dark:text-brand-400 bg-brand-500/10 dark:bg-brand-500/20 px-2.5 py-0.5 rounded-full">{t('canonicalOps', 'Canonical Operations')}</span>
             <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('opsFlow', 'Brand → Strategy → SEO → Create → Approve → Publish')}</span>
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">{t('opsHubTitle', 'AI Ads™ Operations Hub')}</h1>
+          <h1 className="text-lg font-extrabold text-slate-900 dark:text-white">{t('opsHubTitle', 'AI Ads™ Operations Hub')}</h1>
           <p className="text-xs text-slate-600 dark:text-slate-300 max-w-xl">
             {t('currentlyGoverning', 'Currently governing')} <strong className="text-slate-900 dark:text-white">{activeWorkspace?.brandName || 'your brand'}</strong> ({activeWorkspace?.domainUrl || 'website'}). {t('anchoredToDna', 'All output is anchored to immutable Brand DNA.')}
           </p>
@@ -92,7 +92,7 @@ export const DashboardModule = () => {
             className="btn-secondary text-xs flex items-center gap-1.5"
           >
             <Dna className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-            {t('brandDna', 'Brand DNA')}
+            {t('brandDna', 'Enter Your Brand')}
           </button>
           <button
             onClick={() => setIsQuickPostOpen(true)}
@@ -217,8 +217,8 @@ export const DashboardModule = () => {
                     </td>
                     <td className="py-3 px-3">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${item.status === 'APPROVED' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30' :
-                          item.status === 'RED_FLAG_CITATION_NEEDED' ? 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 dark:border-rose-500/30' :
-                            'bg-amber-500/10 dark:bg-amber-500/20 text-amber-650 dark:text-amber-300 border border-amber-500/20 dark:border-amber-500/30'
+                        item.status === 'RED_FLAG_CITATION_NEEDED' ? 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 dark:border-rose-500/30' :
+                          'bg-amber-500/10 dark:bg-amber-500/20 text-amber-650 dark:text-amber-300 border border-amber-500/20 dark:border-amber-500/30'
                         }`}>
                         {item.status}
                       </span>

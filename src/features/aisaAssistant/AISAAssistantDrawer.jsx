@@ -174,7 +174,9 @@ export const AISAAssistantDrawer = () => {
         workspaceId: activeWorkspace?._id || activeWorkspace?.id,
         userEmail: currentUserEmail,
         userName: currentUserName,
-        brandContext: activeWorkspace?.brandVoiceTone || activeWorkspace?.positioningSummary || '',
+        brandContext: typeof activeWorkspace?.brandVoiceTone === 'string'
+          ? activeWorkspace.brandVoiceTone
+          : (typeof activeWorkspace?.positioningSummary === 'string' ? activeWorkspace.positioningSummary : (activeWorkspace?.brandName || '')),
         systemInstruction: `You are AI Ads™ Assistant, the official AI copilot embedded inside the AI Ads™ Platform for ${activeWorkspace?.brandName || 'the brand'}.
 
 MANDATORY PLATFORM DIRECTIVE:

@@ -99,7 +99,7 @@ export const ContentStudioModule = () => {
           setDraftingBlog(true);
           contentAPI.generateBlogDraft({ workspaceId, topic, keywords: blogKeywords })
             .then(res => { if (res.article || res.draft) setBlogDraft(res.article || res.draft); })
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => setDraftingBlog(false));
         }
       } else if (platformRaw === 'email') {
@@ -135,15 +135,15 @@ export const ContentStudioModule = () => {
             topic: topic,
             postType: postType.toLowerCase(),
           })
-          .then(res => {
-            if (res.data) setSocialResult(res.data);
-          })
-          .catch(err => {
-            console.error('Auto generate social error:', err);
-          })
-          .finally(() => {
-            setDraftingSocial(false);
-          });
+            .then(res => {
+              if (res.data) setSocialResult(res.data);
+            })
+            .catch(err => {
+              console.error('Auto generate social error:', err);
+            })
+            .finally(() => {
+              setDraftingSocial(false);
+            });
         }
       }
 
@@ -242,7 +242,7 @@ export const ContentStudioModule = () => {
         national_daily: 'National Daily Newspaper Front-Page Feature',
         trade_magazine: 'Industry Trade Magazine Feature Story'
       };
-      
+
       const mockNewspaperDraft = {
         id: `np_${Date.now()}`,
         headline: newspaperTopic.toUpperCase(),
@@ -347,14 +347,14 @@ export const ContentStudioModule = () => {
       });
       if (res.email) {
         setEmailResult(res.email);
-        if (setGeneratedContent) setGeneratedContent({ 
-          ...res.email, 
-          type: 'EMAIL', 
-          platform: 'email', 
+        if (setGeneratedContent) setGeneratedContent({
+          ...res.email,
+          type: 'EMAIL',
+          platform: 'email',
           topic: emailForm.subject || emailForm.purpose || 'Newsletter',
           hook: res.email.subject || res.email.headline || 'Email Update',
           caption: res.email.body || '',
-          hashtags: [] 
+          hashtags: []
         });
       }
     } catch (err) {
@@ -467,854 +467,869 @@ export const ContentStudioModule = () => {
 
           {/* Render Active Sub-Page parameters & editor canvas */}
           {tab === 'BLOG' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-            <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('blog', 'Blog')} Parameters</h2>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Article Topic</label>
-              <textarea
-                rows={3}
-                value={blogTopic}
-                onChange={(e) => setBlogTopic(e.target.value)}
-                className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Keywords (comma-separated)</label>
-              <input
-                type="text"
-                value={blogKeywords}
-                onChange={(e) => setBlogKeywords(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
-              />
-            </div>
-            <button
-              onClick={handleDraftBlog}
-              disabled={draftingBlog}
-              className="w-full btn-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60"
-            >
-              {draftingBlog ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              {draftingBlog ? 'Drafting Blog...' : 'Generate Full Article'}
-            </button>
-          </div>
-
-          <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Editorial Canvas</span>
-              {blogDraft && (
-                <button onClick={() => submitToApprovals(blogDraft)} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1">
-                  <Send className="w-3.5 h-3.5" /> Submit to Approvals
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('blog', 'Blog')} Parameters</h2>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Article Topic</label>
+                  <textarea
+                    rows={3}
+                    value={blogTopic}
+                    onChange={(e) => setBlogTopic(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Keywords (comma-separated)</label>
+                  <input
+                    type="text"
+                    value={blogKeywords}
+                    onChange={(e) => setBlogKeywords(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
+                  />
+                </div>
+                <button
+                  onClick={handleDraftBlog}
+                  disabled={draftingBlog}
+                  className="w-full btn-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {draftingBlog ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  {draftingBlog ? 'Drafting Blog...' : 'Generate Full Article'}
                 </button>
-              )}
-            </div>
+              </div>
 
-            {factCheck && (
-              <div className={`p-3.5 rounded-2xl border flex items-center justify-between text-xs ${
-                factCheck.passed ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300' : 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300'
-              }`}>
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <div>
-                    <span className="font-bold uppercase tracking-wider text-[10px]">Fact-Check Verification: {factCheck.status}</span>
-                    <p className="text-[11px] font-medium">Claims verified against Brand DNA repository.</p>
-                  </div>
+              <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Editorial Canvas</span>
+                  {blogDraft && (
+                    <button onClick={() => submitToApprovals(blogDraft)} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1">
+                      <Send className="w-3.5 h-3.5" /> Submit to Approvals
+                    </button>
+                  )}
                 </div>
-                <span className="font-extrabold text-sm px-2 py-0.5 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{factCheck.score}%</span>
-              </div>
-            )}
 
-            {blogDraft ? (
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  value={blogDraft.title}
-                  onChange={(e) => setBlogDraft({ ...blogDraft, title: e.target.value })}
-                  className="w-full text-base font-extrabold text-slate-900 dark:text-white bg-transparent border-b border-slate-200 dark:border-slate-800 pb-2 focus:outline-none"
-                />
-                <textarea
-                  rows={14}
-                  value={blogDraft.content}
-                  onChange={(e) => setBlogDraft({ ...blogDraft, content: e.target.value })}
-                  className="w-full p-4 rounded-2xl font-mono text-xs leading-relaxed text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
-                />
-              </div>
-            ) : (
-              <div className="p-12 text-center text-slate-500 space-y-2">
-                <FileText className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600" />
-                <p className="text-xs font-medium">Enter a topic and click "Generate Full Article" to draft an AI blog article with automatic fact checking.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+                {factCheck && (
+                  <div className={`p-3.5 rounded-2xl border flex items-center justify-between text-xs ${factCheck.passed ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300' : 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300'
+                    }`}>
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      <div>
+                        <span className="font-bold uppercase tracking-wider text-[10px]">Fact-Check Verification: {factCheck.status}</span>
+                        <p className="text-[11px] font-medium">Claims verified against Brand DNA repository.</p>
+                      </div>
+                    </div>
+                    <span className="font-extrabold text-sm px-2 py-0.5 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{factCheck.score}%</span>
+                  </div>
+                )}
 
-      {/* 2. {t('socialMedia', 'Social Media')} Studio */}
-      {tab === 'SOCIAL' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-            <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('socialMedia', 'Social Media')} Parameters</h2>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Platform</label>
-              <select
-                value={socialPlatform}
-                onChange={(e) => setSocialPlatform(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 capitalize"
-              >
-                {['instagram', 'linkedin', 'twitter', 'facebook', 'youtube', 'tiktok'].map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
+                {blogDraft ? (
+                  <div className="space-y-4">
+                    <input
+                      type="text"
+                      value={blogDraft.title}
+                      onChange={(e) => setBlogDraft({ ...blogDraft, title: e.target.value })}
+                      className="w-full text-base font-extrabold text-slate-900 dark:text-white bg-transparent border-b border-slate-200 dark:border-slate-800 pb-2 focus:outline-none"
+                    />
+                    <textarea
+                      rows={14}
+                      value={blogDraft.content}
+                      onChange={(e) => setBlogDraft({ ...blogDraft, content: e.target.value })}
+                      className="w-full p-4 rounded-2xl font-mono text-xs leading-relaxed text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+                    />
+                  </div>
+                ) : (
+                  <div className="p-12 text-center text-slate-500 space-y-2">
+                    <FileText className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600" />
+                    <p className="text-xs font-medium">Enter a topic and click "Generate Full Article" to draft an AI blog article with automatic fact checking.</p>
+                  </div>
+                )}
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Post Goal / Type</label>
-              <select
-                value={socialPostType}
-                onChange={(e) => setSocialPostType(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 capitalize"
-              >
-                {['educational', 'promotional', 'thought_leadership', 'engagement'].map((t) => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Topic</label>
-              <textarea
-                rows={3}
-                value={socialTopic}
-                onChange={(e) => setSocialTopic(e.target.value)}
-                className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
-              />
-            </div>
-            <button
-              onClick={handleGenerateSocial}
-              disabled={draftingSocial}
-              className="w-full btn-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60"
-            >
-              {draftingSocial ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              {draftingSocial ? 'Generating Post...' : 'Generate Social Post'}
-            </button>
-          </div>
+          )}
 
-          <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Social Asset</h2>
-              {socialResult && (
-                <button onClick={() => submitToApprovals(socialResult)} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1">
-                  <Send className="w-3.5 h-3.5" /> Submit to Approvals
+          {/* 2. {t('socialMedia', 'Social Media')} Studio */}
+          {tab === 'SOCIAL' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('socialMedia', 'Social Media')} Parameters</h2>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Platform</label>
+                  <select
+                    value={socialPlatform}
+                    onChange={(e) => setSocialPlatform(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 capitalize"
+                  >
+                    {['instagram', 'linkedin', 'twitter', 'facebook', 'youtube', 'tiktok'].map((p) => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Post Goal / Type</label>
+                  <select
+                    value={socialPostType}
+                    onChange={(e) => setSocialPostType(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 capitalize"
+                  >
+                    {['educational', 'promotional', 'thought_leadership', 'engagement'].map((t) => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Topic</label>
+                  <textarea
+                    rows={3}
+                    value={socialTopic}
+                    onChange={(e) => setSocialTopic(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
+                  />
+                </div>
+                <button
+                  onClick={handleGenerateSocial}
+                  disabled={draftingSocial}
+                  className="w-full btn-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {draftingSocial ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  {draftingSocial ? 'Generating Post...' : 'Generate Social Post'}
                 </button>
-              )}
-            </div>
+              </div>
 
-            {socialResult ? (
-              <div className="bg-white dark:bg-slate-900 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden p-6 space-y-6">
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center font-extrabold text-brand-600 dark:text-brand-400 text-xs uppercase overflow-hidden">
-                      {activeWorkspace?.brandName ? activeWorkspace.brandName.substring(0, 4).toUpperCase() : 'AISA'}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                          {activeWorkspace?.brandName ? `${activeWorkspace.brandName.toUpperCase()} CONTENT COPY` : 'AISA CONTENT COPY'}
-                        </span>
-                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
-                          TEXT COPY SYNCHRONIZED
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 font-medium">Platform: <span className="uppercase font-bold text-slate-700 dark:text-slate-300">{socialPlatform}</span> · Topic: "{socialTopic}"</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        const fullText = `HOOK:\n${socialResult.hook || ''}\n\nSTORYTELLING:\n${socialResult.storytelling || ''}\n\nCAPTION:\n${socialResult.shortCaption || socialResult.longCaption || socialResult.caption || ''}\n\nCTA:\n${socialResult.cta || socialResult.callToAction || ''}\n\nHASHTAGS:\n${(socialResult.hashtags || []).join(' ')}`;
-                        navigator.clipboard.writeText(fullText);
-                        alert('All content copy copied to clipboard!');
-                      }}
-                      className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm"
-                    >
-                      <Copy className="w-3.5 h-3.5" /> Copy All Text
+              <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Social Asset</h2>
+                  {socialResult && (
+                    <button onClick={() => submitToApprovals(socialResult)} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1">
+                      <Send className="w-3.5 h-3.5" /> Submit to Approvals
                     </button>
-                    <button
-                      onClick={() => setActiveModule('creative')}
-                      className="py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" /> Creative Studio →
-                    </button>
-                    <button onClick={() => setSocialResult(null)} className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-400 dark:text-slate-500 transition-colors">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
+                  )}
                 </div>
 
-                {/* Banner notice explaining focus on copy */}
-                <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-between text-xs text-indigo-700 dark:text-indigo-300 font-medium">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-brand-500 flex-shrink-0" />
-                    <p><strong>Content Studio focus:</strong> Structured text copy (Hook, Storytelling, Captions, CTAs, SEO Hashtags). Generate matching visual assets in <strong>Creative Studio</strong>.</p>
-                  </div>
-                </div>
-
-                {/* Structured Rectangle Cards Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                  {/* ── CARD 1: HOOK / HEADLINE ── */}
-                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-brand-500/40 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <span className="px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
-                        + HOOK / HEADLINE
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => handleRegenerateSection('hook')}
-                          disabled={regeneratingSection === 'hook'}
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-brand-50 hover:text-brand-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
-                        >
-                          {regeneratingSection === 'hook' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                          {regeneratingSection === 'hook' ? 'Regenerating...' : 'Regenerate'}
-                        </button>
-                        <button
-                          onClick={() => navigator.clipboard.writeText(socialResult.hook || '')}
-                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-brand-500 transition-colors"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">
-                      {socialResult.hook || 'Upgrade Your Brand Strategy with High-Converting Content! 🚀'}
-                    </h3>
-                  </div>
-
-                  {/* ── CARD 2: STORYTELLING ANGLE ── */}
-                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-purple-500/40 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <span className="px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
-                        📖 STORYTELLING ANGLE
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => handleRegenerateSection('storytelling')}
-                          disabled={regeneratingSection === 'storytelling'}
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-purple-50 hover:text-purple-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
-                        >
-                          {regeneratingSection === 'storytelling' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                          {regeneratingSection === 'storytelling' ? 'Regenerating...' : 'Regenerate'}
-                        </button>
-                        <button
-                          onClick={() => navigator.clipboard.writeText(socialResult.storytelling || 'Every brand has a story, but only the ones with consistent voice build lasting loyalty.')}
-                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-brand-500 transition-colors"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed italic">
-                      "{socialResult.storytelling || 'Every brand has a story, but only the ones with consistent voice build lasting loyalty. When you anchor your content to your Brand DNA, every post resonates deeper and converts faster.'}"
-                    </p>
-                  </div>
-
-                  {/* ── CARD 3: CAPTION & BODY COPY ── */}
-                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm md:col-span-2 hover:border-emerald-500/40 transition-colors">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
+                {socialResult ? (
+                  <div className="bg-white dark:bg-slate-900 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden p-6 space-y-6">
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 gap-3">
                       <div className="flex items-center gap-3">
-                        <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-widest">
-                          ✍️ CAPTION & BODY COPY
-                        </span>
-                        {/* Short / Long Toggle */}
-                        <div className="flex items-center gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                          <button
-                            onClick={() => setCaptionMode('short')}
-                            className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all ${
-                              captionMode === 'short'
-                                ? 'bg-emerald-500 text-white shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                            }`}
-                          >
-                            Short Caption
-                          </button>
-                          <button
-                            onClick={() => setCaptionMode('long')}
-                            className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all ${
-                              captionMode === 'long'
-                                ? 'bg-emerald-500 text-white shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                            }`}
-                          >
-                            Long / Narrative
-                          </button>
+                        <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center font-extrabold text-brand-600 dark:text-brand-400 text-xs uppercase overflow-hidden">
+                          {activeWorkspace?.brandName ? activeWorkspace.brandName.substring(0, 4).toUpperCase() : 'AISA'}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                              {activeWorkspace?.brandName ? `${activeWorkspace.brandName.toUpperCase()} CONTENT COPY` : 'AISA CONTENT COPY'}
+                            </span>
+                            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                              TEXT COPY SYNCHRONIZED
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 font-medium">Platform: <span className="uppercase font-bold text-slate-700 dark:text-slate-300">{socialPlatform}</span> · Topic: "{socialTopic}"</p>
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleRegenerateSection(captionMode === 'short' ? 'shortCaption' : 'longCaption')}
-                          disabled={regeneratingSection === 'shortCaption' || regeneratingSection === 'longCaption'}
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                          onClick={() => {
+                            const fullText = `HOOK:\n${socialResult.hook || ''}\n\nSTORYTELLING:\n${socialResult.storytelling || ''}\n\nCAPTION:\n${socialResult.shortCaption || socialResult.longCaption || socialResult.caption || ''}\n\nCTA:\n${socialResult.cta || socialResult.callToAction || ''}\n\nHASHTAGS:\n${(socialResult.hashtags || []).join(' ')}`;
+                            navigator.clipboard.writeText(fullText);
+                            alert('All content copy copied to clipboard!');
+                          }}
+                          className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm"
                         >
-                          {(regeneratingSection === 'shortCaption' || regeneratingSection === 'longCaption') ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                          {(regeneratingSection === 'shortCaption' || regeneratingSection === 'longCaption') ? 'Regenerating...' : 'Regenerate'}
+                          <Copy className="w-3.5 h-3.5" /> Copy All Text
                         </button>
                         <button
                           onClick={() => {
-                            const txt = captionMode === 'short'
-                              ? (socialResult.shortCaption || socialResult.short_caption || '')
-                              : (socialResult.longCaption || socialResult.caption || '');
-                            navigator.clipboard.writeText(txt);
+                            if (setGeneratedContent) {
+                              setGeneratedContent({
+                                platform: socialPlatform,
+                                type: 'SOCIAL',
+                                topic: socialTopic,
+                                hook: socialResult?.hook || socialTopic,
+                                caption: socialResult?.shortCaption || socialResult?.longCaption || socialResult?.caption || '',
+                                shortCaption: socialResult?.shortCaption || '',
+                                longCaption: socialResult?.longCaption || '',
+                                storytelling: socialResult?.storytelling || '',
+                                cta: socialResult?.cta || socialResult?.callToAction || '',
+                                hashtags: socialResult?.hashtags || [],
+                                strategyPillar: socialResult?.strategyPillar || activeWorkspace?.positioningSummary || 'Brand Strategy',
+                                data: socialResult,
+                              });
+                            }
+                            setActiveModule('creative');
                           }}
-                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-emerald-500 transition-colors"
+                          className="py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
                         >
-                          <Copy className="w-3.5 h-3.5" />
+                          <Sparkles className="w-3.5 h-3.5" /> Creative Studio →
+                        </button>
+                        <button onClick={() => setSocialResult(null)} className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-400 dark:text-slate-500 transition-colors">
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
 
-                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                      {captionMode === 'short' ? (
-                        <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">
-                          {socialResult.shortCaption || socialResult.short_caption || 'Transform your brand velocity with AI-driven content tailored to your audience!'}
-                        </p>
-                      ) : (
-                        <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">
-                          {socialResult.longCaption || socialResult.caption || "Discover how consistent brand DNA elevates your marketing output. Whether you are running social campaigns, newsletters, or ad copy, maintaining a unified tone is essential for building trust and scaling conversions. Start leveraging AI Ads today to automate your workflow without sacrificing brand quality!"}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* ── CARD 4: CALL TO ACTION (CTA) ── */}
-                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-amber-500/40 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase tracking-widest">
-                        🎯 CALL TO ACTION (CTA)
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => handleRegenerateSection('cta')}
-                          disabled={regeneratingSection === 'cta'}
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-amber-50 hover:text-amber-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
-                        >
-                          {regeneratingSection === 'cta' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                          {regeneratingSection === 'cta' ? 'Regenerating...' : 'Regenerate'}
-                        </button>
-                        <button
-                          onClick={() => navigator.clipboard.writeText(socialResult.cta || socialResult.callToAction || '')}
-                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-amber-500 transition-colors"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-900 dark:text-white font-bold leading-relaxed">
-                      {socialResult.cta || socialResult.callToAction || '👉 Click the link in bio to start your free trial today!'}
-                    </p>
-                  </div>
-
-                  {/* ── CARD 5: SEO HASHTAGS & KEYWORDS ── */}
-                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-rose-500/40 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <span className="px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
-                        <Hash className="w-3 h-3" /> SEO HASHTAGS & TAGS
-                      </span>
-                      <button
-                        onClick={() => handleRegenerateSection('hashtags')}
-                        disabled={regeneratingSection === 'hashtags'}
-                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
-                      >
-                        {regeneratingSection === 'hashtags' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                        {regeneratingSection === 'hashtags' ? 'Regenerating...' : 'Regenerate'}
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {(socialResult.hashtags?.length > 0 ? socialResult.hashtags : ['#BrandContent', '#AIMarketing', '#SocialMediaStrategy', '#ContentVelocity', '#BrandDNA']).map((h, i) => (
-                        <span key={i} className="px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-brand-600 dark:text-brand-400 text-xs font-bold cursor-pointer hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-colors"
-                          onClick={() => navigator.clipboard.writeText(h.startsWith('#') ? h : `#${h}`)}
-                          title="Click to copy hashtag"
-                        >
-                          {h.startsWith('#') ? h : `#${h}`}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* ── CARD 6: CREATIVE COPY VARIATIONS & ANGLES ── */}
-                  <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm md:col-span-2 hover:border-cyan-500/40 transition-colors">
-                    <div className="flex items-center justify-between">
+                    {/* Banner notice explaining focus on copy */}
+                    <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-between text-xs text-indigo-700 dark:text-indigo-300 font-medium">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center border border-cyan-500/20">
-                          <Layers className="w-3.5 h-3.5" />
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">CREATIVE COPY ANGLES & VARIATIONS</h4>
-                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">STORYTELLING · PROBLEM-SOLUTION · URGENCY</p>
-                        </div>
+                        <FileText className="w-4 h-4 text-brand-500 flex-shrink-0" />
+                        <p><strong>Content Studio focus:</strong> Structured text copy (Hook, Storytelling, Captions, CTAs, SEO Hashtags). Generate matching visual assets in <strong>Creative Studio</strong>.</p>
                       </div>
-                      <button
-                        onClick={() => handleRegenerateSection('variations')}
-                        disabled={regeneratingSection === 'variations'}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-cyan-50 hover:text-cyan-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50 border border-slate-200 dark:border-slate-700"
-                      >
-                        {regeneratingSection === 'variations' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                        {regeneratingSection === 'variations' ? 'Regenerating...' : 'Regenerate Angles'}
-                      </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {(socialResult.creativeVariations || [
-                        {
-                          type: 'STORYTELLING ANGLE',
-                          text: socialResult.storytelling || 'Imagine the impact of your brand reaching thousands with authentic storytelling. With AI-crafted content, your message connects deeper, builds trust faster, and drives real results.'
-                        },
-                        {
-                          type: 'PROBLEM-SOLUTION',
-                          text: socialResult.problemSolution || 'Struggling to create consistent, high-quality content? Our AI platform solves that instantly. Get scroll-stopping text copy, optimized captions, and brand-aligned hashtags in seconds.'
-                        }
-                      ]).map((variant, i) => (
-                        <div key={i} className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-[9px] font-black uppercase tracking-widest border border-cyan-500/20">
-                              {variant.type || `ANGLE ${i + 1}`}
-                            </span>
+                    {/* Structured Rectangle Cards Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                      {/* ── CARD 1: HOOK / HEADLINE ── */}
+                      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-brand-500/40 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <span className="px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                            + HOOK / HEADLINE
+                          </span>
+                          <div className="flex items-center gap-1">
                             <button
-                              onClick={() => navigator.clipboard.writeText(variant.text || '')}
-                              className="p-1 rounded text-slate-400 hover:text-brand-500 transition-colors"
+                              onClick={() => handleRegenerateSection('hook')}
+                              disabled={regeneratingSection === 'hook'}
+                              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-brand-50 hover:text-brand-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                            >
+                              {regeneratingSection === 'hook' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                              {regeneratingSection === 'hook' ? 'Regenerating...' : 'Regenerate'}
+                            </button>
+                            <button
+                              onClick={() => navigator.clipboard.writeText(socialResult.hook || '')}
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-brand-500 transition-colors"
                             >
                               <Copy className="w-3.5 h-3.5" />
                             </button>
                           </div>
-                          <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
-                            {variant.text}
-                          </p>
                         </div>
-                      ))}
+                        <h3 className="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">
+                          {socialResult.hook || 'Upgrade Your Brand Strategy with High-Converting Content! 🚀'}
+                        </h3>
+                      </div>
+
+                      {/* ── CARD 2: STORYTELLING ANGLE ── */}
+                      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-purple-500/40 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <span className="px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                            📖 STORYTELLING ANGLE
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleRegenerateSection('storytelling')}
+                              disabled={regeneratingSection === 'storytelling'}
+                              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-purple-50 hover:text-purple-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                            >
+                              {regeneratingSection === 'storytelling' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                              {regeneratingSection === 'storytelling' ? 'Regenerating...' : 'Regenerate'}
+                            </button>
+                            <button
+                              onClick={() => navigator.clipboard.writeText(socialResult.storytelling || 'Every brand has a story, but only the ones with consistent voice build lasting loyalty.')}
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-brand-500 transition-colors"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed italic">
+                          "{socialResult.storytelling || 'Every brand has a story, but only the ones with consistent voice build lasting loyalty. When you anchor your content to your Brand DNA, every post resonates deeper and converts faster.'}"
+                        </p>
+                      </div>
+
+                      {/* ── CARD 3: CAPTION & BODY COPY ── */}
+                      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm md:col-span-2 hover:border-emerald-500/40 transition-colors">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <div className="flex items-center gap-3">
+                            <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-widest">
+                              ✍️ CAPTION & BODY COPY
+                            </span>
+                            {/* Short / Long Toggle */}
+                            <div className="flex items-center gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                              <button
+                                onClick={() => setCaptionMode('short')}
+                                className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all ${captionMode === 'short'
+                                    ? 'bg-emerald-500 text-white shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                  }`}
+                              >
+                                Short Caption
+                              </button>
+                              <button
+                                onClick={() => setCaptionMode('long')}
+                                className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all ${captionMode === 'long'
+                                    ? 'bg-emerald-500 text-white shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                  }`}
+                              >
+                                Long / Narrative
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleRegenerateSection(captionMode === 'short' ? 'shortCaption' : 'longCaption')}
+                              disabled={regeneratingSection === 'shortCaption' || regeneratingSection === 'longCaption'}
+                              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                            >
+                              {(regeneratingSection === 'shortCaption' || regeneratingSection === 'longCaption') ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                              {(regeneratingSection === 'shortCaption' || regeneratingSection === 'longCaption') ? 'Regenerating...' : 'Regenerate'}
+                            </button>
+                            <button
+                              onClick={() => {
+                                const txt = captionMode === 'short'
+                                  ? (socialResult.shortCaption || socialResult.short_caption || '')
+                                  : (socialResult.longCaption || socialResult.caption || '');
+                                navigator.clipboard.writeText(txt);
+                              }}
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-emerald-500 transition-colors"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                          {captionMode === 'short' ? (
+                            <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">
+                              {socialResult.shortCaption || socialResult.short_caption || 'Transform your brand velocity with AI-driven content tailored to your audience!'}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">
+                              {socialResult.longCaption || socialResult.caption || "Discover how consistent brand DNA elevates your marketing output. Whether you are running social campaigns, newsletters, or ad copy, maintaining a unified tone is essential for building trust and scaling conversions. Start leveraging AI Ads today to automate your workflow without sacrificing brand quality!"}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* ── CARD 4: CALL TO ACTION (CTA) ── */}
+                      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-amber-500/40 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase tracking-widest">
+                            🎯 CALL TO ACTION (CTA)
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleRegenerateSection('cta')}
+                              disabled={regeneratingSection === 'cta'}
+                              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-amber-50 hover:text-amber-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                            >
+                              {regeneratingSection === 'cta' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                              {regeneratingSection === 'cta' ? 'Regenerating...' : 'Regenerate'}
+                            </button>
+                            <button
+                              onClick={() => navigator.clipboard.writeText(socialResult.cta || socialResult.callToAction || '')}
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-amber-500 transition-colors"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-900 dark:text-white font-bold leading-relaxed">
+                          {socialResult.cta || socialResult.callToAction || '👉 Click the link in bio to start your free trial today!'}
+                        </p>
+                      </div>
+
+                      {/* ── CARD 5: SEO HASHTAGS & KEYWORDS ── */}
+                      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-rose-500/40 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <span className="px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                            <Hash className="w-3 h-3" /> SEO HASHTAGS & TAGS
+                          </span>
+                          <button
+                            onClick={() => handleRegenerateSection('hashtags')}
+                            disabled={regeneratingSection === 'hashtags'}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                          >
+                            {regeneratingSection === 'hashtags' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                            {regeneratingSection === 'hashtags' ? 'Regenerating...' : 'Regenerate'}
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(socialResult.hashtags?.length > 0 ? socialResult.hashtags : ['#BrandContent', '#AIMarketing', '#SocialMediaStrategy', '#ContentVelocity', '#BrandDNA']).map((h, i) => (
+                            <span key={i} className="px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-brand-600 dark:text-brand-400 text-xs font-bold cursor-pointer hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-colors"
+                              onClick={() => navigator.clipboard.writeText(h.startsWith('#') ? h : `#${h}`)}
+                              title="Click to copy hashtag"
+                            >
+                              {h.startsWith('#') ? h : `#${h}`}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* ── CARD 6: CREATIVE COPY VARIATIONS & ANGLES ── */}
+                      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm md:col-span-2 hover:border-cyan-500/40 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center border border-cyan-500/20">
+                              <Layers className="w-3.5 h-3.5" />
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">CREATIVE COPY ANGLES & VARIATIONS</h4>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">STORYTELLING · PROBLEM-SOLUTION · URGENCY</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRegenerateSection('variations')}
+                            disabled={regeneratingSection === 'variations'}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-cyan-50 hover:text-cyan-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50 border border-slate-200 dark:border-slate-700"
+                          >
+                            {regeneratingSection === 'variations' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                            {regeneratingSection === 'variations' ? 'Regenerating...' : 'Regenerate Angles'}
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {(socialResult.creativeVariations || [
+                            {
+                              type: 'STORYTELLING ANGLE',
+                              text: socialResult.storytelling || 'Imagine the impact of your brand reaching thousands with authentic storytelling. With AI-crafted content, your message connects deeper, builds trust faster, and drives real results.'
+                            },
+                            {
+                              type: 'PROBLEM-SOLUTION',
+                              text: socialResult.problemSolution || 'Struggling to create consistent, high-quality content? Our AI platform solves that instantly. Get scroll-stopping text copy, optimized captions, and brand-aligned hashtags in seconds.'
+                            }
+                          ]).map((variant, i) => (
+                            <div key={i} className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-[9px] font-black uppercase tracking-widest border border-cyan-500/20">
+                                  {variant.type || `ANGLE ${i + 1}`}
+                                </span>
+                                <button
+                                  onClick={() => navigator.clipboard.writeText(variant.text || '')}
+                                  className="p-1 rounded text-slate-400 hover:text-brand-500 transition-colors"
+                                >
+                                  <Copy className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                              <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+                                {variant.text}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
                     </div>
                   </div>
-
-                </div>
-              </div>
-            ) : (
-              <div className="p-12 text-center text-slate-500 space-y-2">
-                <Share2 className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600" />
-                <p className="text-xs font-medium">Select a platform and click "Generate Social Post" to draft custom copy, hashtags, and visual prompts.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 3. Email Copy Studio */}
-      {tab === 'EMAIL' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-6 xl:col-span-5 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-5 h-fit">
-            <div>
-              <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">Email Details</h2>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Provide details to draft the perfect email</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Purpose */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Purpose</label>
-                <select
-                  value={emailForm.purpose}
-                  onChange={(e) => updateEmailField('purpose', e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
-                >
-                  <option value="newsletter">Newsletter / Update</option>
-                  <option value="sales_pitch">Sales Pitch</option>
-                  <option value="cold_outreach">Cold Outreach</option>
-                  <option value="follow_up">Follow Up</option>
-                  <option value="product_launch">Product Launch</option>
-                  <option value="event_invitation">Event Invitation</option>
-                  <option value="customer_onboarding">Customer Onboarding</option>
-                  <option value="re_engagement">Re-engagement</option>
-                  <option value="thank_you">Thank You / Appreciation</option>
-                  <option value="feedback_request">Feedback Request</option>
-                  <option value="partnership_proposal">Partnership Proposal</option>
-                  <option value="executive_letter">Executive Letter</option>
-                </select>
-              </div>
-
-              {/* Recipient */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Recipient</label>
-                <input
-                  type="text"
-                  value={emailForm.recipient}
-                  onChange={(e) => updateEmailField('recipient', e.target.value)}
-                  placeholder="e.g. Subscribers"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
-                />
-              </div>
-
-              {/* Tone */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Tone</label>
-                <select
-                  value={emailForm.tone}
-                  onChange={(e) => updateEmailField('tone', e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
-                >
-                  <option value="professional">Professional</option>
-                  <option value="friendly">Friendly & Warm</option>
-                  <option value="formal">Formal / Corporate</option>
-                  <option value="persuasive">Persuasive / Sales-Driven</option>
-                  <option value="casual">Casual & Conversational</option>
-                  <option value="urgent">Urgent / Time-Sensitive</option>
-                  <option value="empathetic">Empathetic / Supportive</option>
-                  <option value="authoritative">Authoritative / Expert</option>
-                  <option value="inspirational">Inspirational / Motivational</option>
-                </select>
-              </div>
-
-              {/* Length / Format */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Length</label>
-                <select
-                  value={emailForm.lengthFormat}
-                  onChange={(e) => updateEmailField('lengthFormat', e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
-                >
-                  <option value="short">Short (under 150 words)</option>
-                  <option value="detailed">Detailed (300–500 words)</option>
-                  <option value="long_form">Long-Form (500+ words)</option>
-                  <option value="bullet_points">Bullet Points</option>
-                  <option value="numbered_steps">Numbered Steps</option>
-                  <option value="storytelling">Storytelling</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Subject */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Subject Topic</label>
-              <input
-                type="text"
-                value={emailForm.subject}
-                onChange={(e) => updateEmailField('subject', e.target.value)}
-                placeholder="e.g. Exclusive Launch Invite..."
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
-              />
-            </div>
-
-            {/* Context */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Context</label>
-              <textarea
-                value={emailForm.context}
-                onChange={(e) => updateEmailField('context', e.target.value)}
-                placeholder="Background or situation..."
-                rows={1}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all resize-none"
-              />
-            </div>
-
-            {/* Key Points */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Key Points</label>
-              <textarea
-                value={emailForm.keyPoints}
-                onChange={(e) => updateEmailField('keyPoints', e.target.value)}
-                placeholder="Points to include..."
-                rows={1}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all resize-none"
-              />
-            </div>
-
-            {/* CTA */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Call to Action (CTA)</label>
-              <input
-                type="text"
-                value={emailForm.cta}
-                onChange={(e) => updateEmailField('cta', e.target.value)}
-                placeholder="e.g. Shop Now..."
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
-              />
-            </div>
-
-            {/* Sender Details */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Sender Details</label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <input
-                  type="text"
-                  value={emailForm.senderName}
-                  onChange={(e) => updateEmailField('senderName', e.target.value)}
-                  placeholder="Name"
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
-                />
-                <input
-                  type="text"
-                  value={emailForm.senderDesignation}
-                  onChange={(e) => updateEmailField('senderDesignation', e.target.value)}
-                  placeholder="Role"
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
-                />
-                <input
-                  type="text"
-                  value={emailForm.senderCompany}
-                  onChange={(e) => updateEmailField('senderCompany', e.target.value)}
-                  placeholder="Company"
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
-                />
-              </div>
-            </div>
-
-            <button
-              onClick={handleGenerateEmail}
-              disabled={draftingEmail}
-              className="w-full btn-primary py-3 mt-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60"
-            >
-              {draftingEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              {draftingEmail ? 'Generating Email...' : 'Generate Email Copy'}
-            </button>
-          </div>
-
-          <div className="lg:col-span-6 xl:col-span-7 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-            <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Email Copy</h2>
-            {emailResult ? (
-              <div className="space-y-4 text-xs">
-                <div>
-                  <span className="font-bold text-slate-500 block mb-1">Subject</span>
-                  <input
-                    type="text"
-                    value={emailResult.subject}
-                    onChange={(e) => setEmailResult({ ...emailResult, subject: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <span className="font-bold text-slate-500 block mb-1">Preheader Preview</span>
-                  <input
-                    type="text"
-                    value={emailResult.preheader}
-                    onChange={(e) => setEmailResult({ ...emailResult, preheader: e.target.value })}
-                    className="w-full p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400"
-                  />
-                </div>
-                <div>
-                  <span className="font-bold text-slate-500 block mb-1">Email Body</span>
-                  <textarea
-                    rows={10}
-                    value={emailResult.body}
-                    onChange={(e) => setEmailResult({ ...emailResult, body: e.target.value })}
-                    className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-slate-100"
-                  />
-                </div>
-                <button onClick={() => submitToApprovals(emailResult)} className="btn-primary text-xs flex items-center gap-1">
-                  <Send className="w-3.5 h-3.5" /> Submit to Approvals
-                </button>
-              </div>
-            ) : (
-              <div className="p-12 text-center text-slate-500 space-y-2">
-                <Mail className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600" />
-                <p className="text-xs font-medium">Click "Generate Email Copy" to draft subjects, preheaders, and email bodies formatted for marketing campaigns.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 4. Ad Copy Studio */}
-      {tab === 'AD_COPY' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-            <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Ad Copy Parameters</h2>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Product / Feature Focus</label>
-              <input
-                type="text"
-                value={adProduct}
-                onChange={(e) => setAdProduct(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Ad Platform</label>
-              <select
-                value={adPlatform}
-                onChange={(e) => setAdPlatform(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 capitalize"
-              >
-                {['facebook', 'instagram', 'google', 'linkedin'].map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-            <button
-              onClick={handleGenerateAd}
-              disabled={draftingAd}
-              className="w-full btn-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60"
-            >
-              {draftingAd ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              {draftingAd ? 'Generating Ad Copy...' : 'Generate Ad Copy Variations'}
-            </button>
-          </div>
-
-          <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-            <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Ad Copy Variations</h2>
-            {adResult ? (
-              <div className="space-y-4 text-xs">
-                {adResult.headlines?.length > 0 && (
-                  <div>
-                    <span className="font-bold text-slate-500 block mb-1">Headlines</span>
-                    <div className="space-y-1">
-                      {adResult.headlines.map((h, i) => (
-                        <div key={i} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-bold text-slate-900 dark:text-white">
-                          {h}
-                        </div>
-                      ))}
-                    </div>
+                ) : (
+                  <div className="p-12 text-center text-slate-500 space-y-2">
+                    <Share2 className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600" />
+                    <p className="text-xs font-medium">Select a platform and click "Generate Social Post" to draft custom copy, hashtags, and visual prompts.</p>
                   </div>
                 )}
-                {adResult.descriptions?.length > 0 && (
-                  <div>
-                    <span className="font-bold text-slate-500 block mb-1">Descriptions</span>
-                    <div className="space-y-1">
-                      {adResult.descriptions.map((d, i) => (
-                        <div key={i} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
-                          {d}
-                        </div>
-                      ))}
-                    </div>
+              </div>
+            </div>
+          )}
+
+          {/* 3. Email Copy Studio */}
+          {tab === 'EMAIL' && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-6 xl:col-span-5 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-5 h-fit">
+                <div>
+                  <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">Email Details</h2>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Provide details to draft the perfect email</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Purpose */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Purpose</label>
+                    <select
+                      value={emailForm.purpose}
+                      onChange={(e) => updateEmailField('purpose', e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+                    >
+                      <option value="newsletter">Newsletter / Update</option>
+                      <option value="sales_pitch">Sales Pitch</option>
+                      <option value="cold_outreach">Cold Outreach</option>
+                      <option value="follow_up">Follow Up</option>
+                      <option value="product_launch">Product Launch</option>
+                      <option value="event_invitation">Event Invitation</option>
+                      <option value="customer_onboarding">Customer Onboarding</option>
+                      <option value="re_engagement">Re-engagement</option>
+                      <option value="thank_you">Thank You / Appreciation</option>
+                      <option value="feedback_request">Feedback Request</option>
+                      <option value="partnership_proposal">Partnership Proposal</option>
+                      <option value="executive_letter">Executive Letter</option>
+                    </select>
                   </div>
-                )}
-                {adResult.longFormAd && (
-                  <div>
-                    <span className="font-bold text-slate-500 block mb-1">Long-form Facebook / Instagram Ad</span>
-                    <textarea
-                      rows={6}
-                      value={adResult.longFormAd}
-                      onChange={(e) => setAdResult({ ...adResult, longFormAd: e.target.value })}
-                      className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100"
+
+                  {/* Recipient */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Recipient</label>
+                    <input
+                      type="text"
+                      value={emailForm.recipient}
+                      onChange={(e) => updateEmailField('recipient', e.target.value)}
+                      placeholder="e.g. Subscribers"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
                     />
                   </div>
+
+                  {/* Tone */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Tone</label>
+                    <select
+                      value={emailForm.tone}
+                      onChange={(e) => updateEmailField('tone', e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+                    >
+                      <option value="professional">Professional</option>
+                      <option value="friendly">Friendly & Warm</option>
+                      <option value="formal">Formal / Corporate</option>
+                      <option value="persuasive">Persuasive / Sales-Driven</option>
+                      <option value="casual">Casual & Conversational</option>
+                      <option value="urgent">Urgent / Time-Sensitive</option>
+                      <option value="empathetic">Empathetic / Supportive</option>
+                      <option value="authoritative">Authoritative / Expert</option>
+                      <option value="inspirational">Inspirational / Motivational</option>
+                    </select>
+                  </div>
+
+                  {/* Length / Format */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Length</label>
+                    <select
+                      value={emailForm.lengthFormat}
+                      onChange={(e) => updateEmailField('lengthFormat', e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+                    >
+                      <option value="short">Short (under 150 words)</option>
+                      <option value="detailed">Detailed (300–500 words)</option>
+                      <option value="long_form">Long-Form (500+ words)</option>
+                      <option value="bullet_points">Bullet Points</option>
+                      <option value="numbered_steps">Numbered Steps</option>
+                      <option value="storytelling">Storytelling</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Subject */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Subject Topic</label>
+                  <input
+                    type="text"
+                    value={emailForm.subject}
+                    onChange={(e) => updateEmailField('subject', e.target.value)}
+                    placeholder="e.g. Exclusive Launch Invite..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+                  />
+                </div>
+
+                {/* Context */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Context</label>
+                  <textarea
+                    value={emailForm.context}
+                    onChange={(e) => updateEmailField('context', e.target.value)}
+                    placeholder="Background or situation..."
+                    rows={1}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all resize-none"
+                  />
+                </div>
+
+                {/* Key Points */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Key Points</label>
+                  <textarea
+                    value={emailForm.keyPoints}
+                    onChange={(e) => updateEmailField('keyPoints', e.target.value)}
+                    placeholder="Points to include..."
+                    rows={1}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all resize-none"
+                  />
+                </div>
+
+                {/* CTA */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Call to Action (CTA)</label>
+                  <input
+                    type="text"
+                    value={emailForm.cta}
+                    onChange={(e) => updateEmailField('cta', e.target.value)}
+                    placeholder="e.g. Shop Now..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+                  />
+                </div>
+
+                {/* Sender Details */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Sender Details</label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input
+                      type="text"
+                      value={emailForm.senderName}
+                      onChange={(e) => updateEmailField('senderName', e.target.value)}
+                      placeholder="Name"
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+                    />
+                    <input
+                      type="text"
+                      value={emailForm.senderDesignation}
+                      onChange={(e) => updateEmailField('senderDesignation', e.target.value)}
+                      placeholder="Role"
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+                    />
+                    <input
+                      type="text"
+                      value={emailForm.senderCompany}
+                      onChange={(e) => updateEmailField('senderCompany', e.target.value)}
+                      placeholder="Company"
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleGenerateEmail}
+                  disabled={draftingEmail}
+                  className="w-full btn-primary py-3 mt-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {draftingEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  {draftingEmail ? 'Generating Email...' : 'Generate Email Copy'}
+                </button>
+              </div>
+
+              <div className="lg:col-span-6 xl:col-span-7 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Email Copy</h2>
+                {emailResult ? (
+                  <div className="space-y-4 text-xs">
+                    <div>
+                      <span className="font-bold text-slate-500 block mb-1">Subject</span>
+                      <input
+                        type="text"
+                        value={emailResult.subject}
+                        onChange={(e) => setEmailResult({ ...emailResult, subject: e.target.value })}
+                        className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-500 block mb-1">Preheader Preview</span>
+                      <input
+                        type="text"
+                        value={emailResult.preheader}
+                        onChange={(e) => setEmailResult({ ...emailResult, preheader: e.target.value })}
+                        className="w-full p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400"
+                      />
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-500 block mb-1">Email Body</span>
+                      <textarea
+                        rows={10}
+                        value={emailResult.body}
+                        onChange={(e) => setEmailResult({ ...emailResult, body: e.target.value })}
+                        className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+                    <button onClick={() => submitToApprovals(emailResult)} className="btn-primary text-xs flex items-center gap-1">
+                      <Send className="w-3.5 h-3.5" /> Submit to Approvals
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-12 text-center text-slate-500 space-y-2">
+                    <Mail className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600" />
+                    <p className="text-xs font-medium">Click "Generate Email Copy" to draft subjects, preheaders, and email bodies formatted for marketing campaigns.</p>
+                  </div>
                 )}
               </div>
-            ) : (
-              <div className="p-12 text-center text-slate-500 space-y-2">
-                <Globe className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600" />
-                <p className="text-xs font-medium">Click "Generate Ad Copy Variations" to produce high-converting headlines, descriptions, and long-form ad copy.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 5. {t('newspaper', 'Newspaper')} & Print Studio */}
-      {tab === 'NEWSPAPER' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
-              <Newspaper className="w-5 h-5" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">{t('newspaper', 'Newspaper')} & PR Parameters</h2>
             </div>
+          )}
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Press Release / Headline Topic</label>
-              <textarea
-                rows={3}
-                value={newspaperTopic}
-                onChange={(e) => setNewspaperTopic(e.target.value)}
-                className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Publication Format</label>
-              <select
-                value={newspaperFormat}
-                onChange={(e) => setNewspaperFormat(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 capitalize"
-              >
-                <option value="press_release">Official Corporate Press Release (AP Style)</option>
-                <option value="national_daily">National Daily Newspaper Front-Page Feature</option>
-                <option value="print_advertorial">High-Impact Print Advertorial Column</option>
-                <option value="trade_magazine">Industry Trade Magazine Feature Story</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Journalistic Tone & Style</label>
-              <select
-                value={newspaperTone}
-                onChange={(e) => setNewspaperTone(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
-              >
-                <option value="ap_corporate">AP Style Corporate Announcement</option>
-                <option value="investigative">Investigative Industry Feature</option>
-                <option value="executive_thought_leadership">Executive Thought Leadership Column</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Dateline & Location Stamp</label>
-              <input
-                type="text"
-                value={newspaperDateline}
-                onChange={(e) => setNewspaperDateline(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
-              />
-            </div>
-
-            <button
-              onClick={handleDraftNewspaper}
-              disabled={draftingNewspaper}
-              className="w-full bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60 transition-colors shadow-md"
-            >
-              {draftingNewspaper ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              {draftingNewspaper ? 'Drafting Press Story...' : 'Generate Newspaper Copy'}
-            </button>
-          </div>
-
-          {/* {t('newspaper', 'Newspaper')} Editorial Canvas */}
-          <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('newspaper', 'Newspaper')} & PR Proofing Canvas</span>
-              {newspaperDraft && (
-                <button onClick={() => submitToApprovals(newspaperDraft)} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1">
-                  <Send className="w-3.5 h-3.5" /> Submit to Approvals
+          {/* 4. Ad Copy Studio */}
+          {tab === 'AD_COPY' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Ad Copy Parameters</h2>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Product / Feature Focus</label>
+                  <input
+                    type="text"
+                    value={adProduct}
+                    onChange={(e) => setAdProduct(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Ad Platform</label>
+                  <select
+                    value={adPlatform}
+                    onChange={(e) => setAdPlatform(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 capitalize"
+                  >
+                    {['facebook', 'instagram', 'google', 'linkedin'].map((p) => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+                <button
+                  onClick={handleGenerateAd}
+                  disabled={draftingAd}
+                  className="w-full btn-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {draftingAd ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  {draftingAd ? 'Generating Ad Copy...' : 'Generate Ad Copy Variations'}
                 </button>
-              )}
+              </div>
+
+              <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Ad Copy Variations</h2>
+                {adResult ? (
+                  <div className="space-y-4 text-xs">
+                    {adResult.headlines?.length > 0 && (
+                      <div>
+                        <span className="font-bold text-slate-500 block mb-1">Headlines</span>
+                        <div className="space-y-1">
+                          {adResult.headlines.map((h, i) => (
+                            <div key={i} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-bold text-slate-900 dark:text-white">
+                              {h}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {adResult.descriptions?.length > 0 && (
+                      <div>
+                        <span className="font-bold text-slate-500 block mb-1">Descriptions</span>
+                        <div className="space-y-1">
+                          {adResult.descriptions.map((d, i) => (
+                            <div key={i} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+                              {d}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {adResult.longFormAd && (
+                      <div>
+                        <span className="font-bold text-slate-500 block mb-1">Long-form Facebook / Instagram Ad</span>
+                        <textarea
+                          rows={6}
+                          value={adResult.longFormAd}
+                          onChange={(e) => setAdResult({ ...adResult, longFormAd: e.target.value })}
+                          className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-12 text-center text-slate-500 space-y-2">
+                    <Globe className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600" />
+                    <p className="text-xs font-medium">Click "Generate Ad Copy Variations" to produce high-converting headlines, descriptions, and long-form ad copy.</p>
+                  </div>
+                )}
+              </div>
             </div>
+          )}
 
-            {newspaperDraft ? (
-              <div className="space-y-4 p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-slate-900 dark:text-slate-100">
-                <div className="space-y-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-                  <span className="text-[10px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-widest">{newspaperDraft.format}</span>
-                  <input
-                    type="text"
-                    value={newspaperDraft.headline}
-                    onChange={(e) => setNewspaperDraft({ ...newspaperDraft, headline: e.target.value })}
-                    className="w-full text-lg font-black text-slate-900 dark:text-white bg-transparent focus:outline-none tracking-tight uppercase"
-                  />
-                  <input
-                    type="text"
-                    value={newspaperDraft.subheadline}
-                    onChange={(e) => setNewspaperDraft({ ...newspaperDraft, subheadline: e.target.value })}
-                    className="w-full text-xs font-semibold text-slate-600 dark:text-slate-400 bg-transparent focus:outline-none italic"
-                  />
+          {/* 5. {t('newspaper', 'Newspaper')} & Print Studio */}
+          {tab === 'NEWSPAPER' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                  <Newspaper className="w-5 h-5" />
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">{t('newspaper', 'Newspaper')} & PR Parameters</h2>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Official Press Release Body & Boilerplate</label>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Press Release / Headline Topic</label>
                   <textarea
-                    rows={14}
-                    value={newspaperDraft.bodyContent}
-                    onChange={(e) => setNewspaperDraft({ ...newspaperDraft, bodyContent: e.target.value })}
-                    className="w-full p-4 rounded-2xl font-mono text-xs leading-relaxed text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-inner"
+                    rows={3}
+                    value={newspaperTopic}
+                    onChange={(e) => setNewspaperTopic(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Publication Format</label>
+                  <select
+                    value={newspaperFormat}
+                    onChange={(e) => setNewspaperFormat(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 capitalize"
+                  >
+                    <option value="press_release">Official Corporate Press Release (AP Style)</option>
+                    <option value="national_daily">National Daily Newspaper Front-Page Feature</option>
+                    <option value="print_advertorial">High-Impact Print Advertorial Column</option>
+                    <option value="trade_magazine">Industry Trade Magazine Feature Story</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Journalistic Tone & Style</label>
+                  <select
+                    value={newspaperTone}
+                    onChange={(e) => setNewspaperTone(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
+                  >
+                    <option value="ap_corporate">AP Style Corporate Announcement</option>
+                    <option value="investigative">Investigative Industry Feature</option>
+                    <option value="executive_thought_leadership">Executive Thought Leadership Column</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Dateline & Location Stamp</label>
+                  <input
+                    type="text"
+                    value={newspaperDateline}
+                    onChange={(e) => setNewspaperDateline(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
+                  />
+                </div>
+
+                <button
+                  onClick={handleDraftNewspaper}
+                  disabled={draftingNewspaper}
+                  className="w-full bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60 transition-colors shadow-md"
+                >
+                  {draftingNewspaper ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  {draftingNewspaper ? 'Drafting Press Story...' : 'Generate Newspaper Copy'}
+                </button>
               </div>
-            ) : (
-              <div className="p-12 text-center text-slate-500 space-y-2">
-                <Newspaper className="w-8 h-8 mx-auto text-amber-500/70" />
-                <p className="text-xs font-medium">Configure publication parameters and click "Generate Newspaper Copy" to draft press releases, print advertorials, and AP-style announcements.</p>
+
+              {/* {t('newspaper', 'Newspaper')} Editorial Canvas */}
+              <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('newspaper', 'Newspaper')} & PR Proofing Canvas</span>
+                  {newspaperDraft && (
+                    <button onClick={() => submitToApprovals(newspaperDraft)} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1">
+                      <Send className="w-3.5 h-3.5" /> Submit to Approvals
+                    </button>
+                  )}
+                </div>
+
+                {newspaperDraft ? (
+                  <div className="space-y-4 p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-slate-900 dark:text-slate-100">
+                    <div className="space-y-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+                      <span className="text-[10px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-widest">{newspaperDraft.format}</span>
+                      <input
+                        type="text"
+                        value={newspaperDraft.headline}
+                        onChange={(e) => setNewspaperDraft({ ...newspaperDraft, headline: e.target.value })}
+                        className="w-full text-lg font-black text-slate-900 dark:text-white bg-transparent focus:outline-none tracking-tight uppercase"
+                      />
+                      <input
+                        type="text"
+                        value={newspaperDraft.subheadline}
+                        onChange={(e) => setNewspaperDraft({ ...newspaperDraft, subheadline: e.target.value })}
+                        className="w-full text-xs font-semibold text-slate-600 dark:text-slate-400 bg-transparent focus:outline-none italic"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Official Press Release Body & Boilerplate</label>
+                      <textarea
+                        rows={14}
+                        value={newspaperDraft.bodyContent}
+                        onChange={(e) => setNewspaperDraft({ ...newspaperDraft, bodyContent: e.target.value })}
+                        className="w-full p-4 rounded-2xl font-mono text-xs leading-relaxed text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-inner"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-12 text-center text-slate-500 space-y-2">
+                    <Newspaper className="w-8 h-8 mx-auto text-amber-500/70" />
+                    <p className="text-xs font-medium">Configure publication parameters and click "Generate Newspaper Copy" to draft press releases, print advertorials, and AP-style announcements.</p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-      )}
-    </div>
-    ) : (
-    <div className="space-y-6">
+      ) : (
+        <div className="space-y-6">
           {/* MAIN CONTENT STUDIO HUB PAGE VIEW (when no channel card is selected) */}
           {/* Header Bar */}
           <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
