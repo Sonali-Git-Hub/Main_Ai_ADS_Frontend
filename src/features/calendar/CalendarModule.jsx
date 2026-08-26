@@ -34,6 +34,7 @@ export const CalendarModule = () => {
   const [currentCampaign, setCurrentCampaign] = useState(null);
   const [campaignPosts, setCampaignPosts] = useState([]);
   const [isCampaignLoading, setIsCampaignLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   // Form State
   const [campaignConfig, setCampaignConfig] = useState({
@@ -120,6 +121,38 @@ export const CalendarModule = () => {
       console.error("Failed to load campaign details:", err);
     } finally {
       setIsCampaignLoading(false);
+    }
+  };
+  
+  const handleGeneratePost = async (postId) => {
+    setActionLoading(true);
+    try {
+      const res = await campaignAPI.generatePostContent(postId);
+      if (res.success && res.post) {
+        setCampaignPosts(prev => prev.map(p => p._id === res.post._id ? res.post : p));
+      }
+    } catch (err) {
+      console.error("Failed to generate post:", err);
+      alert(err.message || "Failed to generate post copy");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUpdatePostStatus = async (postId, status, approvalStatus) => {
+    setActionLoading(true);
+    try {
+      const payload = { status };
+      if (approvalStatus) payload.approvalStatus = approvalStatus;
+      const res = await campaignAPI.updatePostStatus(postId, payload);
+      if (res.success && res.post) {
+        setCampaignPosts(prev => prev.map(p => p._id === res.post._id ? res.post : p));
+      }
+    } catch (err) {
+      console.error("Failed to update post status:", err);
+      alert(err.message || "Failed to update status");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -862,9 +895,67 @@ export const CalendarModule = () => {
                     </>
                   )}
                 </div>
+                
+                {/* Post Pipeline Control Panel */}
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-3 space-y-2">
+                  <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Pipeline Action</span>
+                  {activePost.status === 'Draft' && (
+                    <button
+                      disabled={actionLoading}
+                      onClick={() => handleGeneratePost(activePost._id)}
+                      className="w-full py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                    >
+                      {actionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                      Generate Post Content
+                    </button>
+                  )}
+                  {activePost.status === 'Generated' && (
+                    <div className="flex gap-2">
+                      <button
+                        disabled={actionLoading}
+                        onClick={() => handleUpdatePostStatus(activePost._id, 'Approved', 'Approved')}
+                        className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                      >
+                        {actionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                        Approve Post
+                      </button>
+                      <button
+                        disabled={actionLoading}
+                        onClick={() => handleUpdatePostStatus(activePost._id, 'Draft', 'Rejected')}
+                        className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                      >
+                        Reject Post
+                      </button>
+                    </div>
+                  )}
+                  {activePost.status === 'Approved' && (
+                    <button
+                      disabled={actionLoading}
+                      onClick={() => handleUpdatePostStatus(activePost._id, 'Scheduled')}
+                      className="w-full py-2 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                    >
+                      {actionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                      Schedule Publication
+                    </button>
+                  )}
+                  {activePost.status === 'Scheduled' && (
+                    <button
+                      disabled={actionLoading}
+                      onClick={() => handleUpdatePostStatus(activePost._id, 'Published')}
+                      className="w-full py-2 bg-indigo-650 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                    >
+                      {actionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                      Publish Now
+                    </button>
+                  )}
+                  {activePost.status === 'Published' && (
+                    <div className="py-2 text-center bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 rounded-xl text-[10px] font-black uppercase tracking-wider">
+                      🎉 Post Published Successfully
+                    </div>
+                  )}
+                </div>
 
-
-                <div className="flex gap-2 pt-4 border-t border-slate-100 dark:border-slate-800/80 mt-4">
+                <div className="flex gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-3">
                   <button
                     onClick={() => {
                       const platform = (activePost.platform || 'instagram').toLowerCase();
@@ -877,28 +968,38 @@ export const CalendarModule = () => {
                       const isNewspaper= platform === 'newspaper' || postType.includes('press') || postType.includes('newspaper');
                       const type       = isEmail ? 'EMAIL' : isBlog ? 'BLOG' : isNewspaper ? 'NEWSPAPER' : 'SOCIAL';
 
-                      // Pre-fill generatedContent so Creative Studio shows the correct canvas immediately
+                      // Pre-fill generatedContent with full strategy & calendar context
                       setGeneratedContent({
                         platform,
                         type,
                         postType: activePost.postType || postType,
                         topic,
-                        hook: topic,
+                        hook: activePost.caption ? (activePost.caption.slice(0, 90)) : topic,
                         caption: activePost.caption || '',
-                        shortCaption: '',
+                        shortCaption: activePost.shortCaption || '',
                         cta: activePost.cta || '',
                         hashtags: activePost.hashtags || [],
                         subject: isEmail ? topic : undefined,
                         title: isBlog || isNewspaper ? topic : undefined,
                         headline: isNewspaper ? topic : undefined,
-                        // calendar context
+                        // Strategy and Calendar Context
+                        strategyPillar: activePost.postFor || activePost.strategyPillar || activePost.pillar || 'Brand Awareness',
+                        strategyDescription: activePost.postObjective || activePost.title || '',
                         calendarDate: activePost.date,
                         calendarDay: activePost.day,
-                        campaignStage: activePost.campaignStage,
+                        campaignStage: activePost.campaignStage || 'Awareness',
                       });
 
-                      setStudioTarget({ platform, topic, postType, type, autoGenerate: true });
-                      // Route to Content Studio to generate the content first
+                      setStudioTarget({
+                        platform,
+                        topic,
+                        postType,
+                        type,
+                        autoGenerate: true,
+                        strategyPillar: activePost.postFor || activePost.strategyPillar || 'Brand Awareness',
+                        campaignStage: activePost.campaignStage || 'Awareness'
+                      });
+                      // Route to Content Studio to draft the post
                       setActiveModule('studio');
                     }}
                     className="w-full py-3 bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer"

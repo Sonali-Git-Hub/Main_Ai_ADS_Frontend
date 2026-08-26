@@ -130,7 +130,7 @@ export const TRANSLATIONS = {
     "currentlyGoverning": "Currently governing",
     "anchoredToDna": "All output is anchored to immutable Brand DNA.",
     "quickPost": "Quick Post",
-    "brandDna": "Brand DNA",
+    "brandDna": "Enter Your Brand",
     "verifiedDnaMemory": "Verified Brand DNA Memory",
     "immutablePositioning": "Immutable positioning locked",
     "totalCampaigns": "Total Campaigns",

@@ -93,7 +93,17 @@ const getWeekLabel = (day) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export const StrategyModule = () => {
-  const {activeWorkspace, setActiveModule, updateWorkspace, bulkAddCalendarEvents, calendarEvents, setGeneratedStrategy, t } = useWorkspace();
+  const {
+    activeWorkspace,
+    setActiveModule,
+    updateWorkspace,
+    bulkAddCalendarEvents,
+    calendarEvents,
+    setGeneratedStrategy,
+    setStudioTarget,
+    setGeneratedContent,
+    t
+  } = useWorkspace();
 
 
   // Core strategy fields
@@ -813,7 +823,44 @@ export const StrategyModule = () => {
                 return (
                   <div
                     key={item.day}
-                    className="group relative p-5 rounded-2xl glass-card border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-lg transition-all duration-300 space-y-3"
+                    onClick={() => {
+                      const platformRaw = (item.platform || 'instagram').toLowerCase();
+                      const isEmail = platformRaw.includes('email') || platformRaw.includes('newsletter');
+                      const isBlog = platformRaw.includes('blog') || platformRaw.includes('seo') || platformRaw.includes('article');
+                      const isNewspaper = platformRaw.includes('press') || platformRaw.includes('newspaper');
+                      const type = isEmail ? 'EMAIL' : isBlog ? 'BLOG' : isNewspaper ? 'NEWSPAPER' : 'SOCIAL';
+                      const platform = isEmail ? 'email' : isBlog ? 'blog' : isNewspaper ? 'newspaper' : platformRaw.includes('linkedin') ? 'linkedin' : platformRaw.includes('twitter') ? 'twitter' : 'instagram';
+
+                      if (setGeneratedContent) {
+                        setGeneratedContent({
+                          platform,
+                          type,
+                          postType: 'image',
+                          topic: item.topic,
+                          hook: item.topic,
+                          caption: item.actionItem || '',
+                          strategyPillar: item.topic,
+                          strategyDescription: item.actionItem || '',
+                          calendarDay: item.day,
+                          campaignStage: week === 1 ? 'Awareness' : week === 2 ? 'Consideration' : week === 3 ? 'Engagement' : 'Conversion',
+                        });
+                      }
+
+                      if (setStudioTarget) {
+                        setStudioTarget({
+                          platform,
+                          topic: item.topic,
+                          postType: 'image',
+                          type,
+                          autoGenerate: true,
+                          strategyPillar: item.topic,
+                          strategyDescription: item.actionItem || '',
+                        });
+                      }
+
+                      setActiveModule('studio');
+                    }}
+                    className="group relative p-5 rounded-2xl glass-card border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 dark:hover:border-brand-500/50 hover:shadow-xl transition-all duration-300 space-y-3 cursor-pointer"
                   >
                     {/* Day badge */}
                     <div className="flex items-start justify-between gap-2">
@@ -829,12 +876,14 @@ export const StrategyModule = () => {
                           </span>
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <span className="text-[9px] font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                        Draft Post <ChevronRight className="w-3 h-3" />
+                      </span>
                     </div>
 
                     {/* Topic */}
                     <div>
-                      <p className="text-[13px] font-bold text-slate-800 dark:text-white leading-snug">{item.topic}</p>
+                      <p className="text-[13px] font-bold text-slate-800 dark:text-white leading-snug group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{item.topic}</p>
                     </div>
 
                     {/* Action item */}

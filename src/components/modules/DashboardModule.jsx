@@ -46,7 +46,7 @@ export const DashboardModule = () => {
             className="btn-secondary text-xs"
           >
             <Dna className="w-4 h-4 text-brand-400" />
-            Rescrape Brand DNA
+            Enter Your Brand
           </button>
           <button 
             onClick={() => setIsQuickPostOpen(true)}

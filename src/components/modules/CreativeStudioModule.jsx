@@ -34,14 +34,16 @@ export const CreativeStudioModule = () => {
         setGeneratedVisual(data.asset);
       }
     } catch (e) {
-      // Fallback preview asset with prompt-matched AI image
-      const seed = Math.floor(Math.random() * 1000000);
-      const enhancedPrompt = `${prompt || 'Modern visual'}, ${style} style, 8k resolution, photorealistic studio photography`;
+      const escapeXml = (s = '') => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+      const cleanPrompt = escapeXml((prompt || 'Modern visual').slice(0, 40));
+      const safeStyle = escapeXml(style);
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800"><rect width="800" height="800" fill="#0F172A"/><circle cx="400" cy="400" r="250" fill="#6366F1" opacity="0.25"/><text x="400" y="390" fill="#FFFFFF" font-family="sans-serif" font-size="24" font-weight="bold" text-anchor="middle">${cleanPrompt}</text><text x="400" y="430" fill="#818CF8" font-family="sans-serif" font-size="14" text-anchor="middle">Style: ${safeStyle}</text><text x="400" y="520" fill="#94A3B8" font-family="sans-serif" font-size="12" text-anchor="middle">Google Cloud Vertex AI • Gemini Image Pipeline</text></svg>`;
       setGeneratedVisual({
         id: `asset_${Date.now()}`,
         prompt,
         style,
-        imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=1024&height=1024&nologo=true&seed=${seed}`,
+        imageUrl: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.trim())}`,
+        provider: 'Google Cloud Vertex AI (gemini-3.1-flash-image)',
         createdAt: new Date().toISOString()
       });
     } finally {

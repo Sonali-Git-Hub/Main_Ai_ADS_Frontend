@@ -268,12 +268,8 @@ export const SeoModule = () => {
             )}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-amber-500/8 border border-amber-500/20 flex items-start gap-2 text-[11px] text-amber-700 dark:text-amber-300 font-medium max-w-sm hidden xl:flex">
-            <ShieldAlert className="w-3.5 h-3.5 shrink-0 text-amber-500 mt-0.5" />
-            <span>AI Ads™ schema & keyword intelligence pipeline.</span>
-          </div>
-        </div>
+
+
       </div>
 
       {/* Main Container */}

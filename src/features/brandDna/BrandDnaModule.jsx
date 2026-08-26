@@ -313,10 +313,10 @@ export const BrandDnaModule = () => {
   // ── End No Brand Gate ──────────────────────────────────────────────────────
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in">
+    <div className="space-y-4 animate-in fade-in max-w-7xl mx-auto px-6 pt-1 pb-6">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800">
-        <div className="space-y-1">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 p-3 rounded-2xl glass-card border border-slate-200 dark:border-slate-800">
+        <div className="space-y-0.5">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center">
               <Dna className="w-5 h-5" />
@@ -350,19 +350,7 @@ export const BrandDnaModule = () => {
         </div>
       </div>
 
-      {effectiveProfile && (
-        <div className="flex justify-center mt-4">
-          <button
-            onClick={() => {
-              if (setBrandDnaData) setBrandDnaData(effectiveProfile);
-              if (setActiveModule) setActiveModule('seo');
-            }}
-            className="btn-primary py-3 px-8 text-sm font-bold flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-xl rounded-full transition-transform hover:scale-105"
-          >
-            <Zap className="w-4 h-4 text-amber-300" /> Run SEO Research from Brand DNA →
-          </button>
-        </div>
-      )}
+
 
       {savedMsg && (
         <div className="p-4 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold animate-in fade-in flex items-center gap-2">
@@ -421,7 +409,8 @@ export const BrandDnaModule = () => {
           <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
         </div>
       ) : effectiveProfile ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Identity & Palette */}
           <div className="space-y-6">
             {/* Identity Card */}
@@ -450,22 +439,6 @@ export const BrandDnaModule = () => {
                 </div>
               </div>
 
-              {/* {t('colorPalette', '{t('colorPalette', 'Color Palette')}')} */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">{t('colorPalette', 'Color Palette')}</label>
-                <div className="flex gap-2">
-                  {displayColors.length > 0 ? (
-                    displayColors.map((hex, i) => (
-                      <div key={i} className="flex-1 text-center">
-                        <div className="h-8 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm" style={{ backgroundColor: typeof hex === 'string' ? hex : hex.hex || 'var(--brand-600, #6B5AED)' }} />
-                        <span className="text-[9px] text-slate-500 font-mono mt-1 block uppercase">{typeof hex === 'string' ? hex : hex.hex}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <span className="text-xs text-slate-400">No palette extracted</span>
-                  )}
-                </div>
-              </div>
 
               {/* Quick Attributes */}
               <div className="space-y-2 text-xs">
@@ -585,6 +558,18 @@ export const BrandDnaModule = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+        <div className="flex justify-end">
+            <button
+              onClick={() => {
+                if (setBrandDnaData) setBrandDnaData(effectiveProfile);
+                if (setActiveModule) setActiveModule('seo');
+              }}
+              className="btn-primary py-2 px-5 text-xs font-bold flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg rounded-full transition-transform hover:scale-105"
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-300" /> Run SEO Research from Brand DNA →
+            </button>
           </div>
         </div>
       ) : null}
