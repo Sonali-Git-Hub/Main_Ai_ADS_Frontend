@@ -327,6 +327,7 @@ export const StrategyModule = () => {
 
   const confirmGenerateCalendar = (numDays) => {
     const daysToGen = Math.min(Number(numDays) || 30, thirtyDayPlan.length);
+    localStorage.setItem('aisa_selected_schedule_days', String(daysToGen));
     const today = new Date();
     
     // Filter plan to only generate up to daysToGen

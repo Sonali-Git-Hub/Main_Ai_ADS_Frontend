@@ -1157,7 +1157,9 @@ export const SettingsModal = () => {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
                 <div>
                   <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/20">Active Plan</span>
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-2">Agency Pro Tier</h2>
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-2">
+                    {user?.plan ? `${user.plan.charAt(0).toUpperCase() + user.plan.slice(1)} Plan` : 'Free Tier Plan'}
+                  </h2>
                   <p className="text-xs text-slate-400 mt-1">Includes unlimited text generation, team RBAC, and monthly visual credits.</p>
                 </div>
                 <div className="text-left sm:text-right">

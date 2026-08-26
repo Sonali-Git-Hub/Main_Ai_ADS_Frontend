@@ -43,22 +43,32 @@ export const CalendarModule = () => {
     endDate: '',
   });
 
-  // Auto-fill dates and name if not set
+  // Auto-fill dates and name synced with user-selected schedule days count
   useEffect(() => {
-    if (!campaignConfig.startDate) {
-      const today = new Date();
-      const end = new Date(today);
-      end.setDate(today.getDate() + 29); // 30-day span
+    const savedDays = localStorage.getItem('aisa_selected_schedule_days');
+    const days = savedDays ? Math.min(30, Math.max(1, parseInt(savedDays, 10))) : (strategyPlan.length || 30);
 
-      const brandName = activeWorkspace?.brandName || 'Brand';
-      setCampaignConfig(prev => ({
-        ...prev,
-        campaignName: prev.campaignName || `${brandName} 30-Day Campaign`,
-        startDate: today.toISOString().split('T')[0],
-        endDate: end.toISOString().split('T')[0],
-      }));
-    }
-  }, [activeWorkspace, campaignConfig.startDate]);
+    const today = new Date();
+    const end = new Date(today);
+    end.setDate(today.getDate() + (days - 1));
+
+    const brandName = activeWorkspace?.brandName || 'Brand';
+    setCampaignConfig({
+      campaignName: `${brandName} ${days}-Day Campaign`,
+      postingFrequency: 'Daily',
+      startDate: today.toISOString().split('T')[0],
+      endDate: end.toISOString().split('T')[0],
+    });
+  }, [activeWorkspace, strategyPlan.length]);
+
+  // Derived active days count from date span
+  const activeDaysCount = (() => {
+    if (!campaignConfig.startDate || !campaignConfig.endDate) return 30;
+    const start = new Date(campaignConfig.startDate);
+    const end = new Date(campaignConfig.endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return 30;
+    return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1);
+  })();
 
   // Calendar UI states
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
@@ -190,8 +200,9 @@ export const CalendarModule = () => {
 
       const res = await campaignAPI.create(payload);
       if (res.success && res.campaign) {
-        // 2. Generate plan — pass strategy plan if available
-        const genBody = hasStrategyPlan ? { strategyPlan } : {};
+        // 2. Generate plan — pass strategy plan filtered by active days count
+        const planToUse = hasStrategyPlan ? strategyPlan.filter(item => (item.day || 1) <= activeDaysCount) : [];
+        const genBody = planToUse.length > 0 ? { strategyPlan: planToUse } : {};
         const genRes = await campaignAPI.generatePlan(res.campaign._id, genBody);
         if (genRes.success) {
           setCurrentCampaign(res.campaign);
@@ -416,7 +427,7 @@ export const CalendarModule = () => {
               <span className="text-[9px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-widest">Strategy Linked</span>
             </div>
             <span className="text-[9px] font-bold text-emerald-600/80 dark:text-emerald-400/80">
-              {strategyPlan.length}-Day Plan · {strategyPlatforms.length} Platforms
+              {activeDaysCount}-Day Plan · {strategyPlatforms.length} Platforms
             </span>
           </div>
         ) : (

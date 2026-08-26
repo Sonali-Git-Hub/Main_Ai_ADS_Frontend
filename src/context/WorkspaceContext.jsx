@@ -2414,6 +2414,16 @@ export const WorkspaceProvider = ({ children }) => {
       category: asset.category || asset.type || 'DOCUMENT'
     };
 
+    // Dispatch backend API request to persist asset & record API hit
+    try {
+      const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000/api/content/save-asset' : '/api/content/save-asset';
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newAsset)
+      }).catch(() => {});
+    } catch (e) {}
+
     setGlobalAssets(prev => {
       const updated = [newAsset, ...prev];
       try {

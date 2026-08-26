@@ -9,10 +9,12 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 // ─── Core Fetch Helper ─────────────────────────────────────────────────────────
 const apiFetch = async (path, options = {}) => {
   const url = `${BASE_URL}${path}`;
+  const token = localStorage.getItem('aisa_token');
   const res = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
     body: options.body ? JSON.stringify(options.body) : undefined,

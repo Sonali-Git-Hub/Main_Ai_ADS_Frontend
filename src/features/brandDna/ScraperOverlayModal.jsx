@@ -68,6 +68,7 @@ export const ScraperOverlayModal = () => {
       });
       const data = await res.json();
       const extractedWorkspace = data.workspace || data.brandProfile;
+
       if (data.success && extractedWorkspace) {
         setResult(extractedWorkspace);
       }
@@ -233,19 +234,19 @@ export const ScraperOverlayModal = () => {
                 <div>
                   <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
                     {result.brandName}
-                    <span className="text-[10px] bg-brand-500 text-white px-2 py-0.5 rounded-full font-extrabold">{result.industryCategory || 'Retail & Tech'}</span>
+                    <span className="text-[10px] bg-brand-500 text-white px-2 py-0.5 rounded-full font-extrabold">{result.industryCategory || result.industry || 'Not Specified in Evidence'}</span>
                   </h3>
                   <p className="text-xs font-bold text-brand-500">{result.domainUrl}</p>
                 </div>
               </div>
               <div className="flex gap-1">
                 {result.brandColors?.map((c, i) => (
-                  <span key={i} className="w-4 h-4 rounded-full border border-slate-300" style={{ backgroundColor: c }} />
+                  <span key={i} className="w-4 h-4 rounded-full border border-slate-300" style={{ backgroundColor: typeof c === 'string' ? c : c.hex }} />
                 ))}
               </div>
             </div>
 
-            {/* Company Information & Brand Identity Layout (Matching User Design Specification) */}
+            {/* Company Information & Brand Identity Layout */}
             <div className="space-y-4 text-xs">
               
               {/* SECTION 1: COMPANY INFORMATION */}
@@ -254,8 +255,8 @@ export const ScraperOverlayModal = () => {
                   <span className="font-extrabold text-brand-500 uppercase text-[11px] tracking-wider flex items-center gap-1.5">
                     🏢 Company Information
                   </span>
-                  <span className="text-[10px] bg-amber-500/10 text-amber-600 font-extrabold px-2 py-0.5 rounded-full border border-amber-500/20">
-                    85% AI Synthesized
+                  <span className="text-[10px] bg-brand-500/10 text-brand-600 font-extrabold px-2 py-0.5 rounded-full border border-brand-500/20">
+                    Provenance-First Audited
                   </span>
                 </div>
 
@@ -273,13 +274,18 @@ export const ScraperOverlayModal = () => {
                   <div className="p-2.5 rounded-xl bg-white border border-slate-200">
                     <div className="flex items-center justify-between mb-0.5">
                       <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">TAGLINE</span>
-                      {result.fieldSources?.tagline === 'VERIFIED_DOM' ? (
-                        <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Website DOM</span>
-                      ) : (
-                        <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80" title="Classified by AI using verified website evidence">🛡️ AI + Evidence Verified</span>
-                      )}
+                      {(() => {
+                        const src = result.taglineProvenance?.sourceType || result.fieldSources?.tagline;
+                        if (src === 'WEBSITE_DOM' || src === 'WEBSITE_SCHEMA') {
+                          return <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Website DOM</span>;
+                        } else if (src === 'AI_INFERENCE') {
+                          return <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80">✨ AI Inferred</span>;
+                        } else {
+                          return <span className="text-[8px] bg-slate-100 text-slate-500 font-extrabold px-1.5 py-0.5 rounded border border-slate-200">⚠️ Unverified</span>;
+                        }
+                      })()}
                     </div>
-                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.tagline || ''}</p>
+                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.tagline || <span className="text-slate-400 font-normal italic">Not Specified in Evidence</span>}</p>
                   </div>
 
                   {/* WEBSITE */}
@@ -295,46 +301,77 @@ export const ScraperOverlayModal = () => {
                   <div className="p-2.5 rounded-xl bg-white border border-slate-200">
                     <div className="flex items-center justify-between mb-0.5">
                       <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">INDUSTRY</span>
-                      {result.fieldSources?.industryCategory === 'VERIFIED_DOM' ? (
-                        <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Website DOM</span>
-                      ) : (
-                        <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80" title={result.evidenceCitations?.industry || "Classified by AI using verified website product evidence"}>🛡️ AI + Evidence Verified</span>
-                      )}
+                      {(() => {
+                        const src = result.industryProvenance?.sourceType || result.fieldSources?.industryCategory;
+                        if (src === 'WEBSITE_DOM' || src === 'WEBSITE_SCHEMA') {
+                          return <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Website DOM</span>;
+                        } else if (src === 'REGISTRY') {
+                          return <span className="text-[8px] bg-blue-50 text-blue-700 font-extrabold px-1.5 py-0.5 rounded border border-blue-200/80">✓ Verified Registry</span>;
+                        } else if (src === 'AI_INFERENCE') {
+                          return <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80">✨ AI Inferred</span>;
+                        } else {
+                          return <span className="text-[8px] bg-slate-100 text-slate-500 font-extrabold px-1.5 py-0.5 rounded border border-slate-200">⚠️ Unverified</span>;
+                        }
+                      })()}
                     </div>
-                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.industryCategory || result.industry || 'Consumer Products & Services'}</p>
+                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.industryCategory || result.industry || <span className="text-slate-400 font-normal italic">Not Specified in Evidence</span>}</p>
                   </div>
 
                   {/* BUSINESS TYPE */}
                   <div className="p-2.5 rounded-xl bg-white border border-slate-200">
                     <div className="flex items-center justify-between mb-0.5">
                       <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">BUSINESS TYPE</span>
-                      <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80" title={result.evidenceCitations?.businessType || "Classified by AI using DOM checkout & transaction signals"}>🛡️ AI + Evidence Verified</span>
+                      {(() => {
+                        const src = result.businessTypeProvenance?.sourceType || result.fieldSources?.businessType;
+                        if (src === 'WEBSITE_DOM' || src === 'WEBSITE_SCHEMA') {
+                          return <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Scraped</span>;
+                        } else if (src === 'AI_INFERENCE') {
+                          return <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80">✨ AI Inferred</span>;
+                        } else {
+                          return <span className="text-[8px] bg-slate-100 text-slate-500 font-extrabold px-1.5 py-0.5 rounded border border-slate-200">⚠️ Unverified</span>;
+                        }
+                      })()}
                     </div>
-                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.businessType || result.business_type || 'B2C Direct Brand'}</p>
+                    <p className="font-bold text-slate-900 text-xs mt-0.5">{Array.isArray(result.businessType) ? result.businessType.join(' & ') : (result.businessType || <span className="text-slate-400 font-normal italic">Not Specified in Evidence</span>)}</p>
                   </div>
 
                   {/* HEADQUARTERS */}
                   <div className="p-2.5 rounded-xl bg-white border border-slate-200">
                     <div className="flex items-center justify-between mb-0.5">
                       <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">HEADQUARTERS</span>
-                      {result.fieldSources?.headquarters === 'VERIFIED_REGISTRY' || result.fieldSources?.headquarters === 'VERIFIED_DOM' ? (
-                        <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Registry</span>
-                      ) : (
-                        <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80" title="Verified from corporate registry search">🛡️ AI + Evidence Verified</span>
-                      )}
+                      {(() => {
+                        const src = result.headquartersProvenance?.sourceType || result.fieldSources?.headquarters;
+                        if (src === 'REGISTRY') {
+                          return <span className="text-[8px] bg-blue-50 text-blue-700 font-extrabold px-1.5 py-0.5 rounded border border-blue-200/80">✓ Verified Registry</span>;
+                        } else if (src === 'WEBSITE_DOM' || src === 'WEBSITE_SCHEMA' || src === 'WEBSITE_SUBPAGE') {
+                          return <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified DOM</span>;
+                        } else if (src === 'AI_INFERENCE') {
+                          return <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80">✨ AI Inferred</span>;
+                        } else {
+                          return <span className="text-[8px] bg-slate-100 text-slate-500 font-extrabold px-1.5 py-0.5 rounded border border-slate-200">⚠️ Unverified</span>;
+                        }
+                      })()}
                     </div>
-                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.headquarters || result.contactInfo?.location || 'Mumbai, Maharashtra, India'}</p>
+                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.headquarters || <span className="text-slate-400 font-normal italic">Address Not Found</span>}</p>
                   </div>
-
 
                   {/* CONTACT INFO */}
                   <div className="sm:col-span-2 p-2.5 rounded-xl bg-white border border-slate-200">
                     <div className="flex items-center justify-between mb-0.5">
                       <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">CONTACT INFO</span>
-                      <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Scraped</span>
+                      {result.contactInfo?.email || result.contactInfo?.phone ? (
+                        <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Scraped</span>
+                      ) : (
+                        <span className="text-[8px] bg-slate-100 text-slate-500 font-extrabold px-1.5 py-0.5 rounded border border-slate-200">⚠️ Unverified</span>
+                      )}
                     </div>
                     <p className="font-bold text-slate-900 text-xs mt-0.5">
-                      {result.contactInfo?.email || result.contactInfo?.phone ? `${result.contactInfo?.email || ''} ${result.contactInfo?.phone ? '| Phone: ' + result.contactInfo?.phone : ''}`.trim() : `support@${result.domainUrl || 'company.com'}`}
+                      {(() => {
+                        const email = result.contactInfo?.email;
+                        const phone = result.contactInfo?.phone;
+                        if (!email && !phone) return <span className="text-slate-400 font-normal italic">No Contact Info Specified in Evidence</span>;
+                        return `${email || 'Email Not Specified'}${phone ? ' | Phone: ' + phone : ''}`;
+                      })()}
                     </p>
                   </div>
 
@@ -342,13 +379,18 @@ export const ScraperOverlayModal = () => {
                   <div className="sm:col-span-2 p-2.5 rounded-xl bg-white border border-slate-200">
                     <div className="flex items-center justify-between mb-0.5">
                       <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">COMPANY DESCRIPTION</span>
-                      {result.fieldSources?.companyDescription === 'VERIFIED_DOM' ? (
-                        <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Meta Description</span>
-                      ) : (
-                        <span className="text-[8px] bg-purple-50 text-purple-700 font-extrabold px-1.5 py-0.5 rounded border border-purple-200/80" title="Generated by AI Reasoning because homepage meta description was missing">✨ AI Synthesized</span>
-                      )}
+                      {(() => {
+                        const src = result.companyDescriptionProvenance?.sourceType || result.fieldSources?.companyDescription;
+                        if (src === 'WEBSITE_DOM' || src === 'WEBSITE_META' || src === 'WEBSITE_SCHEMA') {
+                          return <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Meta Description</span>;
+                        } else if (src === 'AI_INFERENCE') {
+                          return <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80">✨ AI Inferred</span>;
+                        } else {
+                          return <span className="text-[8px] bg-slate-100 text-slate-500 font-extrabold px-1.5 py-0.5 rounded border border-slate-200">⚠️ Unverified</span>;
+                        }
+                      })()}
                     </div>
-                    <p className="font-medium text-slate-700 text-xs mt-1 leading-relaxed">{result.companyDescription || result.positioningSummary || result.metaDescription || `${result.brandName || 'Brand'} is an industry-leading company operating in the ${result.industryCategory || 'Consumer Products'} sector, dedicated to quality craftsmanship, customer trust, and innovation.`}</p>
+                    <p className="font-medium text-slate-700 text-xs mt-1 leading-relaxed">{result.companyDescription || result.positioningSummary || result.metaDescription || <span className="text-slate-400 font-normal italic">Not Specified in Evidence</span>}</p>
                   </div>
                 </div>
               </div>
@@ -359,8 +401,8 @@ export const ScraperOverlayModal = () => {
                   <span className="font-extrabold text-brand-500 uppercase text-[11px] tracking-wider flex items-center gap-1.5">
                     ✨ Brand Identity
                   </span>
-                  <span className="text-[10px] bg-amber-500/10 text-amber-600 font-extrabold px-2 py-0.5 rounded-full border border-amber-500/20">
-                    86% AI Synthesized
+                  <span className="text-[10px] bg-brand-500/10 text-brand-600 font-extrabold px-2 py-0.5 rounded-full border border-brand-500/20">
+                    Provenance-First Audited
                   </span>
                 </div>
 
@@ -368,32 +410,41 @@ export const ScraperOverlayModal = () => {
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200">
                   <div className="flex items-center justify-between mb-0.5">
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">MISSION</span>
-                    {result.fieldSources?.missionStatement === 'VERIFIED_DOM' ? (
-                      <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Website DOM</span>
-                    ) : (
-                      <span className="text-[8px] bg-purple-50 text-purple-700 font-extrabold px-1.5 py-0.5 rounded border border-purple-200/80" title="Generated by AI Engine based on brand identity & domain context">✨ AI Synthesized</span>
-                    )}
+                    {(() => {
+                      const src = result.missionStatementProvenance?.sourceType || result.fieldSources?.missionStatement;
+                      if (src === 'WEBSITE_DOM' || src === 'WEBSITE_SCHEMA' || src === 'WEBSITE_SUBPAGE') {
+                        return <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Website DOM</span>;
+                      } else if (src === 'AI_INFERENCE') {
+                        return <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80">✨ AI Inferred</span>;
+                      } else {
+                        return <span className="text-[8px] bg-slate-100 text-slate-500 font-extrabold px-1.5 py-0.5 rounded border border-slate-200">⚠️ Unverified</span>;
+                      }
+                    })()}
                   </div>
-                  <p className="font-medium text-slate-700 text-xs mt-1 leading-relaxed">{result.missionStatement || result.mission || `To empower ${result.brandName || 'our'} customers with premium products, uncompromised quality, and elevated brand experiences.`}</p>
+                  <p className="font-medium text-slate-700 text-xs mt-1 leading-relaxed">{result.missionStatement || result.mission || <span className="text-slate-400 font-normal italic">Not Specified in Evidence</span>}</p>
                 </div>
 
                 {/* VISION */}
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200">
                   <div className="flex items-center justify-between mb-0.5">
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">VISION</span>
-                    {result.fieldSources?.vision === 'VERIFIED_DOM' ? (
-                      <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Website DOM</span>
-                    ) : (
-                      <span className="text-[8px] bg-purple-50 text-purple-700 font-extrabold px-1.5 py-0.5 rounded border border-purple-200/80" title="Generated by AI Engine based on brand identity & domain context">✨ AI Synthesized</span>
-                    )}
+                    {(() => {
+                      const src = result.visionProvenance?.sourceType || result.fieldSources?.vision;
+                      if (src === 'WEBSITE_DOM' || src === 'WEBSITE_SCHEMA' || src === 'WEBSITE_SUBPAGE') {
+                        return <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">✓ Verified Website DOM</span>;
+                      } else if (src === 'AI_INFERENCE') {
+                        return <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80">✨ AI Inferred</span>;
+                      } else {
+                        return <span className="text-[8px] bg-slate-100 text-slate-500 font-extrabold px-1.5 py-0.5 rounded border border-slate-200">⚠️ Unverified</span>;
+                      }
+                    })()}
                   </div>
-                  <p className="font-medium text-slate-700 text-xs mt-1 leading-relaxed">{result.vision || `To be the premier global brand in the ${result.industryCategory || 'Consumer'} sector, inspiring innovation, customer commitment, and sustainable excellence.`}</p>
+                  <p className="font-medium text-slate-700 text-xs mt-1 leading-relaxed">{result.vision || <span className="text-slate-400 font-normal italic">Not Specified in Evidence</span>}</p>
                 </div>
 
               </div>
 
             </div>
-
 
             <button
               onClick={confirmSaveWorkspace}
