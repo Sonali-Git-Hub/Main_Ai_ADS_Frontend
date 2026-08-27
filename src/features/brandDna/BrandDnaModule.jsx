@@ -46,33 +46,46 @@ export const BrandDnaModule = () => {
   }, [loadBrandProfile, activeWorkspace]);
 
   const handleRunAiAnalysis = async () => {
-    if (!workspaceId) return;
+    const targetUrl = websiteUrl || activeWorkspace?.domainUrl || '';
+    const targetName = activeWorkspace?.brandName || 'your brand';
+
+    if (!workspaceId) {
+      if (openScraperModal) openScraperModal('ACTIVE_BRAND');
+      return;
+    }
+
     setAnalyzing(true);
     setError('');
+    setSavedMsg(`⚡ Scraping live brand website (${targetUrl || targetName}) in detail...`);
+
     try {
       const result = await brandAPI.analyze({
         workspaceId,
-        websiteUrl: websiteUrl || activeWorkspace?.domainUrl || '',
+        websiteUrl: targetUrl,
         companyName: activeWorkspace?.brandName || '',
         manualDescription: manualDesc,
       });
 
-      setProfile(result.profile);
-      setSavedMsg('✨ Deep AI Brand Intelligence analysis completed and saved!');
-      setTimeout(() => setSavedMsg(''), 4000);
+      if (result && result.profile) {
+        setProfile(result.profile);
+        setSavedMsg(`✨ Deep AI Brand Intelligence re-scraped and updated for ${targetName}!`);
+        setTimeout(() => setSavedMsg(''), 5000);
 
-      // Update workspace context
-      if (updateWorkspace && result.profile?.structuredIdentity) {
-        const id = result.profile.structuredIdentity;
-        updateWorkspace(workspaceId, {
-          brandVoiceTone: id.tone,
-          targetAudience: id.target_audience,
-          contentPillars: id.content_angles,
-          brandColors: id.color_palette,
-        });
+        // Update workspace context
+        if (updateWorkspace && result.profile?.structuredIdentity) {
+          const id = result.profile.structuredIdentity;
+          updateWorkspace(workspaceId, {
+            brandVoiceTone: id.tone,
+            targetAudience: id.target_audience,
+            contentPillars: id.content_angles,
+            brandColors: id.color_palette,
+          });
+        }
       }
     } catch (err) {
-      setError(err.message || 'Brand AI analysis failed');
+      console.error('Deep AI Brand Analysis error:', err);
+      setError(err.message || 'Brand AI re-scraping analysis failed.');
+      setSavedMsg('');
     } finally {
       setAnalyzing(false);
     }
@@ -106,16 +119,16 @@ export const BrandDnaModule = () => {
   const matchedProfile = isProfileMatching ? profile : null;
 
   // Dynamic Workspace Values
-  const brandName = activeWorkspace?.brandName || 'Brand';
-  const industry = activeWorkspace?.industryCategory || activeWorkspace?.industry || 'Consumer Products & Services';
-  const tagline = activeWorkspace?.tagline || `Leading brand in ${industry}`;
-  const mission = activeWorkspace?.missionStatement || `To empower ${brandName} customers with exceptional quality and service.`;
+  const brandName = activeWorkspace?.brandName || 'Brand Workspace';
+  const industry = activeWorkspace?.industryCategory || activeWorkspace?.industry || 'Not Specified in Evidence';
+  const tagline = activeWorkspace?.tagline || null;
+  const mission = activeWorkspace?.missionStatement || null;
 
-  // Build 100% dynamic effectiveProfile derived from activeWorkspace for ANY brand (Pedigree, Apsara, Vedantu, etc.)
+  // Build 100% dynamic effectiveProfile derived from activeWorkspace for ANY brand
   const effectiveProfile = matchedProfile || (activeWorkspace && (activeWorkspace.brandName || activeWorkspace.domainUrl) ? {
     aiConfidence: activeWorkspace.confidenceScore || 85,
     companyName: brandName,
-    website: activeWorkspace.domainUrl || 'https://',
+    website: activeWorkspace.domainUrl || '',
     logoUrl: activeWorkspace.logoUrl || activeWorkspace.faviconUrl || '',
     brandColors: activeWorkspace.brandColors || ['#6366F1', '#8B5CF6'],
     structuredIdentity: {
@@ -123,28 +136,28 @@ export const BrandDnaModule = () => {
       industry: industry,
       tone: typeof activeWorkspace.brandVoiceTone === 'string' 
         ? activeWorkspace.brandVoiceTone 
-        : (activeWorkspace.brandVoiceTone?.toneKeywords?.join(', ') || 'Professional & Customer-Centric'),
+        : (activeWorkspace.brandVoiceTone?.toneKeywords?.join(', ') || 'Not Specified in Evidence'),
       target_audience: typeof activeWorkspace.targetAudience === 'string'
         ? activeWorkspace.targetAudience
         : (Array.isArray(activeWorkspace.targetAudience) && activeWorkspace.targetAudience.length > 0 
             ? activeWorkspace.targetAudience.join(', ') 
-            : `Primary consumers and users seeking premium ${industry} offerings from ${brandName}.`),
+            : 'Not Specified in Evidence'),
       content_angles: (activeWorkspace.contentPillars && activeWorkspace.contentPillars.length > 0)
         ? activeWorkspace.contentPillars
-        : [`Empowering ${brandName} customers through quality`, `Innovative ${industry} solutions`, `Customer trust & product excellence`],
+        : [],
       color_palette: activeWorkspace.brandColors || ['#6366F1', '#8B5CF6'],
-      goal: tagline || mission || `To be the leading brand in the ${industry} sector`,
+      goal: tagline || mission || 'Not Specified in Evidence',
       products_services: (activeWorkspace.coreProductsServices && activeWorkspace.coreProductsServices.length > 0)
         ? activeWorkspace.coreProductsServices
-        : [`${brandName} Core Product Line`, `Premium ${industry} Offerings`],
-      brand_values: ['Innovation', 'Quality', 'Customer Trust']
+        : [],
+      brand_values: (activeWorkspace.brandValues && activeWorkspace.brandValues.length > 0) ? activeWorkspace.brandValues : []
     },
     targetAudienceSection: {
       description: typeof activeWorkspace.targetAudience === 'string'
         ? activeWorkspace.targetAudience
         : (Array.isArray(activeWorkspace.targetAudience) && activeWorkspace.targetAudience.length > 0 
             ? activeWorkspace.targetAudience.join(', ')
-            : `Consumers and clients seeking high-quality ${industry} products and services from ${brandName}.`)
+            : 'Not Specified in Evidence')
     },
     brandPersonality: {
       values: ['Innovation', 'Quality', 'Reliability'],
@@ -197,8 +210,48 @@ export const BrandDnaModule = () => {
     }
   };
 
-  const structured = effectiveProfile?.structuredIdentity || {};
-  const displayColors = structured.color_palette || activeWorkspace?.brandColors || [];
+  const rawStruct = effectiveProfile?.structuredIdentity || {};
+  const currentBrandName = effectiveProfile?.companyName || activeWorkspace?.brandName || 'Brand';
+  const currentIndustry = rawStruct.industry || activeWorkspace?.industryCategory || activeWorkspace?.industry || 'Consumer Products & Services';
+
+  const structured = {
+    ...rawStruct,
+    brand_name: rawStruct.brand_name || currentBrandName,
+    industry: currentIndustry,
+    tone: rawStruct.tone || effectiveProfile?.brandVoice?.style || (typeof activeWorkspace?.brandVoiceTone === 'string' ? activeWorkspace.brandVoiceTone : 'Professional & Authoritative'),
+    goal: rawStruct.goal || effectiveProfile?.contentStrategy?.goal || `Drive official online sales and engagement for ${currentBrandName}`,
+    target_audience: rawStruct.target_audience || effectiveProfile?.targetAudienceSection?.description || (
+      typeof activeWorkspace?.targetAudience === 'string' ? activeWorkspace.targetAudience : `Primary consumers seeking high-quality ${currentIndustry} products from ${currentBrandName}.`
+    ),
+    content_angles: (rawStruct.content_angles && rawStruct.content_angles.length > 0)
+      ? rawStruct.content_angles
+      : (effectiveProfile?.contentStrategy?.angles && effectiveProfile.contentStrategy.angles.length > 0)
+        ? effectiveProfile.contentStrategy.angles
+        : (activeWorkspace?.contentPillars && activeWorkspace.contentPillars.length > 0)
+          ? activeWorkspace.contentPillars
+          : [
+              `${currentBrandName} | Official Brand Identity & Heritage`,
+              `Authentic ${currentIndustry} Quality & Craftsmanship`,
+              `Trending Styles & Seasonal Collections`,
+              `Customer Trust & Product Excellence`
+            ],
+    products_services: (rawStruct.products_services && rawStruct.products_services.length > 0)
+      ? rawStruct.products_services
+      : (effectiveProfile?.products?.list && effectiveProfile.products.list.length > 0)
+        ? effectiveProfile.products.list
+        : (activeWorkspace?.coreProductsServices && activeWorkspace.coreProductsServices.length > 0)
+          ? activeWorkspace.coreProductsServices
+          : [
+              `${currentBrandName} Core Collection`,
+              `Premium ${currentIndustry} Offerings`,
+              `Seasonal New Arrivals & Bestsellers`
+            ],
+    brand_values: (rawStruct.brand_values && rawStruct.brand_values.length > 0)
+      ? rawStruct.brand_values
+      : (effectiveProfile?.brandPersonality?.values && effectiveProfile.brandPersonality.values.length > 0)
+        ? effectiveProfile.brandPersonality.values
+        : ['Authenticity & Heritage', 'Premium Quality', 'Customer Trust']
+  };
 
   // ── No Brand Gate ──────────────────────────────────────────────────────────
   const noBrand =
@@ -333,11 +386,12 @@ export const BrandDnaModule = () => {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => openScraperModal('NEW_BRAND')}
-            className="btn-primary py-2 px-5 text-xs flex items-center gap-2 shadow-lg shadow-brand-500/20"
+            onClick={handleRunAiAnalysis}
+            disabled={analyzing}
+            className="btn-primary py-2 px-5 text-xs flex items-center gap-2 shadow-lg shadow-brand-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-            {analyzing ? 'Analyzing Brand...' : t('runDeepAiAnalysis', 'Run Deep AI Analysis')}
+            {analyzing ? 'Re-Scraping Brand Intelligence...' : t('runDeepAiAnalysis', 'Run Deep AI Analysis')}
           </button>
           {effectiveProfile && (
             <button
@@ -424,10 +478,17 @@ export const BrandDnaModule = () => {
 
               <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
                 <img
-                  src={effectiveProfile.logoUrl || `https://www.google.com/s2/favicons?domain=${effectiveProfile.website || 'google.com'}&sz=128`}
+                  src={
+                    (effectiveProfile.logoUrl && !effectiveProfile.logoUrl.includes('picsum.photos'))
+                      ? effectiveProfile.logoUrl
+                      : `https://www.google.com/s2/favicons?domain=${(effectiveProfile.website || activeWorkspace?.domainUrl || 'google.com').replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0]}&sz=128`
+                  }
                   alt={effectiveProfile.companyName}
-                  className="w-12 h-12 rounded-xl bg-white p-1 border border-slate-200 object-contain"
-                  onError={(e) => { e.target.src = 'https://picsum.photos/64/64'; }}
+                  className="w-12 h-12 rounded-xl bg-white p-1 border border-slate-200 object-contain shadow-xs"
+                  onError={(e) => {
+                    const dom = (effectiveProfile.website || activeWorkspace?.domainUrl || 'google.com').replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+                    e.target.src = `https://www.google.com/s2/favicons?domain=${dom}&sz=128`;
+                  }}
                 />
                 <div>
                   <h3 className="font-extrabold text-slate-900 dark:text-white text-base">{effectiveProfile.companyName}</h3>

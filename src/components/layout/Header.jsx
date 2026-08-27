@@ -219,9 +219,14 @@ export const Header = () => {
                 <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">{t('signedInAs', 'Signed In As')}</p>
                 <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate mt-0.5">{getUserDisplayName()}</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{user?.email}</p>
-                <span className="inline-block text-[10px] bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full mt-1.5 border border-emerald-500/20">
-                  {t('activeAccount', 'Active Account')}
-                </span>
+                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                  <span className="inline-block text-[10px] bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 font-extrabold px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-500/30 uppercase">
+                    {user?.plan ? `${user.plan} Tier` : 'Free Tier'}
+                  </span>
+                  <span className="inline-block text-[10px] bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    {t('activeAccount', 'Active Account')}
+                  </span>
+                </div>
               </div>
               
               <div className="space-y-1">
