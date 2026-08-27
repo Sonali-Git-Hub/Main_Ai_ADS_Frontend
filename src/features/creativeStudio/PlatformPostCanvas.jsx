@@ -92,6 +92,39 @@ const CopySidebar = ({ hook, story, shortCap, longCap, cta, hashtags, extras = [
   </div>
 );
 
+const extractCleanText = (raw) => {
+  if (!raw) return '';
+  let str = typeof raw === 'string' ? raw.trim() : JSON.stringify(raw);
+
+  // If the string starts with JSON markers or contains JSON wrapper
+  if (str.startsWith('{') || str.startsWith('[') || str.startsWith('```json')) {
+    try {
+      const clean = str.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+      const parsed = JSON.parse(clean);
+      if (parsed.data && typeof parsed.data === 'object') {
+        return extractCleanText(parsed.data.content || parsed.data.body || parsed.data.longCaption || parsed.data.caption || JSON.stringify(parsed.data));
+      }
+      if (parsed.content) return extractCleanText(parsed.content);
+      if (parsed.body) return extractCleanText(parsed.body);
+      if (parsed.longCaption) return extractCleanText(parsed.longCaption);
+      if (parsed.caption) return extractCleanText(parsed.caption);
+    } catch (e) {
+      // Regex extraction if JSON.parse failed due to unescaped quotes or newlines
+      const contentMatch = str.match(/"content"\s*:\s*"([\s\S]*?)(?:"\s*,\s*"|"\s*\}|\s*\n\s*\})/);
+      if (contentMatch && contentMatch[1]) {
+        return contentMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+      }
+    }
+  }
+
+  // Strip any residual leading JSON header lines
+  str = str.replace(/^\{\s*"data"\s*:\s*\{\s*"id"[^}]*?"content"\s*:\s*"/i, '');
+  str = str.replace(/"\s*\}\s*\}\s*$/i, '');
+  str = str.replace(/\\n/g, '\n').replace(/\\"/g, '"');
+
+  return str.trim();
+};
+
 const unwrapAndCleanContent = (raw) => {
   if (!raw) return {};
   let item = raw;
@@ -116,30 +149,17 @@ const unwrapAndCleanContent = (raw) => {
         item = { ...item, ...inner };
       } catch (e) {}
     }
-    if (typeof item.content === 'string' && (item.content.trim().startsWith('{') || item.content.trim().startsWith('```json'))) {
-      try {
-        const clean = item.content.replace(/^```json/, '').replace(/```$/, '').trim();
-        const inner = JSON.parse(clean);
-        if (inner.content) item.content = inner.content;
-        if (inner.title) item.title = inner.title;
-        if (inner.metaDescription) item.metaDescription = inner.metaDescription;
-      } catch (e) {}
+    if (item.content) {
+      item.content = extractCleanText(item.content);
     }
-    if (typeof item.body === 'string' && (item.body.trim().startsWith('{') || item.body.trim().startsWith('```json'))) {
-      try {
-        const clean = item.body.replace(/^```json/, '').replace(/```$/, '').trim();
-        const inner = JSON.parse(clean);
-        if (inner.content) item.body = inner.content;
-        if (inner.title) item.title = inner.title;
-      } catch (e) {}
+    if (item.body) {
+      item.body = extractCleanText(item.body);
     }
-    if (typeof item.longCaption === 'string' && (item.longCaption.trim().startsWith('{') || item.longCaption.trim().startsWith('```json'))) {
-      try {
-        const clean = item.longCaption.replace(/^```json/, '').replace(/```$/, '').trim();
-        const inner = JSON.parse(clean);
-        if (inner.content) item.longCaption = inner.content;
-        if (inner.title) item.title = inner.title;
-      } catch (e) {}
+    if (item.longCaption) {
+      item.longCaption = extractCleanText(item.longCaption);
+    }
+    if (item.caption) {
+      item.caption = extractCleanText(item.caption);
     }
   }
 
@@ -147,10 +167,10 @@ const unwrapAndCleanContent = (raw) => {
 };
 
 const renderFormattedArticle = (rawText = '') => {
-  if (!rawText || typeof rawText !== 'string') return null;
+  const clean = extractCleanText(rawText);
+  if (!clean) return null;
 
-  const unescaped = rawText.replace(/\\n/g, '\n');
-  const sections = unescaped.split(/\n\s*\n/);
+  const sections = clean.split(/\n\s*\n/);
 
   return sections.map((sec, idx) => {
     const trimmed = sec.trim();

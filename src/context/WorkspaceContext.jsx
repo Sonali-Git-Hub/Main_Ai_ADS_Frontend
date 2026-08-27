@@ -2513,16 +2513,39 @@ export const WorkspaceProvider = ({ children }) => {
         );
         setApprovalsQueue(updatedQueue);
 
+        let cleanText = item.content || item.payload?.content || item.payload?.caption || item.payload?.body || '';
+        let cleanTitle = item.title || item.payload?.title || 'Brand Content';
+        let cleanMeta = '';
+
+        if (typeof cleanText === 'string' && (cleanText.trim().startsWith('{') || cleanText.trim().startsWith('```json'))) {
+          try {
+            const rawClean = cleanText.replace(/^```json/, '').replace(/```$/, '').trim();
+            const parsed = JSON.parse(rawClean);
+            if (parsed.data && typeof parsed.data === 'object') {
+              cleanText = parsed.data.content || parsed.data.body || cleanText;
+              cleanTitle = parsed.data.title || cleanTitle;
+              cleanMeta = parsed.data.metaDescription || '';
+            } else {
+              cleanText = parsed.content || parsed.body || cleanText;
+              cleanTitle = parsed.title || cleanTitle;
+              cleanMeta = parsed.metaDescription || '';
+            }
+          } catch (e) {}
+        }
+
         const contentPayload = item.payload || {
-          topic: item.title,
+          topic: cleanTitle,
+          title: cleanTitle,
           type: item.type,
-          platform: item.platform,
-          hook: item.title,
-          caption: item.content,
-          shortCaption: item.content?.slice(0, 100),
-          longCaption: item.content,
-          cta: 'Click link to learn more!',
-          hashtags: ['#AIMarketing', '#BrandDNA', '#Growth']
+          platform: item.platform || 'blog',
+          hook: cleanTitle,
+          content: cleanText,
+          metaDescription: cleanMeta,
+          caption: cleanText,
+          shortCaption: cleanMeta || cleanText?.slice(0, 120),
+          longCaption: cleanText,
+          cta: 'Read full article',
+          hashtags: ['#SEO', '#BrandDNA', '#Growth']
         };
 
         setGeneratedContent(contentPayload);
