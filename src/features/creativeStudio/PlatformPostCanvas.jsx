@@ -345,6 +345,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
       const promptText = contentData?.imagePrompt || `${brand} ${topic} ${hook}`.slice(0, 150);
       setVisualUrl(generateVertexAISvgDataUrl(promptText, brand, visualStyle));
     }
+    if (generatedContent?.imageStyle) setVisualStyle(generatedContent.imageStyle);
     if (generatedContent?.platform) setPlatform(generatedContent.platform.toLowerCase());
     setActiveSlide(0);
   }, [generatedContent, topic, hook]);
@@ -365,21 +366,26 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
 
     // Build rich brand context so backend AI can generate a perfect prompt
     const brandPayload = {
+      workspaceId:    workspace?._id || workspace?.id,
       prompt:         contentData?.imagePrompt || topic,
       topic:          topic,
       hook:           hook,
-      brand:          brand,
+      brand:          brand || workspace?.brandName,
+      brandName:      brand || workspace?.brandName,
+      brandColors:    workspace?.brandColors || [],
+      industry:       workspace?.industry || workspace?.industryCategory || workspace?.niche || '',
+      tagline:        workspace?.tagline || '',
+      companyDescription: workspace?.companyDescription || workspace?.metaDescription || workspace?.positioningSummary || '',
       platform:       platform,
       style:          visualStyle,
       strategyPillar: generatedContent?.strategyPillar || generatedContent?.pillar || contentData?.strategyPillar || '',
-      industry:       workspace?.industry || workspace?.niche || '',
-      brandColors:    workspace?.brandColors || [],
-      aspect:         platform === 'linkedin' ? '16:9' : platform === 'story' ? '9:16' : '1:1',
+      aspect:         platform === 'linkedin' ? '16:9' : (platform === 'story' || platform === 'reel' || platform === 'tiktok') ? '9:16' : '1:1',
       creditCost:     cost,
     };
 
     try {
-      const res = await fetch("http://localhost:5000/api/creative/visual/generate", {
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${apiBase}/creative/visual/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(brandPayload),

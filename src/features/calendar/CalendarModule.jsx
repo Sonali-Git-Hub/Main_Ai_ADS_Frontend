@@ -850,13 +850,17 @@ export const CalendarModule = () => {
                         </div>
                       </div>
 
-                      {/* Pillar / strategy source */}
-                      {activePost.postFor && activePost.postFor !== 'Brand Awareness' && (
-                        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-500/5 border border-brand-500/15">
-                          <FileText className="w-3.5 h-3.5 text-brand-500 shrink-0" />
-                          <div>
-                            <span className="text-[8px] font-black text-brand-500/70 uppercase tracking-widest block">Strategy Pillar</span>
-                            <p className="text-[10px] font-black text-brand-600 dark:text-brand-400">{activePost.postFor}</p>
+                      {/* Visual Asset Preview */}
+                      {activePost.imageUrl && (
+                        <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950 max-h-[220px] flex items-center justify-center relative group shadow-sm">
+                          <img
+                            src={activePost.imageUrl}
+                            alt={activePost.title || 'Post Visual'}
+                            className="w-full h-full max-h-[200px] object-cover"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                          <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[8px] font-black text-white uppercase tracking-wider">
+                            AI Visual
                           </div>
                         </div>
                       )}
@@ -968,6 +972,10 @@ export const CalendarModule = () => {
                       const isNewspaper= platform === 'newspaper' || postType.includes('press') || postType.includes('newspaper');
                       const type       = isEmail ? 'EMAIL' : isBlog ? 'BLOG' : isNewspaper ? 'NEWSPAPER' : 'SOCIAL';
 
+                      // Determine aspect ratio based on platform & post type
+                      const isReelsOrStory = platform.includes('reel') || platform.includes('tiktok') || platform.includes('story');
+                      const aspect = isReelsOrStory ? '9:16' : platform === 'instagram' ? '1:1' : '16:9';
+
                       // Pre-fill generatedContent with full strategy & calendar context
                       setGeneratedContent({
                         platform,
@@ -982,6 +990,15 @@ export const CalendarModule = () => {
                         subject: isEmail ? topic : undefined,
                         title: isBlog || isNewspaper ? topic : undefined,
                         headline: isNewspaper ? topic : undefined,
+                        // Full Brand DNA
+                        workspaceId: activeWorkspace?._id || activeWorkspace?.id,
+                        brandName: activeWorkspace?.brandName,
+                        brandColors: activeWorkspace?.brandColors,
+                        industry: activeWorkspace?.industryCategory || activeWorkspace?.niche,
+                        companyDescription: activeWorkspace?.companyDescription || activeWorkspace?.metaDescription,
+                        tagline: activeWorkspace?.tagline,
+                        imageAspect: aspect,
+                        imageStyle: 'Photorealistic Commercial',
                         // Strategy and Calendar Context
                         strategyPillar: activePost.postFor || activePost.strategyPillar || activePost.pillar || 'Brand Awareness',
                         strategyDescription: activePost.postObjective || activePost.title || '',
@@ -991,11 +1008,18 @@ export const CalendarModule = () => {
                       });
 
                       setStudioTarget({
+                        workspaceId: activeWorkspace?._id || activeWorkspace?.id,
+                        brandName: activeWorkspace?.brandName,
+                        brandColors: activeWorkspace?.brandColors,
+                        industry: activeWorkspace?.industryCategory || activeWorkspace?.niche,
+                        companyDescription: activeWorkspace?.companyDescription || activeWorkspace?.metaDescription,
+                        tagline: activeWorkspace?.tagline,
                         platform,
                         topic,
                         postType,
                         type,
                         autoGenerate: true,
+                        imageAspect: aspect,
                         strategyPillar: activePost.postFor || activePost.strategyPillar || 'Brand Awareness',
                         campaignStage: activePost.campaignStage || 'Awareness'
                       });

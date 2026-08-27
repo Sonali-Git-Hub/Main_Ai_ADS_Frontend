@@ -36,8 +36,25 @@ const renderParsedContentPreview = (selectedItem) => {
     const variations = Array.isArray(data.creativeVariations) ? data.creativeVariations : [];
     const imagePrompt = data.imagePrompt;
 
+    const imgUrl = data.imageUrl || selectedItem.imageUrl;
+
     return (
       <div className="space-y-4">
+        {/* Visual Asset Preview */}
+        {imgUrl && (
+          <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950 max-h-[320px] flex items-center justify-center relative group shadow-md">
+            <img
+              src={imgUrl}
+              alt={hookText || 'AI Marketing Visual'}
+              className="w-full h-full max-h-[300px] object-cover"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+            <div className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md text-[9px] font-black text-white uppercase tracking-wider border border-white/10">
+              📷 AI Visual Asset
+            </div>
+          </div>
+        )}
+
         {/* Hook / Headline */}
         {hookText && (
           <div className="p-3.5 rounded-2xl bg-gradient-to-r from-brand-500/10 via-purple-500/10 to-indigo-500/10 border border-brand-500/30">

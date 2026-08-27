@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { strategyAPI } from '../../services/api';
+import { resolveBrandVisualAsset } from '../../services/brandVisualResolver';
 import {
   Target, Layers, Zap, CheckCircle2, ArrowRight, TrendingUp, Users, BarChart3,
   Globe, Mail, Instagram, Linkedin, Loader2, Save, Crosshair, Gift,
@@ -831,30 +832,54 @@ export const StrategyModule = () => {
                       const type = isEmail ? 'EMAIL' : isBlog ? 'BLOG' : isNewspaper ? 'NEWSPAPER' : 'SOCIAL';
                       const platform = isEmail ? 'email' : isBlog ? 'blog' : isNewspaper ? 'newspaper' : platformRaw.includes('linkedin') ? 'linkedin' : platformRaw.includes('twitter') ? 'twitter' : 'instagram';
 
+                      const brandName = activeWorkspace?.brandName || 'Redbus';
+                      const isReelsOrStory = platformRaw.includes('reel') || platformRaw.includes('tiktok') || platformRaw.includes('story');
+                      const aspect = isReelsOrStory ? '9:16' : platform === 'instagram' ? '1:1' : '16:9';
+                      const imagePrompt = `${item.topic} — ${brandName} commercial marketing campaign photography, professional studio lighting, 8k resolution`;
+                      const initialImageUrl = resolveBrandVisualAsset({
+                        prompt: imagePrompt,
+                        brandName: brandName,
+                        topic: item.topic,
+                        style: 'Photorealistic Commercial',
+                        aspect: aspect,
+                        variationIndex: item.day || 0
+                      });
+
+                      const payload = {
+                        platform,
+                        type,
+                        postType: isReelsOrStory ? 'reel' : 'image',
+                        topic: item.topic,
+                        hook: item.topic,
+                        caption: item.actionItem || '',
+                        strategyPillar: item.topic,
+                        strategyDescription: item.actionItem || '',
+                        calendarDay: item.day,
+                        campaignStage: week === 1 ? 'Awareness' : week === 2 ? 'Consideration' : week === 3 ? 'Engagement' : 'Conversion',
+                        imageUrl: initialImageUrl,
+                        imagePrompt: imagePrompt,
+                        imageStyle: 'Photorealistic Commercial',
+                        imageAspect: aspect,
+                      };
+
                       if (setGeneratedContent) {
-                        setGeneratedContent({
-                          platform,
-                          type,
-                          postType: 'image',
-                          topic: item.topic,
-                          hook: item.topic,
-                          caption: item.actionItem || '',
-                          strategyPillar: item.topic,
-                          strategyDescription: item.actionItem || '',
-                          calendarDay: item.day,
-                          campaignStage: week === 1 ? 'Awareness' : week === 2 ? 'Consideration' : week === 3 ? 'Engagement' : 'Conversion',
-                        });
+                        setGeneratedContent(payload);
                       }
 
                       if (setStudioTarget) {
                         setStudioTarget({
                           platform,
                           topic: item.topic,
-                          postType: 'image',
+                          postType: isReelsOrStory ? 'reel' : 'image',
                           type,
                           autoGenerate: true,
+                          generateVisual: true,
                           strategyPillar: item.topic,
                           strategyDescription: item.actionItem || '',
+                          imageUrl: initialImageUrl,
+                          imagePrompt: imagePrompt,
+                          imageStyle: 'Photorealistic Commercial',
+                          imageAspect: aspect,
                         });
                       }
 
