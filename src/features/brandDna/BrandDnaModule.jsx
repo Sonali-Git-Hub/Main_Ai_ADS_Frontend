@@ -4,7 +4,7 @@ import { brandAPI } from '../../services/api';
 import {
   Dna, Globe, CheckCircle2, Save, RefreshCw, Sparkles, Loader2,
   AlertCircle, ShieldCheck, Target, MessageSquare, Zap, Layers,
-  Compass, AlertTriangle, FileText, BarChart2
+  Compass, AlertTriangle, FileText, BarChart2, Palette, Copy, Check
 } from 'lucide-react';
 
 export const BrandDnaModule = () => {
@@ -15,6 +15,13 @@ export const BrandDnaModule = () => {
   const [regenerating, setRegenerating] = useState(null);
   const [savedMsg, setSavedMsg] = useState('');
   const [error, setError] = useState('');
+  const [copiedColor, setCopiedColor] = useState(null);
+
+  const handleCopyColor = (hex) => {
+    navigator.clipboard.writeText(hex);
+    setCopiedColor(hex);
+    setTimeout(() => setCopiedColor(null), 2000);
+  };
 
   // Editable fields
   const [websiteUrl, setWebsiteUrl] = useState(activeWorkspace?.domainUrl || '');
@@ -252,6 +259,17 @@ export const BrandDnaModule = () => {
         ? effectiveProfile.brandPersonality.values
         : ['Authenticity & Heritage', 'Premium Quality', 'Customer Trust']
   };
+
+  const rawColors = (
+    (effectiveProfile?.brandColors && Array.isArray(effectiveProfile.brandColors) && effectiveProfile.brandColors.length > 0)
+      ? effectiveProfile.brandColors
+      : (activeWorkspace?.brandColors && Array.isArray(activeWorkspace.brandColors) && activeWorkspace.brandColors.length > 0)
+        ? activeWorkspace.brandColors
+        : (structured.color_palette && Array.isArray(structured.color_palette) && structured.color_palette.length > 0)
+          ? structured.color_palette
+          : ['#6366F1', '#8B5CF6', '#06B6D4', '#0F172A']
+  );
+  const brandColorsList = rawColors.map(c => typeof c === 'string' ? c : (c?.hex || c?.color || '#6366F1'));
 
   // ── No Brand Gate ──────────────────────────────────────────────────────────
   const noBrand =
@@ -500,6 +518,48 @@ export const BrandDnaModule = () => {
                 </div>
               </div>
 
+              {/* Brand Theme Color Palette */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                    <Palette className="w-3.5 h-3.5 text-brand-500" />
+                    {t('colorPalette', 'Theme Color Palette')}
+                  </span>
+                  <span className="text-[9px] bg-brand-500/10 text-brand-600 dark:text-brand-400 font-extrabold px-2 py-0.5 rounded-full border border-brand-500/20 uppercase tracking-wider">
+                    {brandColorsList.length} Fetched
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {brandColorsList.map((hex, idx) => {
+                    const colorLabel = idx === 0 ? 'Primary' : idx === 1 ? 'Secondary' : idx === 2 ? 'Accent' : 'Neutral';
+                    const isCopied = copiedColor === hex;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleCopyColor(hex)}
+                        title={`Click to copy ${hex}`}
+                        className="group relative flex flex-col items-center p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 hover:border-brand-500/60 hover:shadow-md transition-all cursor-pointer text-left"
+                      >
+                        <div
+                          className="w-full h-8 rounded-lg mb-1.5 shadow-inner border border-black/10 dark:border-white/10 flex items-center justify-center relative overflow-hidden transition-transform group-hover:scale-105"
+                          style={{ backgroundColor: hex }}
+                        >
+                          <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 text-white rounded px-1.5 py-0.5 text-[9px] font-bold backdrop-blur-xs flex items-center gap-1">
+                            {isCopied ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
+                            {isCopied ? 'Copied' : 'Copy'}
+                          </span>
+                        </div>
+                        <div className="w-full flex items-center justify-between">
+                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">{colorLabel}</span>
+                          <span className="text-[10px] font-mono font-bold text-slate-700 dark:text-slate-200 group-hover:text-brand-500 transition-colors">{hex}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
               {/* Quick Attributes */}
               <div className="space-y-2 text-xs">
