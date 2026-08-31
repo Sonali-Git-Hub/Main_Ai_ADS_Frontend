@@ -92,25 +92,147 @@ const CopySidebar = ({ hook, story, shortCap, longCap, cta, hashtags, extras = [
   </div>
 );
 
-export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deductVisualCredits, setIsCreditModalOpen }) => {
-  const rawType     = (generatedContent?.type     || generatedContent?.postType || "SOCIAL").toUpperCase();
-  const [platform, setPlatform] = useState((generatedContent?.platform || "instagram").toLowerCase());
-  const rawPostType = (generatedContent?.postType || "").toLowerCase();
+const extractCleanText = (raw) => {
+  if (!raw) return '';
+  let str = typeof raw === 'string' ? raw.trim() : JSON.stringify(raw);
 
-  const contentData = generatedContent?.data || generatedContent || {};
+  // If the string starts with JSON markers or contains JSON wrapper
+  if (str.startsWith('{') || str.startsWith('[') || str.startsWith('```json')) {
+    try {
+      const clean = str.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+      const parsed = JSON.parse(clean);
+      if (parsed.data && typeof parsed.data === 'object') {
+        return extractCleanText(parsed.data.content || parsed.data.body || parsed.data.longCaption || parsed.data.caption || JSON.stringify(parsed.data));
+      }
+      if (parsed.content) return extractCleanText(parsed.content);
+      if (parsed.body) return extractCleanText(parsed.body);
+      if (parsed.longCaption) return extractCleanText(parsed.longCaption);
+      if (parsed.caption) return extractCleanText(parsed.caption);
+    } catch (e) {
+      // Regex extraction if JSON.parse failed due to unescaped quotes or newlines
+      const contentMatch = str.match(/"content"\s*:\s*"([\s\S]*?)(?:"\s*,\s*"|"\s*\}|\s*\n\s*\})/);
+      if (contentMatch && contentMatch[1]) {
+        return contentMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+      }
+    }
+  }
+
+  // Strip any residual leading JSON header lines
+  str = str.replace(/^\{\s*"data"\s*:\s*\{\s*"id"[^}]*?"content"\s*:\s*"/i, '');
+  str = str.replace(/"\s*\}\s*\}\s*$/i, '');
+  str = str.replace(/\\n/g, '\n').replace(/\\"/g, '"');
+
+  return str.trim();
+};
+
+const unwrapAndCleanContent = (raw) => {
+  if (!raw) return {};
+  let item = raw;
+  if (typeof item === 'string') {
+    const trimmed = item.trim();
+    if (trimmed.startsWith('{') || trimmed.startsWith('[') || trimmed.startsWith('```json')) {
+      try {
+        const clean = trimmed.replace(/^```json/, '').replace(/```$/, '').trim();
+        item = JSON.parse(clean);
+      } catch (e) {}
+    }
+  }
+
+  if (item && typeof item === 'object') {
+    if (item.data && typeof item.data === 'object') {
+      item = { ...item, ...item.data };
+    }
+    if (typeof item.data === 'string' && (item.data.trim().startsWith('{') || item.data.trim().startsWith('```json'))) {
+      try {
+        const clean = item.data.replace(/^```json/, '').replace(/```$/, '').trim();
+        const inner = JSON.parse(clean);
+        item = { ...item, ...inner };
+      } catch (e) {}
+    }
+    if (item.content) {
+      item.content = extractCleanText(item.content);
+    }
+    if (item.body) {
+      item.body = extractCleanText(item.body);
+    }
+    if (item.longCaption) {
+      item.longCaption = extractCleanText(item.longCaption);
+    }
+    if (item.caption) {
+      item.caption = extractCleanText(item.caption);
+    }
+  }
+
+  return item || {};
+};
+
+const renderFormattedArticle = (rawText = '') => {
+  const clean = extractCleanText(rawText);
+  if (!clean) return null;
+
+  const sections = clean.split(/\n\s*\n/);
+
+  return sections.map((sec, idx) => {
+    const trimmed = sec.trim();
+    if (!trimmed) return null;
+
+    if (trimmed.startsWith('### ')) {
+      return (
+        <h4 key={idx} className="text-sm font-bold text-slate-900 dark:text-white mt-4 mb-1.5">
+          {trimmed.replace(/^###\s+/, '')}
+        </h4>
+      );
+    }
+    if (trimmed.startsWith('## ')) {
+      return (
+        <h3 key={idx} className="text-base font-extrabold text-slate-900 dark:text-white mt-5 mb-2 pb-1 border-b border-slate-100 dark:border-slate-800">
+          {trimmed.replace(/^##\s+/, '')}
+        </h3>
+      );
+    }
+    if (trimmed.startsWith('# ')) {
+      return (
+        <h2 key={idx} className="text-lg font-black text-slate-900 dark:text-white mt-6 mb-2">
+          {trimmed.replace(/^#\s+/, '')}
+        </h2>
+      );
+    }
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      const bullets = trimmed.split(/\n/).map(b => b.replace(/^[-*]\s+/, '').trim()).filter(Boolean);
+      return (
+        <ul key={idx} className="list-disc pl-5 space-y-1 my-2 text-xs text-slate-700 dark:text-slate-300">
+          {bullets.map((b, bIdx) => <li key={bIdx}>{b}</li>)}
+        </ul>
+      );
+    }
+    return (
+      <p key={idx} className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed my-2">
+        {trimmed}
+      </p>
+    );
+  });
+};
+
+export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deductVisualCredits, setIsCreditModalOpen }) => {
+  const unwrapped = unwrapAndCleanContent(generatedContent);
+  const rawType     = (unwrapped?.type     || unwrapped?.postType || generatedContent?.type || generatedContent?.postType || "SOCIAL").toUpperCase();
+  const [platform, setPlatform] = useState((unwrapped?.platform || generatedContent?.platform || "instagram").toLowerCase());
+  const rawPostType = (unwrapped?.postType || generatedContent?.postType || "").toLowerCase();
+
+  const contentData = unwrapped;
   const brand    = workspace?.brandName || "AISA Brand";
   const handle   = "@" + brand.toLowerCase().replace(/\s+/g, "");
-  const topic    = contentData?.topic || contentData?.title || contentData?.subject || generatedContent?.topic || generatedContent?.title || "Campaign Objective";
-  const hook     = contentData?.hook || contentData?.headline || contentData?.title || generatedContent?.hook || generatedContent?.title || "Upgrade Your Brand Strategy!";
+  const topic    = contentData?.topic || contentData?.title || contentData?.subject || "Campaign Objective";
+  const hook     = contentData?.hook || contentData?.headline || contentData?.title || "Upgrade Your Brand Strategy!";
   const story    = contentData?.storytelling || contentData?.storytellingAngle || (Array.isArray(contentData?.creativeVariations) ? contentData.creativeVariations[0]?.text : "") || "";
   const shortCap = contentData?.shortCaption || contentData?.short_caption || "";
   const longCap  = contentData?.longCaption || contentData?.caption || contentData?.body || contentData?.content || "";
   const caption  = longCap || shortCap || contentData?.leadParagraph || contentData?.metaDescription || "";
-  const cta      = contentData?.cta || contentData?.callToAction || generatedContent?.cta || "Click the link in bio to learn more!";
-  const rawHashtags = (Array.isArray(contentData?.hashtags) && contentData.hashtags.length > 0) ? contentData.hashtags : (Array.isArray(generatedContent?.hashtags) && generatedContent.hashtags.length > 0) ? generatedContent.hashtags : null;
+  const cta      = contentData?.cta || contentData?.callToAction || "Click the link in bio to learn more!";
+  const rawHashtags = (Array.isArray(contentData?.hashtags) && contentData.hashtags.length > 0) ? contentData.hashtags : null;
   const hashArr  = rawHashtags || [`#${brand.replace(/\s+/g,'')}`, "#BrandDNA", "#Marketing"];
   const hashtags = hashArr.join(" ");
-  const variations = contentData?.creativeVariations || generatedContent?.creativeVariations || [];
+  const variations = contentData?.creativeVariations || [];
 
   const [generating,  setGenerating]  = useState(false);
   const [visualStyle, setVisualStyle] = useState("Glassmorphic Modern 3D");
@@ -379,7 +501,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
       platform:       platform,
       style:          visualStyle,
       strategyPillar: generatedContent?.strategyPillar || generatedContent?.pillar || contentData?.strategyPillar || '',
-      aspect:         platform === 'linkedin' ? '16:9' : (platform === 'story' || platform === 'reel' || platform === 'tiktok') ? '9:16' : '1:1',
+      aspect:         (platform === 'linkedin' || platform === 'blog' || platform === 'newspaper' || rawType === 'BLOG' || rawType === 'NEWSPAPER') ? '16:9' : (platform === 'story' || platform === 'reel' || platform === 'tiktok') ? '9:16' : '1:1',
       creditCost:     cost,
     };
 
@@ -614,16 +736,16 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
   }
   // ── D. BLOG ──
   if (isBlog) {
-    const blogTitle   = generatedContent?.title || hook;
-    const blogContent = generatedContent?.content || longCap || caption;
-    const metaDesc    = generatedContent?.metaDescription || shortCap || "";
+    const blogTitle   = contentData?.title || hook || topic;
+    const blogContent = contentData?.content || contentData?.body || longCap || caption;
+    const metaDesc    = contentData?.metaDescription || shortCap || "";
     return (
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
         <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="space-y-4">
             <VisualControls visualStyle={visualStyle} setVisualStyle={setVisualStyle} generating={generating} onGenerate={handleGenerateVisual} />
-            <CopySidebar hook={hook} story={story} shortCap={shortCap} longCap={longCap} cta={cta} hashtags={hashtags} extras={[{label:"Meta Description",value:metaDesc,color:"purple"}]} />
+            <CopySidebar hook={blogTitle} story={story} shortCap={shortCap} longCap={blogContent} cta={cta} hashtags={hashtags} extras={[{label:"Meta Description",value:metaDesc,color:"purple"}]} />
           </div>
           <div className="lg:col-span-2">
             <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-2xl bg-white dark:bg-slate-900 font-sans">
@@ -641,7 +763,9 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
                 </div>
                 {metaDesc && <p className="text-xs text-slate-500 italic border-l-4 border-purple-500 pl-3 leading-relaxed">{metaDesc}</p>}
                 {story && (<div className="p-3 rounded-xl bg-brand-500/5 border border-brand-500/20"><span className="text-[8px] font-black uppercase text-brand-500 tracking-widest block mb-1">Storytelling Angle</span><p className="text-xs text-slate-700 dark:text-slate-300 italic leading-relaxed">{story}</p></div>)}
-                <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{blogContent}</div>
+                <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-sans space-y-2">
+                  {renderFormattedArticle(blogContent)}
+                </div>
                 {shortCap && shortCap!==blogContent && <p className="text-xs text-slate-500 dark:text-slate-400 italic">{shortCap}</p>}
                 <div className="flex flex-wrap gap-1.5 pt-2">{hashArr.map((h,i)=><span key={i} className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-[9px] font-bold">{h}</span>)}</div>
                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
