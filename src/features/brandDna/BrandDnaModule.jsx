@@ -130,13 +130,14 @@ export const BrandDnaModule = () => {
 
   const matchedProfile = isProfileMatching ? profile : null;
 
-  // Normalized Brand DNA Data (100% evidence grounded, zero fake corporate fallbacks)
-  const normalizedDna = normalizeBrandDna(activeWorkspace || matchedProfile);
-  const effectiveProfile = (activeWorkspace && (activeWorkspace.brandName || activeWorkspace.domainUrl)) ? {
+  // Single-Ownership Source of Truth: BrandProfile (GET /api/brand/:workspaceId)
+  const canonicalSource = matchedProfile || profile;
+  const normalizedDna = canonicalSource ? normalizeBrandDna(canonicalSource) : null;
+  const effectiveProfile = normalizedDna ? {
     ...normalizedDna,
-    website: normalizedDna.domainUrl,
+    website: normalizedDna.domainUrl || activeWorkspace?.domainUrl || '',
     aiConfidence: normalizedDna.confidenceScore || 85
-  } : (matchedProfile ? normalizeBrandDna(matchedProfile) : null);
+  } : null;
 
   const handleSaveProfile = async () => {
     if (!workspaceId || !effectiveProfile) return;
@@ -657,7 +658,7 @@ export const BrandDnaModule = () => {
                 <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 space-y-2">
                   <span className="font-bold text-emerald-700 dark:text-emerald-300 block uppercase text-[10px]">Do's</span>
                   <ul className="space-y-1 text-slate-700 dark:text-slate-300">
-                    {(effectiveProfile?.brandVoice?.dos || ['Highlight success stories', 'Showcase interactive class features']).map((d, i) => (
+                    {(effectiveProfile?.dosAndDonts?.dos || effectiveProfile?.doWords || (Array.isArray(effectiveProfile?.brandVoice?.dos) ? effectiveProfile.brandVoice.dos : null) || ['Use grounded facts from official evidence', 'Maintain clear professional brand tone']).map((d, i) => (
                       <li key={i}>✓ {d}</li>
                     ))}
                   </ul>
@@ -665,7 +666,7 @@ export const BrandDnaModule = () => {
                 <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 space-y-2">
                   <span className="font-bold text-red-700 dark:text-red-300 block uppercase text-[10px]">Don'ts</span>
                   <ul className="space-y-1 text-slate-700 dark:text-slate-300">
-                    {(effectiveProfile?.brandVoice?.donts || ['Avoid overly technical jargon', 'Do not downplay traditional education methods']).map((d, i) => (
+                    {(effectiveProfile?.dosAndDonts?.donts || effectiveProfile?.dontWords || (Array.isArray(effectiveProfile?.brandVoice?.donts) ? effectiveProfile.brandVoice.donts : null) || ['Avoid unverified claims or unsupported statistics', 'Avoid generic marketing buzzwords']).map((d, i) => (
                       <li key={i}>✗ {d}</li>
                     ))}
                   </ul>

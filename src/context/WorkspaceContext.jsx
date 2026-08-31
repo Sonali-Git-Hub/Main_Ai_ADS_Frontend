@@ -2267,9 +2267,7 @@ export const WorkspaceProvider = ({ children }) => {
       if (data.success && data.workspace) {
         const savedDoc = {
           ...data.workspace,
-          id: data.workspace._id || data.workspace.id || `ws_${Date.now()}`,
-          brandVoiceTone: data.workspace.brandVoiceTone || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative', 'Reliable'] },
-          voiceGuidelines: data.workspace.voiceGuidelines || { formalityScore: 4, toneKeywords: ['Professional', 'Innovative'] }
+          id: data.workspace._id || data.workspace.id || `ws_${Date.now()}`
         };
         setWorkspaces(prev => {
           const exists = prev.some(w => (w.id === savedDoc.id || w._id === savedDoc.id));
