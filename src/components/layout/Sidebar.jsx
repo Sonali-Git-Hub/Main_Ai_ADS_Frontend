@@ -19,11 +19,12 @@ import {
   Send,
   Zap,
   User as UserIcon,
-  Shield
+  Shield,
+  X
 } from 'lucide-react';
 
 export const Sidebar = () => {
-  const { activeModule, setActiveModule, setIsQuickPostOpen, setIsSettingsModalOpen, user, userAvatar, activeWorkspace, t } = useWorkspace();
+  const { activeModule, setActiveModule, setIsQuickPostOpen, setIsSettingsModalOpen, user, userAvatar, activeWorkspace, t, isMobileMenuOpen, setIsMobileMenuOpen } = useWorkspace();
   const [collapsed, setCollapsed] = useState(false);
 
   const userName = (() => {
@@ -56,7 +57,16 @@ export const Sidebar = () => {
   ];
 
   return (
-    <aside className={`h-screen sticky top-0 bg-white dark:bg-[#090d16] border-r border-slate-200 dark:border-slate-800/80 flex flex-col justify-between transition-all duration-300 z-40 ${collapsed ? 'w-20' : 'w-64'}`}>
+    <>
+      {/* Mobile Drawer Backdrop Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          onClick={() => setIsMobileMenuOpen(false)}
+          className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-40 lg:hidden animate-in fade-in transition-opacity"
+        />
+      )}
+
+      <aside className={`h-screen bg-white dark:bg-[#090d16] border-r border-slate-200 dark:border-slate-800/80 flex flex-col justify-between transition-all duration-300 z-50 fixed lg:sticky top-0 left-0 ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl w-64' : '-translate-x-full lg:translate-x-0'} ${collapsed ? 'lg:w-20' : 'lg:w-64'}`}>
       <div>
         {/* Logo Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800/80">
@@ -66,7 +76,7 @@ export const Sidebar = () => {
               alt="AI Ads™ Logo" 
               className="w-10 h-10 rounded-xl object-cover flex-shrink-0 shadow-md border border-slate-200/50 dark:border-slate-800/80 bg-white" 
             />
-            {!collapsed && (
+            {(!collapsed || isMobileMenuOpen) && (
               <div>
                 <div className="flex items-center gap-1">
                   <span className="font-bold text-slate-800 dark:text-white text-base tracking-wide">AI Ads™</span>
@@ -77,10 +87,22 @@ export const Sidebar = () => {
             )}
           </div>
           <button 
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={() => {
+              if (isMobileMenuOpen) {
+                setIsMobileMenuOpen(false);
+              } else {
+                setCollapsed(!collapsed);
+              }
+            }}
             className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors"
+            title={isMobileMenuOpen ? "Close menu" : collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            <span className="lg:hidden">
+              <ChevronLeft className="w-4 h-4 text-brand-500" />
+            </span>
+            <span className="hidden lg:inline">
+              {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </span>
           </button>
         </div>
 
@@ -95,7 +117,7 @@ export const Sidebar = () => {
             ) : (
               <UserIcon className="w-4 h-4 text-white shrink-0" />
             )}
-            {!collapsed && <span className="truncate">{userName}</span>}
+            {(!collapsed || isMobileMenuOpen) && <span className="truncate">{userName}</span>}
           </div>
         </div>
 
@@ -109,6 +131,7 @@ export const Sidebar = () => {
                 key={m.id}
                 onClick={() => {
                   setActiveModule(m.id);
+                  setIsMobileMenuOpen(false);
                   if (m.id === 'settings') {
                     setIsSettingsModalOpen(true);
                   }
@@ -120,7 +143,7 @@ export const Sidebar = () => {
                 }`}
               >
                 <Icon className={`w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-110 ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-brand-500'}`} />
-                {!collapsed && <span className="truncate">{m.label}</span>}
+                {(!collapsed || isMobileMenuOpen) && <span className="truncate">{m.label}</span>}
                 {isActive && <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-400 animate-pulse"></div>}
               </button>
             );
@@ -129,7 +152,7 @@ export const Sidebar = () => {
       </div>
 
       {/* Footer Ecosystem Badge */}
-      {!collapsed && (
+      {(!collapsed || isMobileMenuOpen) && (
         <div className="p-3 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900/40">
           <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-400">
             <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
@@ -139,5 +162,6 @@ export const Sidebar = () => {
         </div>
       )}
     </aside>
+    </>
   );
 };

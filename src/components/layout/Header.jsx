@@ -14,7 +14,9 @@ import {
   UserCheck,
   ArrowLeft,
   Trash2,
-  LogOut
+  LogOut,
+  Menu,
+  X
 } from 'lucide-react';
 
 export const Header = () => {
@@ -31,6 +33,8 @@ export const Header = () => {
     openScraperModal,
     setIsAISAAssistantOpen,
     setIsSettingsModalOpen,
+    isMobileMenuOpen,
+    setIsMobileMenuOpen,
 
     notifications,
     goBack,
@@ -87,8 +91,16 @@ export const Header = () => {
 
   return (
     <header className="h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-[#090d16]/90 backdrop-blur-md sticky top-0 z-30 px-3 sm:px-6 flex items-center justify-between transition-colors">
-      {/* Left: Back Button & Workspace Switcher */}
+      {/* Left: Mobile Toggle, Back Button & Workspace Switcher */}
       <div className="flex items-center gap-2 sm:gap-4">
+        {/* Mobile Navigation Drawer Toggle */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="lg:hidden p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors"
+          title="Toggle Mobile Navigation Menu"
+        >
+          {isMobileMenuOpen ? <X className="w-5 h-5 text-brand-500" /> : <Menu className="w-5 h-5" />}
+        </button>
         {/* Universal Back Button */}
         {canGoBack && (
           <button 
@@ -106,21 +118,17 @@ export const Header = () => {
             onClick={() => setShowWorkspaceMenu(!showWorkspaceMenu)}
             className="flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 bg-slate-100/70 dark:bg-slate-900/80 transition-all text-left"
           >
-            <div className="w-7 h-7 rounded-lg bg-brand-500/15 border border-brand-500/30 flex items-center justify-center text-brand-400 font-bold text-xs overflow-hidden">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden shrink-0 shadow-sm p-1">
               {activeWorkspace?.logoUrl || activeWorkspace?.faviconUrl ? (
-                <img src={activeWorkspace.logoUrl || activeWorkspace.faviconUrl} alt={activeWorkspace.brandName} className="w-full h-full object-cover bg-white" />
+                <img src={activeWorkspace.logoUrl || activeWorkspace.faviconUrl} alt={activeWorkspace.brandName} className="w-full h-full object-contain" />
               ) : (
                 <Building2 className="w-4 h-4 text-brand-500" />
               )}
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-100">{activeWorkspace?.brandName}</span>
-                <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.2 bg-brand-500/20 text-brand-400 rounded-full font-medium hidden sm:inline">{t('brandDnaBadge', 'Brand DNA')}</span>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[100px] sm:max-w-[140px]">{activeWorkspace?.domainUrl}</p>
+              <span className="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-slate-100 block truncate max-w-[140px] sm:max-w-[200px]">{activeWorkspace?.brandName}</span>
             </div>
-            <ChevronDown className="w-4 h-4 text-slate-400 ml-1" />
+            <ChevronDown className="w-4 h-4 text-slate-400 ml-1 shrink-0" />
           </button>
 
           {/* Workspace Dropdown */}

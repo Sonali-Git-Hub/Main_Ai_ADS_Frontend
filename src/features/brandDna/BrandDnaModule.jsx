@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { brandAPI } from '../../services/api';
+import { normalizeBrandDna, getProvenanceBadgeInfo } from '../../utils/normalizeBrandDna';
 import {
   Dna, Globe, CheckCircle2, Save, RefreshCw, Sparkles, Loader2,
   AlertCircle, ShieldCheck, Target, MessageSquare, Zap, Layers,
   Compass, AlertTriangle, FileText, BarChart2, Palette, Copy, Check
 } from 'lucide-react';
+
+const ProvenanceBadge = ({ provenanceObj }) => {
+  return null;
+};
 
 export const BrandDnaModule = () => {
   const {activeWorkspace, updateWorkspace, setActiveModule, setIsScraperOpen, openScraperModal, setBrandDnaData, t } = useWorkspace();
@@ -125,78 +130,21 @@ export const BrandDnaModule = () => {
 
   const matchedProfile = isProfileMatching ? profile : null;
 
-  // Dynamic Workspace Values
-  const brandName = activeWorkspace?.brandName || 'Brand Workspace';
-  const industry = activeWorkspace?.industryCategory || activeWorkspace?.industry || 'Not Specified in Evidence';
-  const tagline = activeWorkspace?.tagline || null;
-  const mission = activeWorkspace?.missionStatement || null;
-
-  // Build 100% dynamic effectiveProfile derived from activeWorkspace for ANY brand
-  const effectiveProfile = matchedProfile || (activeWorkspace && (activeWorkspace.brandName || activeWorkspace.domainUrl) ? {
-    aiConfidence: activeWorkspace.confidenceScore || 85,
-    companyName: brandName,
-    website: activeWorkspace.domainUrl || '',
-    logoUrl: activeWorkspace.logoUrl || activeWorkspace.faviconUrl || '',
-    brandColors: activeWorkspace.brandColors || ['#6366F1', '#8B5CF6'],
-    structuredIdentity: {
-      brand_name: brandName,
-      industry: industry,
-      tone: typeof activeWorkspace.brandVoiceTone === 'string' 
-        ? activeWorkspace.brandVoiceTone 
-        : (activeWorkspace.brandVoiceTone?.toneKeywords?.join(', ') || 'Not Specified in Evidence'),
-      target_audience: typeof activeWorkspace.targetAudience === 'string'
-        ? activeWorkspace.targetAudience
-        : (Array.isArray(activeWorkspace.targetAudience) && activeWorkspace.targetAudience.length > 0 
-            ? activeWorkspace.targetAudience.join(', ') 
-            : 'Not Specified in Evidence'),
-      content_angles: (activeWorkspace.contentPillars && activeWorkspace.contentPillars.length > 0)
-        ? activeWorkspace.contentPillars
-        : [],
-      color_palette: activeWorkspace.brandColors || ['#6366F1', '#8B5CF6'],
-      goal: tagline || mission || 'Not Specified in Evidence',
-      products_services: (activeWorkspace.coreProductsServices && activeWorkspace.coreProductsServices.length > 0)
-        ? activeWorkspace.coreProductsServices
-        : [],
-      brand_values: (activeWorkspace.brandValues && activeWorkspace.brandValues.length > 0) ? activeWorkspace.brandValues : []
-    },
-    targetAudienceSection: {
-      description: typeof activeWorkspace.targetAudience === 'string'
-        ? activeWorkspace.targetAudience
-        : (Array.isArray(activeWorkspace.targetAudience) && activeWorkspace.targetAudience.length > 0 
-            ? activeWorkspace.targetAudience.join(', ')
-            : 'Not Specified in Evidence')
-    },
-    brandPersonality: {
-      values: ['Innovation', 'Quality', 'Reliability'],
-      usps: [tagline, `High customer satisfaction & trust in ${industry}`]
-    },
-    brandVoice: {
-      style: typeof activeWorkspace.brandVoiceTone === 'string'
-        ? activeWorkspace.brandVoiceTone
-        : (activeWorkspace.brandVoiceTone?.toneKeywords?.join(', ') || 'Friendly & Professional'),
-      dos: [`Highlight ${brandName} success stories`, `Showcase core product features & quality`],
-      donts: ['Avoid generic unverified claims', 'Do not compromise on brand consistency']
-    },
-    contentStrategy: {
-      angles: (activeWorkspace.contentPillars && activeWorkspace.contentPillars.length > 0)
-        ? activeWorkspace.contentPillars
-        : [`Empowering ${brandName} customers through quality`, `Innovative ${industry} solutions`, `Customer trust & product excellence`],
-      goal: mission,
-      platforms: ['instagram', 'linkedin', 'facebook']
-    }
-  } : null);
+  // Normalized Brand DNA Data (100% evidence grounded, zero fake corporate fallbacks)
+  const normalizedDna = normalizeBrandDna(activeWorkspace || matchedProfile);
+  const effectiveProfile = (activeWorkspace && (activeWorkspace.brandName || activeWorkspace.domainUrl)) ? {
+    ...normalizedDna,
+    website: normalizedDna.domainUrl,
+    aiConfidence: normalizedDna.confidenceScore || 85
+  } : (matchedProfile ? normalizeBrandDna(matchedProfile) : null);
 
   const handleSaveProfile = async () => {
     if (!workspaceId || !effectiveProfile) return;
     try {
-      const cleanColor = (c) => typeof c === 'string' ? c : (c?.hex || c?.color || '#6366F1');
+      const cleanColor = (c) => typeof c === 'string' ? c : (c?.hex || c?.color);
       const sanitizedProfile = {
         ...effectiveProfile,
-        brandColors: (effectiveProfile.brandColors || []).map(cleanColor),
-        structuredIdentity: {
-          ...effectiveProfile.structuredIdentity,
-          color_palette: (effectiveProfile.structuredIdentity?.color_palette || []).map(cleanColor)
-        }
+        brandColors: (effectiveProfile.brandColors || []).map(cleanColor).filter(Boolean)
       };
       if (updateWorkspace) {
         await updateWorkspace(workspaceId, sanitizedProfile);
@@ -217,59 +165,7 @@ export const BrandDnaModule = () => {
     }
   };
 
-  const rawStruct = effectiveProfile?.structuredIdentity || {};
-  const currentBrandName = effectiveProfile?.companyName || activeWorkspace?.brandName || 'Brand';
-  const currentIndustry = rawStruct.industry || activeWorkspace?.industryCategory || activeWorkspace?.industry || 'Consumer Products & Services';
-
-  const structured = {
-    ...rawStruct,
-    brand_name: rawStruct.brand_name || currentBrandName,
-    industry: currentIndustry,
-    tone: rawStruct.tone || effectiveProfile?.brandVoice?.style || (typeof activeWorkspace?.brandVoiceTone === 'string' ? activeWorkspace.brandVoiceTone : 'Professional & Authoritative'),
-    goal: rawStruct.goal || effectiveProfile?.contentStrategy?.goal || `Drive official online sales and engagement for ${currentBrandName}`,
-    target_audience: rawStruct.target_audience || effectiveProfile?.targetAudienceSection?.description || (
-      typeof activeWorkspace?.targetAudience === 'string' ? activeWorkspace.targetAudience : `Primary consumers seeking high-quality ${currentIndustry} products from ${currentBrandName}.`
-    ),
-    content_angles: (rawStruct.content_angles && rawStruct.content_angles.length > 0)
-      ? rawStruct.content_angles
-      : (effectiveProfile?.contentStrategy?.angles && effectiveProfile.contentStrategy.angles.length > 0)
-        ? effectiveProfile.contentStrategy.angles
-        : (activeWorkspace?.contentPillars && activeWorkspace.contentPillars.length > 0)
-          ? activeWorkspace.contentPillars
-          : [
-              `${currentBrandName} | Official Brand Identity & Heritage`,
-              `Authentic ${currentIndustry} Quality & Craftsmanship`,
-              `Trending Styles & Seasonal Collections`,
-              `Customer Trust & Product Excellence`
-            ],
-    products_services: (rawStruct.products_services && rawStruct.products_services.length > 0)
-      ? rawStruct.products_services
-      : (effectiveProfile?.products?.list && effectiveProfile.products.list.length > 0)
-        ? effectiveProfile.products.list
-        : (activeWorkspace?.coreProductsServices && activeWorkspace.coreProductsServices.length > 0)
-          ? activeWorkspace.coreProductsServices
-          : [
-              `${currentBrandName} Core Collection`,
-              `Premium ${currentIndustry} Offerings`,
-              `Seasonal New Arrivals & Bestsellers`
-            ],
-    brand_values: (rawStruct.brand_values && rawStruct.brand_values.length > 0)
-      ? rawStruct.brand_values
-      : (effectiveProfile?.brandPersonality?.values && effectiveProfile.brandPersonality.values.length > 0)
-        ? effectiveProfile.brandPersonality.values
-        : ['Authenticity & Heritage', 'Premium Quality', 'Customer Trust']
-  };
-
-  const rawColors = (
-    (effectiveProfile?.brandColors && Array.isArray(effectiveProfile.brandColors) && effectiveProfile.brandColors.length > 0)
-      ? effectiveProfile.brandColors
-      : (activeWorkspace?.brandColors && Array.isArray(activeWorkspace.brandColors) && activeWorkspace.brandColors.length > 0)
-        ? activeWorkspace.brandColors
-        : (structured.color_palette && Array.isArray(structured.color_palette) && structured.color_palette.length > 0)
-          ? structured.color_palette
-          : ['#6366F1', '#8B5CF6', '#06B6D4', '#0F172A']
-  );
-  const brandColorsList = rawColors.map(c => typeof c === 'string' ? c : (c?.hex || c?.color || '#6366F1'));
+  const brandColorsList = (effectiveProfile?.brandColors || []).map(c => typeof c === 'string' ? c : (c?.hex || c?.color)).filter(Boolean);
 
   // ── No Brand Gate ──────────────────────────────────────────────────────────
   const noBrand =
@@ -384,29 +280,29 @@ export const BrandDnaModule = () => {
   // ── End No Brand Gate ──────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-4 animate-in fade-in max-w-7xl mx-auto px-6 pt-1 pb-6">
+    <div className="space-y-4 animate-in fade-in max-w-7xl mx-auto px-1 sm:px-4 pt-1 pb-6">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 p-3 rounded-2xl glass-card border border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 sm:p-5 rounded-2xl glass-card border border-slate-200 dark:border-slate-800">
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
               <Dna className="w-5 h-5" />
             </div>
-            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               {t('brandDnaTitle', 'Brand Intelligence & Brand DNA')}
             </h1>
           </div>
-          <p className="text-xs text-slate-500 font-medium pl-10">
+          <p className="text-xs text-slate-500 font-medium sm:pl-10">
             Immutable brand memory governing voice, positioning, and content rules for{' '}
             <strong className="text-brand-600 dark:text-brand-400">{activeWorkspace?.brandName || 'your brand'}</strong>.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
           <button
             onClick={handleRunAiAnalysis}
             disabled={analyzing}
-            className="btn-primary py-2 px-5 text-xs flex items-center gap-2 shadow-lg shadow-brand-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary py-2 px-4 text-xs flex-1 md:flex-none flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
             {analyzing ? 'Re-Scraping Brand Intelligence...' : t('runDeepAiAnalysis', 'Run Deep AI Analysis')}
@@ -414,7 +310,7 @@ export const BrandDnaModule = () => {
           {effectiveProfile && (
             <button
               onClick={handleSaveProfile}
-              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all border border-slate-200 dark:border-slate-700 flex items-center gap-2"
+              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 flex-1 md:flex-none"
             >
               <Save className="w-3.5 h-3.5 text-emerald-500" /> Save Profile
             </button>
@@ -531,129 +427,226 @@ export const BrandDnaModule = () => {
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {brandColorsList.map((hex, idx) => {
-                    const colorLabel = idx === 0 ? 'Primary' : idx === 1 ? 'Secondary' : idx === 2 ? 'Accent' : 'Neutral';
-                    const isCopied = copiedColor === hex;
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleCopyColor(hex)}
-                        title={`Click to copy ${hex}`}
-                        className="group relative flex flex-col items-center p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 hover:border-brand-500/60 hover:shadow-md transition-all cursor-pointer text-left"
-                      >
-                        <div
-                          className="w-full h-8 rounded-lg mb-1.5 shadow-inner border border-black/10 dark:border-white/10 flex items-center justify-center relative overflow-hidden transition-transform group-hover:scale-105"
-                          style={{ backgroundColor: hex }}
+                  {brandColorsList.length > 0 ? (
+                    brandColorsList.map((hex, idx) => {
+                      const colorLabel = idx === 0 ? 'Primary' : idx === 1 ? 'Secondary' : idx === 2 ? 'Accent' : 'Neutral';
+                      const isCopied = copiedColor === hex;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleCopyColor(hex)}
+                          title={`Click to copy ${hex}`}
+                          className="group relative flex flex-col items-center p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 hover:border-brand-500/60 hover:shadow-md transition-all cursor-pointer text-left"
                         >
-                          <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 text-white rounded px-1.5 py-0.5 text-[9px] font-bold backdrop-blur-xs flex items-center gap-1">
-                            {isCopied ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
-                            {isCopied ? 'Copied' : 'Copy'}
-                          </span>
-                        </div>
-                        <div className="w-full flex items-center justify-between">
-                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">{colorLabel}</span>
-                          <span className="text-[10px] font-mono font-bold text-slate-700 dark:text-slate-200 group-hover:text-brand-500 transition-colors">{hex}</span>
-                        </div>
-                      </button>
-                    );
-                  })}
+                          <div
+                            className="w-full h-8 rounded-lg mb-1.5 shadow-inner border border-black/10 dark:border-white/10 flex items-center justify-center relative overflow-hidden transition-transform group-hover:scale-105"
+                            style={{ backgroundColor: hex }}
+                          >
+                            <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 text-white rounded px-1.5 py-0.5 text-[9px] font-bold backdrop-blur-xs flex items-center gap-1">
+                              {isCopied ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
+                              {isCopied ? 'Copied' : 'Copy'}
+                            </span>
+                          </div>
+                          <div className="w-full flex items-center justify-between">
+                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">{colorLabel}</span>
+                            <span className="text-[10px] font-mono font-bold text-slate-700 dark:text-slate-200 group-hover:text-brand-500 transition-colors">{hex}</span>
+                          </div>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="col-span-4 p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">
+                      Brand colors could not be reliably detected.
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Quick Attributes */}
-              <div className="space-y-2 text-xs">
-                <div>
-                  <span className="font-bold text-slate-500 dark:text-slate-400 block">{t('industry', 'Industry')}</span>
-                  <span className="font-medium text-slate-900 dark:text-white">{structured.industry || 'Not specified'}</span>
+              {/* Quick Provenance Attributes */}
+              <div className="space-y-3 text-xs">
+                {/* Industry */}
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-slate-500 dark:text-slate-400">{t('industry', 'Industry')}</span>
+                    <ProvenanceBadge provenanceObj={effectiveProfile?.industryProvenance} />
+                  </div>
+                  <span className="font-semibold text-slate-900 dark:text-white">
+                    {effectiveProfile?.industryCategory || <span className="text-slate-400 font-normal italic">Not available from official sources</span>}
+                  </span>
                 </div>
-                <div>
-                  <span className="font-bold text-slate-500 dark:text-slate-400 block">{t('toneOfVoice', 'Tone of Voice')}</span>
-                  <span className="font-medium text-slate-900 dark:text-white">{structured.tone || 'Professional & Authoritative'}</span>
+
+                {/* Headquarters */}
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-slate-500 dark:text-slate-400">Headquarters</span>
+                    <ProvenanceBadge provenanceObj={effectiveProfile?.headquartersProvenance} />
+                  </div>
+                  <span className="font-semibold text-slate-900 dark:text-white">
+                    {effectiveProfile?.headquarters || <span className="text-slate-400 font-normal italic">Address not found</span>}
+                  </span>
                 </div>
-                <div>
-                  <span className="font-bold text-slate-500 dark:text-slate-400 block">{t('targetGoal', 'Target Goal')}</span>
-                  <span className="font-medium text-slate-900 dark:text-white">{structured.goal || 'Engagement & Lead Generation'}</span>
+
+                {/* Parent Company */}
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-slate-500 dark:text-slate-400">Parent Company</span>
+                    <ProvenanceBadge provenanceObj={effectiveProfile?.parentCompanyProvenance} />
+                  </div>
+                  <span className="font-semibold text-slate-900 dark:text-white">
+                    {effectiveProfile?.parentCompany || <span className="text-slate-400 font-normal italic">No parent company detected</span>}
+                  </span>
+                </div>
+
+                {/* Tagline */}
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-slate-500 dark:text-slate-400">Tagline / Slogan</span>
+                    <ProvenanceBadge provenanceObj={effectiveProfile?.taglineProvenance} />
+                  </div>
+                  <span className="font-semibold text-slate-900 dark:text-white">
+                    {effectiveProfile?.tagline ? `"${effectiveProfile.tagline}"` : <span className="text-slate-400 font-normal italic">Not Specified in Evidence</span>}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* {t('targetAudience', 'Target Audience')} Section */}
+            {/* Target Audience Section */}
             <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
                   <Target className="w-4 h-4 text-brand-500" /> Target Audience
                 </h2>
-                <button
-                  onClick={() => handleRegenerateSection('targetAudience')}
-                  disabled={regenerating === 'targetAudience'}
-                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-brand-500 transition-colors"
-                >
-                  {regenerating === 'targetAudience' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                </button>
+                <ProvenanceBadge provenanceObj={effectiveProfile?.targetAudienceProvenance} />
               </div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                {structured.target_audience || effectiveProfile?.targetAudienceSection?.description || 'Audience profile not generated yet.'}
-              </p>
+              {Array.isArray(effectiveProfile?.targetAudience) && effectiveProfile.targetAudience.length > 0 ? (
+                <div className="space-y-1.5">
+                  {effectiveProfile.targetAudience.map((aud, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
+                      {aud}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 font-normal italic">
+                  Target audience could not be reliably detected from website evidence.
+                </p>
+              )}
             </div>
           </div>
 
-          {/* Center & Right: Strategy, Pillars, SWOT */}
+          {/* Center & Right: Strategy, Pillars, Extracted Claims */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Content Pillars / Angles */}
-            <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <Layers className="w-4 h-4 text-brand-500" /> {t('contentPillarsAngles', 'Content Pillars & Angles')}
-                </h2>
-                <button
-                  onClick={() => handleRegenerateSection('contentStrategy')}
-                  disabled={regenerating === 'contentStrategy'}
-                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-brand-500 transition-colors"
-                >
-                  {regenerating === 'contentStrategy' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                </button>
+            {/* Mission & Vision Statements */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Compass className="w-4 h-4 text-purple-500" /> Mission Statement
+                  </h2>
+                  <ProvenanceBadge provenanceObj={effectiveProfile?.missionStatementProvenance} />
+                </div>
+                <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+                  {effectiveProfile?.missionStatement ? `"${effectiveProfile.missionStatement}"` : <span className="text-slate-400 font-normal italic">Mission statement not available from official sources</span>}
+                </p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {(structured.content_angles || []).map((angle, i) => (
-                  <div key={i} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
-                    <span className="text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase">{t('pillar', 'PILLAR')} #{i + 1}</span>
-                    <p className="text-xs font-bold text-slate-900 dark:text-white">{angle}</p>
-                  </div>
-                ))}
+
+              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-cyan-500" /> Company Vision
+                  </h2>
+                  <ProvenanceBadge provenanceObj={effectiveProfile?.visionProvenance} />
+                </div>
+                <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+                  {effectiveProfile?.vision ? `"${effectiveProfile.vision}"` : <span className="text-slate-400 font-normal italic">Vision statement not available from official sources</span>}
+                </p>
               </div>
             </div>
 
-            {/* Products & Values */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
+            {/* Core Products & Services */}
+            <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+              <div className="flex items-center justify-between">
                 <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <Zap className="w-4 h-4 text-amber-500" /> Products & Services
+                  <Zap className="w-4 h-4 text-amber-500" /> Core Products & Services
                 </h2>
-                <div className="space-y-1.5">
-                  {(structured.products_services || []).map((prod, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+                <ProvenanceBadge provenanceObj={effectiveProfile?.coreProductsServicesProvenance} />
+              </div>
+              {Array.isArray(effectiveProfile?.coreProductsServices) && effectiveProfile.coreProductsServices.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {effectiveProfile.coreProductsServices.map((prod, i) => (
+                    <div key={i} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
                       {prod}
                     </div>
                   ))}
                 </div>
-              </div>
+              ) : (
+                <p className="text-xs text-slate-400 font-normal italic">No explicit product category headings extracted.</p>
+              )}
+            </div>
 
-              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
-                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" /> {t('brandValuesTitle', 'Brand Values')}
-                </h2>
-                <div className="space-y-1.5">
-                  {(structured.brand_values || []).map((val, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
-                      {val}
+            {/* Extracted Marketing Claims (Unverified) */}
+            {Array.isArray(effectiveProfile?.extractedClaims) && effectiveProfile.extractedClaims.length > 0 && (
+              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-blue-500" /> Extracted Marketing Claims (Unverified)
+                  </h2>
+                  <span className="text-[9px] bg-slate-100 text-slate-500 font-extrabold px-2 py-0.5 rounded-full border border-slate-200">
+                    ⚠️ Scraped Marketing Statements
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {effectiveProfile.extractedClaims.map((claim, i) => (
+                    <div key={i} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">"{claim.claimText || claim}"</p>
+                      <span className="text-[9px] text-slate-400 block">Source: Official Website DOM Heading</span>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Scraped Evidence Pages (DOM Text + Visual Screenshots) */}
+            {Array.isArray(effectiveProfile?.pagesEvidence) && effectiveProfile.pagesEvidence.length > 0 && (
+              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Globe className="w-4 h-4 text-brand-500" /> Scraped Evidence Sources (DOM Text & Visual Screenshots)
+                  </h2>
+                  <span className="text-[9px] bg-brand-500/10 text-brand-600 font-extrabold px-2.5 py-1 rounded-full border border-brand-500/20">
+                    {effectiveProfile.pagesEvidence.length} Crawled Pages
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {effectiveProfile.pagesEvidence.map((page, i) => (
+                    <div key={i} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                      <div className="min-w-0 flex-1 pr-2">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-[8px] font-extrabold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded uppercase">
+                            {page.pageType || 'PAGE'}
+                          </span>
+                          <p className="font-bold text-xs text-slate-900 dark:text-white truncate">{page.pageTitle || page.url}</p>
+                        </div>
+                        <p className="text-[10px] text-slate-400 truncate">{page.url}</p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="text-[8px] bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80 dark:border-emerald-800/80">
+                          ✓ Text Scraped
+                        </span>
+                        {(page.hasScreenshot || page.screenshotStatus === 'SUCCESS') && (
+                          <span className="text-[8px] bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80 dark:border-indigo-800/80">
+                            📸 Screenshot Captured
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Content Rules / Dos & Don'ts */}
             <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">

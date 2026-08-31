@@ -142,7 +142,7 @@ const MainContent = () => {
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <Header />
-        <main className="p-6 flex-1 overflow-y-auto max-w-7xl w-full mx-auto">
+        <main className="p-3 sm:p-6 flex-1 overflow-y-auto max-w-7xl w-full mx-auto">
           {renderModule()}
         </main>
       </div>
@@ -158,10 +158,10 @@ const MainContent = () => {
       {!isAISAAssistantOpen && (
         <button
           onClick={() => setIsAISAAssistantOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-xl shadow-brand-500/30 transition-all hover:scale-105 active:scale-95 group"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-xl shadow-brand-500/30 transition-all hover:scale-105 active:scale-95 group"
           title="Open AI Ads™ Chatbot Assistant"
         >
-          <Bot className="w-6 h-6" />
+          <Bot className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
       )}
     </div>

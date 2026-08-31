@@ -72,51 +72,50 @@ export const DashboardModule = () => {
   ];
 
   return (
-    <div className="space-y-4 animate-in fade-in max-w-7xl mx-auto px-6 pt-1 pb-6">
+    <div className="space-y-4 animate-in fade-in max-w-7xl mx-auto px-1 sm:px-4 pt-1 pb-6">
       {/* Banner */}
-      <div className="p-3 rounded-2xl bg-gradient-to-r from-brand-50 via-white to-purple-50 dark:from-brand-900/60 dark:via-slate-900 dark:to-purple-950/60 border border-brand-200 dark:border-brand-500/30 shadow-lg relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-        <div className="relative z-10 space-y-0.5">
-          <div className="flex items-center gap-2">
-            <span className="text-xs uppercase font-extrabold tracking-widest text-brand-600 dark:text-brand-400 bg-brand-500/10 dark:bg-brand-500/20 px-2.5 py-0.5 rounded-full">{t('canonicalOps', 'Canonical Operations')}</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('opsFlow', 'Brand → Strategy → SEO → Create → Approve → Publish')}</span>
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-brand-50 via-white to-purple-50 dark:from-brand-900/60 dark:via-slate-900 dark:to-purple-950/60 border border-brand-200 dark:border-brand-500/30 shadow-lg relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+        <div className="relative z-10 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[10px] sm:text-xs uppercase font-extrabold tracking-widest text-brand-600 dark:text-brand-400 bg-brand-500/10 dark:bg-brand-500/20 px-2.5 py-0.5 rounded-full">{t('canonicalOps', 'Canonical Operations')}</span>
+            <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{t('opsFlow', 'Brand → Strategy → SEO → Create → Approve → Publish')}</span>
           </div>
-          <h1 className="text-lg font-extrabold text-slate-900 dark:text-white">{t('opsHubTitle', 'AI Ads™ Operations Hub')}</h1>
-          <p className="text-xs text-slate-600 dark:text-slate-300 max-w-xl">
+          <h1 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">{t('opsHubTitle', 'AI Ads™ Operations Hub')}</h1>
+          <p className="text-xs text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
             {t('currentlyGoverning', 'Currently governing')} <strong className="text-slate-900 dark:text-white">{activeWorkspace?.brandName || 'your brand'}</strong> ({activeWorkspace?.domainUrl || 'website'}). {t('anchoredToDna', 'All output is anchored to immutable Brand DNA.')}
           </p>
         </div>
 
-        <div className="flex gap-2 relative z-10">
+        <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full md:w-auto relative z-10">
           <button
             onClick={() => setActiveModule('brands')}
-            className="btn-secondary text-xs flex items-center gap-1.5"
+            className="btn-secondary text-xs flex-1 md:flex-none flex items-center justify-center gap-1.5 py-2.5 px-3"
           >
             <Dna className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-            {t('brandDna', 'Enter Your Brand')}
+            <span className="truncate">{t('brandDna', 'Enter Your Brand')}</span>
           </button>
           <button
             onClick={() => setIsQuickPostOpen(true)}
-            className="btn-secondary text-xs flex items-center gap-1.5"
+            className="btn-secondary text-xs flex-1 md:flex-none flex items-center justify-center gap-1.5 py-2.5 px-3"
           >
             <Zap className="w-4 h-4 text-amber-500" />
-            {t('quickPost', 'Quick Post')}
+            <span className="truncate">{t('quickPost', 'Quick Post')}</span>
           </button>
-
         </div>
       </div>
 
       {/* KPI Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {stats.map((s, idx) => {
           const Icon = s.icon;
           return (
-            <div key={idx} className={`p-5 rounded-2xl glass-card border ${s.bg} flex items-center justify-between`}>
+            <div key={idx} className={`p-4 sm:p-5 rounded-2xl glass-card border ${s.bg} flex items-center justify-between`}>
               <div>
                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">{s.label}</span>
-                <div className="text-2xl font-extrabold text-slate-900 dark:text-white my-0.5">{s.value}</div>
+                <div className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white my-0.5">{s.value}</div>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{s.sub}</span>
               </div>
-              <div className={`p-3 rounded-2xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 ${s.color}`}>
+              <div className={`p-2.5 sm:p-3 rounded-2xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 ${s.color}`}>
                 <Icon className="w-5 h-5" />
               </div>
             </div>
@@ -125,12 +124,12 @@ export const DashboardModule = () => {
       </div>
 
       {/* Pipeline Shortcuts */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+      <div className="p-4 sm:p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
         <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
           <Layers className="w-4 h-4 text-brand-500" /> {t('endToEndPipeline', 'End-to-End Content Pipeline')}
         </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           {[
             { id: 'brands', label: t('dnaStepTitle', '1. Brand DNA'), sub: t('dnaStepSub', 'Positioning & Claims'), icon: Dna, color: 'text-brand-600 dark:text-brand-400', bg: 'bg-brand-500/10' },
             { id: 'seo', label: t('seoStepTitle', '2. SEO Briefs'), sub: t('seoStepSub', 'Topic Clusters & Intent'), icon: Search, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-500/10' },
@@ -143,13 +142,15 @@ export const DashboardModule = () => {
               <button
                 key={step.id}
                 onClick={() => setActiveModule(step.id)}
-                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 transition-all text-left group"
+                className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 transition-all text-left group flex flex-col justify-between"
               >
-                <div className={`w-8 h-8 rounded-xl ${step.bg} ${step.color} flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
-                  <Icon className="w-4 h-4" />
+                <div>
+                  <div className={`w-8 h-8 rounded-xl ${step.bg} ${step.color} flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white block leading-tight">{step.label}</span>
                 </div>
-                <span className="text-xs font-bold text-slate-900 dark:text-white block">{step.label}</span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400">{step.sub}</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">{step.sub}</span>
               </button>
             );
           })}
@@ -157,8 +158,8 @@ export const DashboardModule = () => {
       </div>
 
       {/* Production Items Queue */}
-      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="p-4 sm:p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
             <Clock className="w-4 h-4 text-brand-500" /> {t('recentProductionItems', 'Recent Production Items & Governance Status')}
           </h2>

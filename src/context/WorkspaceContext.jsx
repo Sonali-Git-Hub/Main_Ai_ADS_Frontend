@@ -1652,6 +1652,7 @@ export const WorkspaceProvider = ({ children }) => {
   const canGoBack = navigationHistory.length > 0 || activeModule !== 'dashboard';
 
   // Settings Modal & Personalization Preferences State
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [activeSettingsTab, setActiveSettingsTab] = useState('personalization');
 
@@ -2467,7 +2468,8 @@ export const WorkspaceProvider = ({ children }) => {
       notifications, setNotifications,
       userAvatar, setUserAvatar,
 
-      // New Account Settings Modal & Personalization
+      // Mobile Navigation Drawer State & Account Settings
+      isMobileMenuOpen, setIsMobileMenuOpen,
       isSettingsModalOpen, setIsSettingsModalOpen,
       activeSettingsTab, setActiveSettingsTab,
       appearance, setAppearance,
