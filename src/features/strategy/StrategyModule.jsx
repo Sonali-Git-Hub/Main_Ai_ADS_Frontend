@@ -140,45 +140,39 @@ export const StrategyModule = () => {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduleDays, setScheduleDays] = useState('30');
 
+  const isLegacyStrategy = (strat) => {
+    if (!strat || !strat.thirtyDayPlan || strat.thirtyDayPlan.length < 10) return true;
+    if (strat.campaignIdeas && strat.campaignIdeas.some(c => c.title === 'The Authority Series' || c.title === 'DNA Lead Magnet Launch')) return true;
+    if (strat.thirtyDayPlan.some(d => d.title && (d.title.includes('Key Insights for') || d.title.includes('Day 1: Pillar')))) return true;
+    return false;
+  };
+
   // ─── Init from workspace ─────────────────────────────────────────────────
   useEffect(() => {
-    const strat = activeWorkspace.currentStrategy || {};
-    setBusinessGoal(strat.businessGoal || deriveGoal(activeWorkspace));
-    setLeadMagnet(strat.leadMagnet   || deriveLeadMagnet(activeWorkspace));
-    setPrimaryCta(strat.primaryCta   || deriveCta(activeWorkspace));
-    setPostingFrequency(strat.postingFrequency || 'Daily');
-    setBudgetSuggestions(strat.budgetSuggestions || '60% Organic content marketing & SEO / 40% Paid micro-targeting & retargeting.');
-    setBestPlatforms(strat.bestPlatforms || ['LinkedIn', 'Google SEO Blog', 'Email Newsletter', 'Instagram & Reels']);
-    setContentPillars(strat.contentPillars || activeWorkspace.contentPillars || ['Educational Value', 'Product Capabilities', 'Social Proof']);
-    setCampaignIdeas(strat.campaignIdeas || [
-      { title: 'The Authority Series', desc: 'Long-form thought leadership posts demonstrating domain mastery.' },
-      { title: 'DNA Lead Magnet Launch', desc: 'Direct-response opt-in push using landing page & email funnel.' },
-      { title: 'Social Proof Sprint',   desc: 'Customer testimonials & case-study carousel posts for trust.' },
-    ]);
-    setThirtyDayPlan(strat.thirtyDayPlan || []);
-    setFunnel(strat.funnel || {
-      awareness:   'Pillar-driven content, SEO optimization, and educational hooks to drive top-of-funnel reach.',
-      nurturing:   'Interactive guides, how-to value-bombs, and lead magnet resources to capture email subscribers.',
-      conversion:  'Direct sales copy, verified client testimonials, case studies, and primary product benefit pushes.',
-    });
-    setAudience(strat.audience || (activeWorkspace.targetAudience || []).slice(0, 4));
-
-    if (strat.channelMix && strat.channelMix.length > 0) {
-      setChannelMix(strat.channelMix);
-    } else {
-      const raw = activeWorkspace.socialMediaPresence || [];
-      const hasLinkedin  = raw.some(p => p.platform?.toLowerCase().includes('linkedin'));
-      const hasInstagram = raw.some(p => p.platform?.toLowerCase().includes('instagram'));
-      const hasYoutube   = raw.some(p => p.platform?.toLowerCase().includes('youtube'));
-      setChannelMix([
-        { label: 'SEO Blogs (Long-Form)',                            pct: 40, icon: 'Globe',     color: 'bg-brand-500' },
-        { label: hasLinkedin ? 'LinkedIn & Founder Copy' : 'Facebook & Community Posts', pct: 30, icon: 'Linkedin',  color: 'bg-blue-500' },
-        { label: 'Email Newsletters',                                pct: hasYoutube ? 15 : 20, icon: 'Mail',      color: 'bg-amber-500' },
-        { label: hasInstagram ? 'Instagram & Reels Copy' : 'Twitter/X & Short-Form', pct: hasYoutube ? 15 : 10, icon: 'Instagram', color: 'bg-rose-500' },
-      ]);
+    const strat = activeWorkspace.currentStrategy;
+    
+    if (strat && !isLegacyStrategy(strat)) {
+      setBusinessGoal(strat.businessGoal || '');
+      setLeadMagnet(strat.leadMagnet || '');
+      setPrimaryCta(strat.primaryCta || '');
+      setPostingFrequency(strat.postingFrequency || 'Daily');
+      setBudgetSuggestions(strat.budgetSuggestions || '');
+      setBestPlatforms(strat.bestPlatforms || []);
+      setContentPillars(strat.contentPillars || activeWorkspace.contentPillars || []);
+      setCampaignIdeas(strat.campaignIdeas || []);
+      setThirtyDayPlan(strat.thirtyDayPlan || []);
+      setFunnel(strat.funnel || { awareness: '', nurturing: '', conversion: '' });
+      setAudience(strat.audience || (activeWorkspace.targetAudience || []).slice(0, 4));
+      if (strat.channelMix && strat.channelMix.length > 0) setChannelMix(strat.channelMix);
+      setGeneratedDoc(true);
+      return;
     }
-    setGeneratedDoc(!!strat.thirtyDayPlan?.length);
-  }, [activeWorkspace.id || activeWorkspace._id, activeWorkspace.currentStrategy]);
+
+    // Otherwise automatically trigger fresh AI Strategy generation
+    if (activeWorkspace.id || activeWorkspace._id) {
+      handleGenerate();
+    }
+  }, [activeWorkspace.id || activeWorkspace._id]);
 
   // ─── Save ─────────────────────────────────────────────────────────────────
   const handleSave = useCallback(async () => {
