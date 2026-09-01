@@ -1262,7 +1262,7 @@ export const StrategyModule = () => {
       )}
 
       {/* ══════════ STICKY FLOATING GENERATE CALENDAR BUTTON ══════════ */}
-      {generatedDoc && (
+      {generatedDoc && activeTab === 'plan' && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-in fade-in slide-in-from-bottom-4 duration-300 shrink-0">
           <button 
             onClick={handleGenerateCalendar}
