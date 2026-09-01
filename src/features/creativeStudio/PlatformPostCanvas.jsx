@@ -33,49 +33,27 @@ const ContentPill = ({ label, value, color = "slate" }) => {
   );
 };
 
-const HeaderRow = ({ platform, topic, formatLabel, isSocial, onPlatformChange, onSaveAsset, isSaving }) => (
+const HeaderRow = ({ platform, topic, onSaveAsset, isSaving }) => (
   <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[10px] font-black uppercase tracking-widest">{platform.toUpperCase()}</span>
-      <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-[9px] font-bold uppercase">{formatLabel}</span>
+    <div className="flex items-center gap-3 min-w-0">
+      <span className="px-3.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-black uppercase tracking-wider shrink-0">
+        {platform ? platform.toUpperCase() : 'POST'}
+      </span>
+      <span className="text-xs text-slate-500 font-medium truncate">
+        Topic: <strong className="text-slate-800 dark:text-slate-200 font-bold">"{topic}"</strong>
+      </span>
     </div>
 
-    {isSocial && (
-      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200 dark:border-slate-700">
-        {[
-          { id: 'instagram', label: 'Instagram' },
-          { id: 'linkedin',  label: 'LinkedIn' },
-          { id: 'twitter',   label: 'Twitter / X' },
-          { id: 'facebook',  label: 'Facebook' },
-        ].map(p => (
-          <button
-            key={p.id}
-            onClick={() => onPlatformChange && onPlatformChange(p.id)}
-            className={`px-3 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all ${
-              platform === p.id
-                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
+    {onSaveAsset && (
+      <button
+        onClick={onSaveAsset}
+        disabled={isSaving}
+        className="py-2 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60 shrink-0"
+      >
+        {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FolderPlus className="w-3.5 h-3.5" />}
+        {isSaving ? "Saving..." : "Save to Asset Library"}
+      </button>
     )}
-
-    <div className="flex items-center gap-3 ml-auto">
-      <span className="text-[10px] text-slate-500 font-medium hidden md:block">Topic: <strong className="text-slate-800 dark:text-slate-200">"{topic}"</strong></span>
-      {onSaveAsset && (
-        <button
-          onClick={onSaveAsset}
-          disabled={isSaving}
-          className="py-2 px-4 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-lg shadow-brand-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60"
-        >
-          {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FolderPlus className="w-3.5 h-3.5" />}
-          {isSaving ? "Saving..." : "Save to Asset Library"}
-        </button>
-      )}
-    </div>
   </div>
 );
 
@@ -833,78 +811,221 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
 
   return (
     <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
-      <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} isSocial={true} onPlatformChange={setPlatform} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-4 space-y-4">
-          <VisualControls visualStyle={visualStyle} setVisualStyle={setVisualStyle} generating={generating} onGenerate={handleGenerateVisual} />
-          <CopySidebar hook={hook} story={story} shortCap={shortCap} longCap={longCap} cta={cta} hashtags={hashtags} />
-        </div>
-        <div className="lg:col-span-8 flex flex-col space-y-4">
+      <HeaderRow 
+        platform={platform} 
+        topic={topic} 
+        onSaveAsset={handleSaveToAssetLibrary} 
+        isSaving={isSavingAsset} 
+      />
 
-          {/* Dedicated Image Showcase Card */}
-          <div className="w-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden p-6 space-y-5">
-            {/* Header info */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <h3 className="text-xs font-black uppercase text-slate-800 dark:text-white tracking-wider">AI Visual Asset Showcase</h3>
-              </div>
-              <span className="text-[10px] font-extrabold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-3 py-1 rounded-full border border-brand-500/20">
-                {visualStyle}
-              </span>
-            </div>
-
-            {/* High-Res Image Display */}
-            <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-video bg-slate-950 shadow-inner group">
-              <img src={visualUrl} alt={topic} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/50 to-transparent flex flex-col sm:flex-row justify-between sm:items-end gap-2">
-                <div className="space-y-0.5">
-                  <p className="text-white font-extrabold text-xs sm:text-sm line-clamp-1">"{hook}"</p>
-                  <p className="text-slate-300 text-[10px] font-medium">{brand} · High-Res Render</p>
-                </div>
-                <span className="text-[9px] font-mono text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded border border-slate-700 self-start sm:self-auto">1080 × 1080</span>
-              </div>
-            </div>
-
-            {/* Direct Action Bar: Download, Share, Save */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <button
-                onClick={handleDownloadImage}
-                disabled={downloading}
-                className="py-3 px-4 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-brand-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                {downloading ? "Preparing..." : "Download Image"}
-              </button>
-
-              <button
-                onClick={handleShareImage}
-                className="py-3 px-4 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Share2 className="w-4 h-4" />
-                {copiedShare ? "Link & Copy Shared!" : "Share Image & Copy"}
-              </button>
-
-              <button
-                onClick={handleSaveToAssetLibrary}
-                disabled={isSavingAsset}
-                className="py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-              >
-                {isSavingAsset ? <Loader2 className="w-4 h-4 animate-spin" /> : <FolderPlus className="w-4 h-4" />}
-                {isSavingAsset ? "Saving..." : "Save to Library"}
-              </button>
-            </div>
-
-            {/* Success Status Note */}
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs flex items-center justify-between font-medium">
-              <span className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                AI Visual synthesized and ready for high-resolution download & sharing.
-              </span>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Ready</span>
-            </div>
+      {/* ── 1. PROMINENT HERO IMAGE SHOWCASE (TOP) ── */}
+      <div className="w-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden p-6 space-y-5">
+        {/* Header & Visual Style Controls */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <h3 className="text-xs font-black uppercase text-slate-800 dark:text-white tracking-wider">AI Visual Asset Showcase</h3>
+            <span className="text-[10px] font-extrabold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-3 py-0.5 rounded-full border border-brand-500/20">
+              {visualStyle}
+            </span>
           </div>
 
+          <div className="flex items-center gap-2 flex-wrap">
+            <select 
+              value={visualStyle} 
+              onChange={(e) => setVisualStyle(e.target.value)} 
+              className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none"
+            >
+              <option>Glassmorphic Modern 3D</option>
+              <option>Minimalist Corporate Tech</option>
+              <option>Cyberpunk Neon Gradients</option>
+              <option>Photorealistic B2B Studio</option>
+              <option>Bold Editorial Fashion</option>
+            </select>
+
+            <button 
+              onClick={handleGenerateVisual} 
+              disabled={generating} 
+              className="btn-primary py-2 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60 shadow-md hover:scale-105 transition-all"
+            >
+              {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              {generating ? "Generating Visual..." : "Regenerate Image"}
+            </button>
+          </div>
+        </div>
+
+        {/* High-Res Image Display */}
+        <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-video max-h-[520px] bg-slate-950 shadow-inner group flex items-center justify-center">
+          <img src={visualUrl} alt={topic} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/50 to-transparent flex flex-col sm:flex-row justify-between sm:items-end gap-2">
+            <div className="space-y-0.5">
+              <p className="text-white font-extrabold text-xs sm:text-sm line-clamp-1">"{hook}"</p>
+              <p className="text-slate-300 text-[10px] font-medium">{brand} · High-Res 8K Studio Render</p>
+            </div>
+            <span className="text-[9px] font-mono text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded border border-slate-700 self-start sm:self-auto">1080 × 1080 · HQ</span>
+          </div>
+        </div>
+
+        {/* Direct Action Bar: Download, Share, Save */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <button
+            onClick={handleDownloadImage}
+            disabled={downloading}
+            className="py-3 px-4 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-brand-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {downloading ? "Preparing..." : "Download Image"}
+          </button>
+
+          <button
+            onClick={handleShareImage}
+            className="py-3 px-4 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Share2 className="w-4 h-4" />
+            {copiedShare ? "Link & Copy Shared!" : "Share Image & Copy"}
+          </button>
+
+          <button
+            onClick={handleSaveToAssetLibrary}
+            disabled={isSavingAsset}
+            className="py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+          >
+            {isSavingAsset ? <Loader2 className="w-4 h-4 animate-spin" /> : <FolderPlus className="w-4 h-4" />}
+            {isSavingAsset ? "Saving..." : "Save to Library"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── 2. STRUCTURED CONTENT & COPY SUITE (BELOW THE IMAGE) ── */}
+      <div className="w-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-6 space-y-5">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">
+              ✍️
+            </div>
+            <div>
+              <h3 className="text-xs font-black uppercase text-slate-800 dark:text-white tracking-wider">
+                Post Content & Copy Breakdown
+              </h3>
+              <p className="text-[10px] text-slate-500">
+                Generated high-converting copy, hashtags, and CTA synchronized with this visual.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              const fullText = `HOOK:\n${hook}\n\nSTORYTELLING:\n${story}\n\nSHORT CAPTION:\n${shortCap}\n\nLONG CAPTION:\n${longCap}\n\nCTA:\n${cta}\n\nHASHTAGS:\n${hashtags}`;
+              navigator.clipboard.writeText(fullText);
+              alert("All post content copied to clipboard!");
+            }}
+            className="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all"
+          >
+            <Copy className="w-3.5 h-3.5" /> Copy All Content
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Card 1: Hook */}
+          {hook && (
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2 hover:border-brand-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-widest text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-md">
+                  🚀 Hook / Headline
+                </span>
+                <button onClick={() => navigator.clipboard.writeText(hook)} className="p-1 text-slate-400 hover:text-brand-500 transition-colors" title="Copy Hook">
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs font-extrabold text-slate-900 dark:text-white leading-relaxed">
+                {hook}
+              </p>
+            </div>
+          )}
+
+          {/* Card 2: Storytelling Angle */}
+          {story && (
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2 hover:border-purple-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-md">
+                  📖 Storytelling Angle
+                </span>
+                <button onClick={() => navigator.clipboard.writeText(story)} className="p-1 text-slate-400 hover:text-purple-500 transition-colors" title="Copy Story">
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 font-medium italic leading-relaxed">
+                "{story}"
+              </p>
+            </div>
+          )}
+
+          {/* Card 3: Short Caption */}
+          {shortCap && (
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2 hover:border-indigo-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md">
+                  ✍️ Short Caption
+                </span>
+                <button onClick={() => navigator.clipboard.writeText(shortCap)} className="p-1 text-slate-400 hover:text-indigo-500 transition-colors" title="Copy Short Caption">
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+                {shortCap}
+              </p>
+            </div>
+          )}
+
+          {/* Card 4: Long Caption */}
+          {longCap && (
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2 md:col-span-2 hover:border-emerald-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
+                  📝 Long Caption / Full Narrative
+                </span>
+                <button onClick={() => navigator.clipboard.writeText(longCap)} className="p-1 text-slate-400 hover:text-emerald-500 transition-colors" title="Copy Long Caption">
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed whitespace-pre-wrap">
+                {longCap}
+              </p>
+            </div>
+          )}
+
+          {/* Card 5: Call To Action (CTA) */}
+          {cta && (
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2 hover:border-amber-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md">
+                  🎯 Call To Action (CTA)
+                </span>
+                <button onClick={() => navigator.clipboard.writeText(cta)} className="p-1 text-slate-400 hover:text-amber-500 transition-colors" title="Copy CTA">
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs font-bold text-slate-900 dark:text-white leading-relaxed">
+                {cta}
+              </p>
+            </div>
+          )}
+
+          {/* Card 6: SEO Hashtags */}
+          {hashtags && (
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2 md:col-span-2 lg:col-span-3 hover:border-cyan-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md">
+                  🏷️ SEO Hashtags
+                </span>
+                <button onClick={() => navigator.clipboard.writeText(hashtags)} className="p-1 text-slate-400 hover:text-cyan-500 transition-colors" title="Copy Hashtags">
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs font-bold text-cyan-600 dark:text-cyan-400 leading-relaxed">
+                {hashtags}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -817,65 +817,24 @@ export const CreativeStudioModule = () => {
     }
   };
 
-  const activeContent = effectiveContent || (selectedFormat ? formatPayloads[selectedFormat] : null);
+  const activeContent = effectiveContent || (selectedFormat ? formatPayloads[selectedFormat] : formatPayloads['social']);
 
   return (
     <div className="space-y-6 animate-in fade-in max-w-7xl mx-auto p-6">
       <div className="space-y-6">
-        {/* Header Bar */}
-        <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Palette className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">{t('creativeStudioTitle', 'Creative Studio')} & Format Synthesis</h1>
+        {/* Clean Header */}
+        <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-purple-600 text-white flex items-center justify-center shadow-md">
+              <Palette className="w-5 h-5" />
             </div>
-            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-              Multi-channel creative synthesis for{' '}
-              <strong className="text-slate-900 dark:text-white">{activeWorkspace?.brandName || 'your brand'}</strong> — Email / Letter, Social Media, Blog, and Newspaper.
-            </p>
+            <div>
+              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Creative Studio</h1>
+              <p className="text-xs text-slate-500">
+                High-Resolution AI Visual Creative & Ad Rendering for <strong>{activeWorkspace?.brandName || 'Brand'}</strong>
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-900/80 px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-800">
-            <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Balance:</span>
-            <span className="text-sm font-extrabold text-cyan-600 dark:text-cyan-400">{credits?.balance || 0} Visual Credits</span>
-            <button onClick={() => setIsCreditModalOpen(true)} className="btn-primary text-xs py-1 px-2.5">+Top Up</button>
-          </div>
-        </div>
-
-        {/* 4 Format Section Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {FORMAT_SECTIONS.map((sec) => {
-            const Icon = sec.icon;
-            const isSelected = selectedFormat === sec.id;
-            return (
-              <button
-                key={sec.id}
-                onClick={() => setSelectedFormat(sec.id)}
-                className={`p-5 rounded-3xl text-left transition-all duration-300 border flex flex-col justify-between group relative overflow-hidden bg-white/80 dark:bg-slate-900/60 ${
-                  isSelected
-                    ? 'border-brand-500 dark:border-brand-500 ring-2 ring-brand-500/20 bg-brand-500/5 dark:bg-brand-500/10 shadow-lg'
-                    : `border-slate-200 dark:border-slate-800 ${sec.hoverBorder}`
-                }`}
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${sec.colorClass} opacity-30 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`} />
-                <div className="relative z-10 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className={`p-2.5 rounded-2xl ${sec.badgeBg} transition-transform group-hover:scale-110 duration-300`}>
-                      <Icon className={`w-5 h-5 ${sec.iconColor}`} />
-                    </div>
-                    <ArrowUpRight className={`w-4 h-4 transition-all duration-300 ${isSelected ? 'text-brand-500 opacity-100' : 'text-slate-400 opacity-0 group-hover:opacity-100'}`} />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight">{sec.title}</h3>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-snug">{sec.subtitle}</p>
-                  </div>
-                </div>
-                <div className="relative z-10 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                  <span>{isSelected ? 'Active Mode' : 'Select Format'}</span>
-                  <span className={`${sec.iconColor} opacity-80 group-hover:opacity-100 font-semibold`}>Open →</span>
-                </div>
-              </button>
-            );
-          })}
         </div>
 
         {/* Dynamic Platform Post Canvas */}
@@ -893,9 +852,9 @@ export const CreativeStudioModule = () => {
               <Sparkles className="w-7 h-7 text-brand-500" />
             </div>
             <div>
-              <h4 className="text-sm font-extrabold text-slate-800 dark:text-white">Select a Format to Synthesize</h4>
+              <h4 className="text-sm font-extrabold text-slate-800 dark:text-white">Creative Studio Ready</h4>
               <p className="text-xs text-slate-500 mt-1 max-w-xs leading-relaxed">
-                Click any section card above (<strong>Email / Letter</strong>, <strong>Social Media</strong>, <strong>Blog</strong>, or <strong>Newspaper</strong>) to load the canvas, or generate content in <strong>Content Studio</strong> & <strong>Calendar</strong>.
+                Generate content in <strong>Content Studio</strong> & <strong>Calendar</strong> or create visual assets directly.
               </p>
             </div>
           </div>

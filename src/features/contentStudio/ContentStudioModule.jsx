@@ -759,7 +759,12 @@ export const ContentStudioModule = () => {
           {tab === 'SOCIAL' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('socialMedia', 'Social Media')} Parameters</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('socialMedia', 'Social Media')} Parameters</h2>
+                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 uppercase tracking-wider">
+                    {activeWorkspace?.brandName || 'Brand DNA'}
+                  </span>
+                </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Platform</label>
                   <select
@@ -783,19 +788,50 @@ export const ContentStudioModule = () => {
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Topic</label>
                   <textarea
-                    rows={3}
+                    rows={2}
                     value={socialTopic}
                     onChange={(e) => setSocialTopic(e.target.value)}
                     className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
+                    placeholder="Enter post topic or select from strategy..."
                   />
                 </div>
+
+                {/* ── LIVE AI PROMPT BLUEPRINT PREVIEW ── */}
+                <div className="p-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3 text-brand-500" /> Active AI Prompt Blueprint
+                    </span>
+                    <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md">
+                      READY
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-1.5 text-[11px] text-slate-600 dark:text-slate-300 font-mono bg-white/60 dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800/80 leading-relaxed max-h-36 overflow-y-auto">
+                    <p className="text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-widest font-sans">1. Copy Directive:</p>
+                    <p className="text-slate-700 dark:text-slate-300">
+                      Write high-converting {socialPlatform} {socialPostType} copy for <strong>{activeWorkspace?.brandName || 'Brand'}</strong> on "{socialTopic || 'Topic'}" using PAS/AIDA framework.
+                    </p>
+                    
+                    <p className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest font-sans pt-1">2. SEO & Tags Directive:</p>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      Inject 2-3 search intent keywords + 12 curated brand, niche, and viral hashtags with direct CTA.
+                    </p>
+
+                    <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest font-sans pt-1">3. Visual Image Prompt:</p>
+                    <p className="text-slate-500 dark:text-slate-400 italic">
+                      "Commercial advertising photography of {socialTopic || 'Topic'} for {activeWorkspace?.brandName || 'Brand'}, 85mm f/1.8 lens, cinematic lighting, 8k resolution"
+                    </p>
+                  </div>
+                </div>
+
                 <button
                   onClick={handleGenerateSocial}
                   disabled={draftingSocial}
-                  className="w-full btn-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="w-full btn-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg shadow-brand-500/20 hover:scale-[1.01] active:scale-95 transition-all"
                 >
                   {draftingSocial ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                  {draftingSocial ? 'Generating Post...' : 'Generate Social Post'}
+                  {draftingSocial ? 'Synthesizing Prompt & Generating...' : 'Generate Social Post'}
                 </button>
               </div>
 
@@ -812,33 +848,37 @@ export const ContentStudioModule = () => {
                 {socialResult ? (
                   <div className="bg-white dark:bg-slate-900 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden p-6 space-y-6">
                     {/* Header */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center font-extrabold text-brand-600 dark:text-brand-400 text-xs uppercase overflow-hidden">
-                          {activeWorkspace?.brandName ? activeWorkspace.brandName.substring(0, 4).toUpperCase() : 'AISA'}
+                    <div className="flex flex-wrap items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center font-black text-brand-600 dark:text-brand-400 text-xs uppercase shrink-0">
+                          {activeWorkspace?.brandName ? activeWorkspace.brandName.substring(0, 3).toUpperCase() : 'AI'}
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                              {activeWorkspace?.brandName ? `${activeWorkspace.brandName.toUpperCase()} CONTENT COPY` : 'AISA CONTENT COPY'}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
+                              {activeWorkspace?.brandName || 'Brand'} · {socialPlatform.toUpperCase()}
                             </span>
-                            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
-                              TEXT COPY SYNCHRONIZED
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest whitespace-nowrap">
+                              Ready
                             </span>
                           </div>
-                          <p className="text-[10px] text-slate-500 font-medium">Platform: <span className="uppercase font-bold text-slate-700 dark:text-slate-300">{socialPlatform}</span> · Topic: "{socialTopic}"</p>
+                          <p className="text-[11px] text-slate-500 truncate max-w-sm">
+                            Topic: <span className="font-semibold text-slate-700 dark:text-slate-300">"{socialTopic}"</span>
+                          </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+
+                      {/* Header Actions */}
+                      <div className="flex items-center gap-2 shrink-0">
                         <button
                           onClick={() => {
                             const fullText = `HOOK:\n${socialResult.hook || ''}\n\nSTORYTELLING:\n${socialResult.storytelling || ''}\n\nCAPTION:\n${socialResult.shortCaption || socialResult.longCaption || socialResult.caption || ''}\n\nCTA:\n${socialResult.cta || socialResult.callToAction || ''}\n\nHASHTAGS:\n${(socialResult.hashtags || []).join(' ')}`;
                             navigator.clipboard.writeText(fullText);
                             alert('All content copy copied to clipboard!');
                           }}
-                          className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm"
+                          className="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shadow-sm"
                         >
-                          <Copy className="w-3.5 h-3.5" /> Copy All Text
+                          <Copy className="w-3.5 h-3.5" /> Copy Text
                         </button>
                         <button
                           onClick={() => {
@@ -855,261 +895,66 @@ export const ContentStudioModule = () => {
                                 cta: socialResult?.cta || socialResult?.callToAction || '',
                                 hashtags: socialResult?.hashtags || [],
                                 strategyPillar: socialResult?.strategyPillar || activeWorkspace?.positioningSummary || 'Brand Strategy',
+                                imagePrompt: socialResult?.imagePrompt || `${socialTopic} — ${activeWorkspace?.brandName || 'Brand'} commercial advertising photography, 8k`,
                                 data: socialResult,
                               });
                             }
                             setActiveModule('creative');
                           }}
-                          className="py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                          className="py-1.5 px-3.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
                         >
                           <Sparkles className="w-3.5 h-3.5" /> Creative Studio →
                         </button>
-                        <button onClick={() => setSocialResult(null)} className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-400 dark:text-slate-500 transition-colors">
+                        <button 
+                          onClick={() => setSocialResult(null)} 
+                          className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-400 dark:text-slate-500 transition-colors"
+                          title="Close"
+                        >
                           <X className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
 
-                    {/* ── HERO AI IMAGE & VISUAL CREATIVE SUITE CARD ── */}
-                    <div className="p-6 rounded-3xl bg-gradient-to-br from-indigo-900/10 via-purple-900/10 to-brand-500/10 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-slate-900 border border-brand-500/30 dark:border-brand-500/30 space-y-5 shadow-lg">
-                      {/* Header */}
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-brand-500/20">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-600 to-purple-600 text-white flex items-center justify-center shadow-md">
-                            <Sparkles className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                                AI Generated Visual Creative
-                              </span>
-                              <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[9px] font-extrabold uppercase tracking-widest border border-emerald-500/20">
-                                {socialResult?.engine || 'gemini-3.1-flash-image · Vertex AI'}
-                              </span>
-                            </div>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                              Prompt-matched visual creative tailored to your brand voice & platform ({socialPlatform.toUpperCase()})
-                            </p>
-                          </div>
+                    {/* ── CREATIVE STUDIO VISUAL CALLOUT BANNER ── */}
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-900/20 via-brand-500/15 to-indigo-900/20 border border-purple-500/30 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md shrink-0">
+                          <Sparkles className="w-4 h-4" />
                         </div>
-
-                        {/* Quick Image Controls */}
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {/* Aspect Ratio Pills */}
-                          <div className="flex items-center gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                            {[
-                              { id: '1:1', label: '1:1 Square' },
-                              { id: '4:5', label: '4:5 Portrait' },
-                              { id: '9:16', label: '9:16 Reel' },
-                              { id: '16:9', label: '16:9 Wide' },
-                            ].map((asp) => (
-                              <button
-                                key={asp.id}
-                                onClick={() => {
-                                  setVisualAspect(asp.id);
-                                  handleRegenerateImage(socialResult.imagePrompt, visualStyle, asp.id);
-                                }}
-                                className={`px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wide transition-all ${
-                                  (socialResult.imageAspect || visualAspect) === asp.id
-                                    ? 'bg-brand-500 text-white shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                                }`}
-                              >
-                                {asp.label}
-                              </button>
-                            ))}
-                          </div>
-
-                          <button
-                            onClick={() => handleRegenerateImage(socialResult.imagePrompt, visualStyle, visualAspect)}
-                            disabled={regeneratingImage}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-[10px] font-black uppercase tracking-wider transition-all shadow-sm disabled:opacity-50"
-                          >
-                            {regeneratingImage ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                            {regeneratingImage ? 'Generating...' : 'Regenerate Visual'}
-                          </button>
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
+                            Need Visual Creative & Ad Banners for This Post?
+                          </h4>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                            Design 8K visual assets, carousels, and templates tailored to this copy in Creative Studio.
+                          </p>
                         </div>
                       </div>
-
-                      {/* Main Visual Display & Controls Split */}
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
-                        {/* Left: Image Canvas */}
-                        <div className="lg:col-span-6 flex justify-center">
-                          <div className="relative group rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950 shadow-xl max-w-full flex items-center justify-center">
-                            {regeneratingImage && (
-                              <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center text-white gap-2 p-4">
-                                <Loader2 className="w-8 h-8 animate-spin text-brand-400" />
-                                <p className="text-xs font-bold uppercase tracking-wider">Generating AI Visual...</p>
-                                <span className="text-[10px] text-slate-400 text-center">gemini-3.1-flash-image · Vertex AI & Flux Pro</span>
-                              </div>
-                            )}
-
-                            <img
-                              src={socialResult.imageUrl || socialResult.svgFallback || resolveBrandVisualAsset({
-                                prompt: socialResult.imagePrompt || socialTopic,
-                                brandName: activeWorkspace?.brandName || 'Brand',
-                                topic: socialTopic,
-                                style: socialResult.imageStyle || visualStyle,
-                                aspect: socialResult.imageAspect || visualAspect,
-                                variationIndex: visualVariationIndex
-                              })}
-                              alt={socialResult.imagePrompt || socialTopic}
-                              className={`w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
-                                (socialResult.imageAspect || visualAspect) === '9:16'
-                                  ? 'aspect-[9/16] max-h-[380px] object-contain bg-slate-950'
-                                  : (socialResult.imageAspect || visualAspect) === '16:9'
-                                  ? 'aspect-video'
-                                  : (socialResult.imageAspect || visualAspect) === '4:5'
-                                  ? 'aspect-[4/5] max-h-[380px]'
-                                  : 'aspect-square max-h-[380px]'
-                              }`}
-                              onError={(e) => {
-                                if (socialResult?.svgFallback) {
-                                  e.currentTarget.src = socialResult.svgFallback;
-                                } else {
-                                  e.currentTarget.src = resolveBrandVisualAsset({
-                                    prompt: socialResult?.imagePrompt || socialTopic,
-                                    brandName: activeWorkspace?.brandName || 'Brand',
-                                    topic: socialTopic,
-                                    style: 'Photorealistic Commercial',
-                                    aspect: socialResult?.imageAspect || visualAspect,
-                                    variationIndex: 0
-                                  });
-                                }
-                              }}
-                            />
-
-                            {/* Hover overlay with quick actions */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end gap-2 z-10">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-bold text-white uppercase tracking-wider bg-black/60 px-2.5 py-1 rounded-lg backdrop-blur-sm">
-                                  {socialResult.imageStyle || visualStyle}
-                                </span>
-                                <div className="flex items-center gap-1.5">
-                                  <button
-                                    onClick={() => handleDownloadImage(socialResult.imageUrl, `${socialPlatform}-${Date.now()}.jpg`)}
-                                    className="p-2 rounded-lg bg-white/20 hover:bg-white/30 text-white backdrop-blur-md transition-colors"
-                                    title="Download Image"
-                                  >
-                                    <Download className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(socialResult.imageUrl || '');
-                                      alert('Image link copied to clipboard!');
-                                    }}
-                                    className="p-2 rounded-lg bg-white/20 hover:bg-white/30 text-white backdrop-blur-md transition-colors"
-                                    title="Copy Image URL"
-                                  >
-                                    <Copy className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Right: Visual Prompt & Style Controls */}
-                        <div className="lg:col-span-6 space-y-4">
-                          {/* Style Selector Pills */}
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                              <Palette className="w-3 h-3 text-brand-500" /> Visual Aesthetic Style
-                            </label>
-                            <div className="grid grid-cols-2 gap-1.5">
-                              {[
-                                'Photorealistic Commercial',
-                                'Glassmorphic Modern 3D',
-                                'Cinematic Film Studio',
-                                'Minimalist Editorial',
-                                'Vibrant Social Ad',
-                                'Luxury Brand Studio'
-                              ].map((st) => (
-                                <button
-                                  key={st}
-                                  onClick={() => {
-                                    setVisualStyle(st);
-                                    handleRegenerateImage(socialResult.imagePrompt, st, visualAspect);
-                                  }}
-                                  className={`p-2 rounded-xl text-[10px] font-bold text-left transition-all border ${
-                                    (socialResult.imageStyle || visualStyle) === st
-                                      ? 'bg-brand-500/15 border-brand-500 text-brand-600 dark:text-brand-400 font-extrabold shadow-sm'
-                                      : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-brand-500/40'
-                                  }`}
-                                >
-                                  {st}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Prompt Display & Custom Editing */}
-                          <div className="space-y-1.5">
-                            <div className="flex items-center justify-between">
-                              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                                <Sparkles className="w-3 h-3 text-brand-500" /> AI Creative Prompt
-                              </label>
-                              <button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(socialResult.imagePrompt || '');
-                                  alert('AI Image Prompt copied to clipboard!');
-                                }}
-                                className="text-[9px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1"
-                              >
-                                <Copy className="w-3 h-3" /> Copy Prompt
-                              </button>
-                            </div>
-                            <textarea
-                              rows={3}
-                              value={socialResult.imagePrompt || `${socialTopic} — ${activeWorkspace?.brandName || 'Brand'} commercial advertising photography, professional studio lighting, 8k resolution`}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setSocialResult(prev => ({ ...prev, imagePrompt: val }));
-                              }}
-                              className="w-full p-3 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-brand-500/20 outline-none leading-relaxed resize-none"
-                            />
-                          </div>
-
-                          {/* Bottom Actions */}
-                          <div className="flex items-center gap-2 pt-1">
-                            <button
-                              onClick={() => handleDownloadImage(socialResult.imageUrl, `${socialPlatform}-visual-${Date.now()}.jpg`)}
-                              className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
-                            >
-                              <Download className="w-3.5 h-3.5" /> Download HD Asset
-                            </button>
-
-                            <button
-                              onClick={() => {
-                                if (setGeneratedContent) {
-                                  setGeneratedContent({
-                                    platform: socialPlatform,
-                                    type: 'SOCIAL',
-                                    topic: socialTopic,
-                                    hook: socialResult?.hook || socialTopic,
-                                    caption: socialResult?.shortCaption || socialResult?.longCaption || socialResult?.caption || '',
-                                    shortCaption: socialResult?.shortCaption || '',
-                                    longCaption: socialResult?.longCaption || '',
-                                    storytelling: socialResult?.storytelling || '',
-                                    cta: socialResult?.cta || socialResult?.callToAction || '',
-                                    hashtags: socialResult?.hashtags || [],
-                                    strategyPillar: socialResult?.strategyPillar || activeWorkspace?.positioningSummary || 'Brand Strategy',
-                                    imageUrl: socialResult.imageUrl,
-                                    imagePrompt: socialResult.imagePrompt,
-                                    imageStyle: socialResult.imageStyle || visualStyle,
-                                    imageAspect: socialResult.imageAspect || visualAspect,
-                                    data: socialResult,
-                                  });
-                                }
-                                setActiveModule('creative');
-                              }}
-                              className="flex-1 py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
-                            >
-                              <Sparkles className="w-3.5 h-3.5" /> Open in Creative Studio →
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+                      <button
+                        onClick={() => {
+                          if (setGeneratedContent) {
+                            setGeneratedContent({
+                              platform: socialPlatform,
+                              type: 'SOCIAL',
+                              topic: socialTopic,
+                              hook: socialResult?.hook || socialTopic,
+                              caption: socialResult?.shortCaption || socialResult?.longCaption || socialResult?.caption || '',
+                              shortCaption: socialResult?.shortCaption || '',
+                              longCaption: socialResult?.longCaption || '',
+                              storytelling: socialResult?.storytelling || '',
+                              cta: socialResult?.cta || socialResult?.callToAction || '',
+                              hashtags: socialResult?.hashtags || [],
+                              strategyPillar: socialResult?.strategyPillar || activeWorkspace?.positioningSummary || 'Brand Strategy',
+                              imagePrompt: socialResult?.imagePrompt || `${socialTopic} — ${activeWorkspace?.brandName || 'Brand'} commercial advertising photography, 8k`,
+                              data: socialResult,
+                            });
+                          }
+                          setActiveModule('creative');
+                        }}
+                        className="py-2 px-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 shrink-0"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" /> Design Visual in Creative Studio →
+                      </button>
                     </div>
 
                     {/* Structured Rectangle Cards Grid */}
@@ -1347,10 +1192,62 @@ export const ContentStudioModule = () => {
 
                     </div>
                   </div>
+                ) : draftingSocial ? (
+                  <div className="p-8 sm:p-12 rounded-[28px] bg-slate-900/90 border border-slate-800 text-center space-y-6 animate-in fade-in duration-300">
+                    <div className="w-14 h-14 rounded-2xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center mx-auto text-brand-400">
+                      <Loader2 className="w-7 h-7 animate-spin" />
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                      <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">
+                        Executing AI Content Prompt...
+                      </h3>
+                      <p className="text-xs text-slate-400 max-w-md mx-auto">
+                        Synthesizing Brand DNA, copywriting frameworks, SEO hashtags, and 8K commercial visual creative for <strong>"{socialTopic}"</strong>.
+                      </p>
+                    </div>
+
+                    <div className="max-w-md mx-auto space-y-2.5 text-left text-xs bg-slate-950/70 p-4 rounded-2xl border border-slate-800/80 font-mono">
+                      <div className="flex items-center gap-2 text-emerald-400">
+                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                        <span>1. Ingested Brand DNA & Audience Persona</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-brand-400 animate-pulse">
+                        <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                        <span>2. Generating Pattern-Interrupt Hook & PAS Copy</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-purple-400 animate-pulse">
+                        <Hash className="w-3.5 h-3.5 shrink-0" />
+                        <span>3. Extracting High-Intent SEO Keywords & Hashtags</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-amber-400 animate-pulse">
+                        <Palette className="w-3.5 h-3.5 shrink-0" />
+                        <span>4. Synthesizing 8K Commercial Visual Studio Asset</span>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
-                  <div className="p-12 text-center text-slate-500 space-y-2">
-                    <Share2 className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600" />
-                    <p className="text-xs font-medium">Select a platform and click "Generate Social Post" to draft custom copy, hashtags, and visual prompts.</p>
+                  <div className="p-8 sm:p-12 text-center rounded-[28px] border border-dashed border-slate-200 dark:border-slate-800 space-y-4 bg-slate-50/50 dark:bg-slate-900/40">
+                    <div className="w-14 h-14 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mx-auto text-brand-600 dark:text-brand-400">
+                      <Sparkles className="w-6 h-6" />
+                    </div>
+                    
+                    <div className="space-y-1 max-w-md mx-auto">
+                      <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
+                        AI Social Asset Blueprint Ready
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Topic: <span className="font-bold text-slate-700 dark:text-slate-200">"{socialTopic || 'Select or enter topic'}"</span>
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={handleGenerateSocial}
+                      className="btn-primary text-xs py-2.5 px-6 rounded-xl font-bold flex items-center gap-2 mx-auto shadow-lg shadow-brand-500/20 hover:scale-105 active:scale-95 transition-all"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>Execute Prompt & Generate Post</span>
+                    </button>
                   </div>
                 )}
               </div>
