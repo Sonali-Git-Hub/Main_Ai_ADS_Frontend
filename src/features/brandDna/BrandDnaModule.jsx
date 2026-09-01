@@ -5,7 +5,7 @@ import { normalizeBrandDna, getProvenanceBadgeInfo } from '../../utils/normalize
 import {
   Dna, Globe, CheckCircle2, Save, RefreshCw, Sparkles, Loader2,
   AlertCircle, ShieldCheck, Target, MessageSquare, Zap, Layers,
-  Compass, AlertTriangle, FileText, BarChart2, Palette, Copy, Check
+  Compass, AlertTriangle, FileText, BarChart2, Palette, Copy, Check, Edit3
 } from 'lucide-react';
 
 const ProvenanceBadge = ({ provenanceObj }) => {
@@ -21,6 +21,109 @@ export const BrandDnaModule = () => {
   const [savedMsg, setSavedMsg] = useState('');
   const [error, setError] = useState('');
   const [copiedColor, setCopiedColor] = useState(null);
+  const [editState, setEditState] = useState({});
+  const [colorDrafts, setColorDrafts] = useState(null);
+
+  const handleFieldChangeLocal = (fieldKey, newValue) => {
+    const current = profile || effectiveProfile || {};
+    let updatedValue = newValue;
+
+    if (fieldKey === 'targetAudience' || fieldKey === 'coreProductsServices') {
+      if (typeof newValue === 'string') {
+        updatedValue = newValue.split('\n');
+      }
+    }
+
+    const updatedProfile = {
+      ...current,
+      workspaceId: workspaceId || current.workspaceId,
+      [fieldKey]: updatedValue,
+      structuredIdentity: {
+        ...(current.structuredIdentity || {}),
+        ...(fieldKey === 'brandColors' ? { color_palette: updatedValue } : {})
+      }
+    };
+
+    setProfile(updatedProfile);
+  };
+
+  const toggleEdit = async (fieldKey) => {
+    const isClosing = editState[fieldKey];
+
+    if (isClosing && workspaceId && effectiveProfile) {
+      const currentVal = effectiveProfile[fieldKey];
+      let sanitizedVal = currentVal;
+
+      if (fieldKey === 'targetAudience' || fieldKey === 'coreProductsServices') {
+        if (Array.isArray(currentVal)) {
+          sanitizedVal = currentVal.map(s => typeof s === 'string' ? s.trim() : s).filter(Boolean);
+        }
+      }
+
+      await updateProfileField(fieldKey, sanitizedVal);
+    }
+
+    setEditState(prev => ({ ...prev, [fieldKey]: !prev[fieldKey] }));
+  };
+
+  const toggleEditBrandColors = async () => {
+    if (!editState['brandColors']) {
+      const current = [...brandColorsList];
+      while (current.length < 4) {
+        current.push(current.length === 0 ? '#3B82F6' : current.length === 1 ? '#1E40AF' : current.length === 2 ? '#60A5FA' : '#0F172A');
+      }
+      setColorDrafts(current.slice(0, 4));
+    } else {
+      if (colorDrafts) {
+        const cleaned = colorDrafts.map(c => typeof c === 'string' ? c.trim() : '').filter(c => c.length > 0);
+        await updateProfileField('brandColors', cleaned);
+      }
+      setColorDrafts(null);
+    }
+    setEditState(prev => ({ ...prev, brandColors: !prev['brandColors'] }));
+  };
+
+  const handleColorDraftChange = (index, newValue) => {
+    const nextDrafts = colorDrafts ? [...colorDrafts] : [...brandColorsList];
+    while (nextDrafts.length < 4) {
+      nextDrafts.push('#000000');
+    }
+    nextDrafts[index] = newValue;
+    setColorDrafts(nextDrafts);
+  };
+
+  const updateProfileField = async (fieldKey, newValue) => {
+    if (!workspaceId) return;
+    const current = profile || effectiveProfile || {};
+    let updatedValue = newValue;
+
+    if (fieldKey === 'targetAudience' || fieldKey === 'coreProductsServices') {
+      if (typeof newValue === 'string') {
+        updatedValue = newValue.split('\n').map(s => s.trim()).filter(Boolean);
+      }
+    }
+
+    const updatedProfile = {
+      ...current,
+      workspaceId,
+      [fieldKey]: updatedValue,
+      structuredIdentity: {
+        ...(current.structuredIdentity || {}),
+        ...(fieldKey === 'brandColors' ? { color_palette: updatedValue } : {})
+      }
+    };
+
+    setProfile(updatedProfile);
+
+    try {
+      await brandAPI.updateProfile(workspaceId, updatedProfile);
+      if (updateWorkspace) {
+        await updateWorkspace(workspaceId, updatedProfile);
+      }
+    } catch (err) {
+      console.error('Failed to save Brand Profile field change:', err);
+    }
+  };
 
   const handleCopyColor = (hex) => {
     navigator.clipboard.writeText(hex);
@@ -328,12 +431,6 @@ export const BrandDnaModule = () => {
         </div>
       )}
 
-      {error && (
-        <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs font-medium flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          {error}
-        </div>
-      )}
 
       {/* Input bar for URL / Description ONLY if no workspace is active at all */}
       {!effectiveProfile && !loading && (
@@ -379,19 +476,24 @@ export const BrandDnaModule = () => {
         </div>
       ) : effectiveProfile ? (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: Identity & Palette */}
-          <div className="space-y-6">
-            {/* Identity Card */}
-            <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-5">
+
+          {/* ROW 1: Brand Identity & Theme Color Palette Side-by-Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Identity Card (1/3) */}
+            <div className="p-4 rounded-2xl glass-card border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('brandIdentity', 'Brand Identity')}</h2>
-                <span className="text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-extrabold px-2 py-0.5 rounded-full border border-emerald-500/30">
-                  {t('confidence', 'Confidence')}: {effectiveProfile.aiConfidence || 85}%
-                </span>
+                <h2 className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">{t('brandIdentity', 'Brand Identity')}</h2>
+                <button
+                  type="button"
+                  onClick={() => toggleEdit('identity')}
+                  className="p-1 rounded-md text-slate-400 hover:text-brand-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1 text-xs font-semibold"
+                  title="Edit Brand Identity"
+                >
+                  {editState['identity'] ? <Check className="w-3.5 h-3.5 text-emerald-500 font-bold" /> : <Edit3 className="w-3.5 h-3.5" />}
+                </button>
               </div>
 
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800/60 h-full">
                 <img
                   src={
                     (effectiveProfile.logoUrl && !effectiveProfile.logoUrl.includes('picsum.photos'))
@@ -399,283 +501,426 @@ export const BrandDnaModule = () => {
                       : `https://www.google.com/s2/favicons?domain=${(effectiveProfile.website || activeWorkspace?.domainUrl || 'google.com').replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0]}&sz=128`
                   }
                   alt={effectiveProfile.companyName}
-                  className="w-12 h-12 rounded-xl bg-white p-1 border border-slate-200 object-contain shadow-xs"
+                  className="w-9 h-9 rounded-lg bg-white p-1 border border-slate-200 object-contain shadow-xs shrink-0"
                   onError={(e) => {
                     const dom = (effectiveProfile.website || activeWorkspace?.domainUrl || 'google.com').replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
                     e.target.src = `https://www.google.com/s2/favicons?domain=${dom}&sz=128`;
                   }}
                 />
-                <div>
-                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base">{effectiveProfile.companyName}</h3>
-                  {effectiveProfile.website && (
-                    <a href={effectiveProfile.website} target="_blank" rel="noreferrer" className="text-xs text-brand-600 dark:text-brand-400 font-bold flex items-center gap-1 hover:underline">
-                      <Globe className="w-3.5 h-3.5" /> {effectiveProfile.website}
-                    </a>
+                <div className="flex-1 min-w-0">
+                  {editState['identity'] ? (
+                    <div className="space-y-1.5">
+                      <input
+                        type="text"
+                        value={effectiveProfile.companyName || ''}
+                        onChange={(e) => handleFieldChangeLocal('companyName', e.target.value)}
+                        placeholder="Company Name..."
+                        className="w-full text-xs font-extrabold text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-brand-500/50 rounded-md px-2 py-0.5 outline-none"
+                      />
+                      <input
+                        type="text"
+                        value={effectiveProfile.website || ''}
+                        onChange={(e) => handleFieldChangeLocal('website', e.target.value)}
+                        placeholder="Website URL..."
+                        className="w-full text-[11px] font-bold text-brand-600 dark:text-brand-400 bg-white dark:bg-slate-800 border border-brand-500/50 rounded-md px-2 py-0.5 outline-none"
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <h3 className="font-extrabold text-slate-900 dark:text-white text-sm truncate">{effectiveProfile.companyName}</h3>
+                      {effectiveProfile.website && (
+                        <a href={effectiveProfile.website} target="_blank" rel="noreferrer" className="text-[11px] text-brand-600 dark:text-brand-400 font-bold flex items-center gap-1 hover:underline truncate">
+                          <Globe className="w-3 h-3 shrink-0" /> {effectiveProfile.website}
+                        </a>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
+            </div>
 
-              {/* Brand Theme Color Palette */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                    <Palette className="w-3.5 h-3.5 text-brand-500" />
-                    {t('colorPalette', 'Theme Color Palette')}
-                  </span>
-                  <span className="text-[9px] bg-brand-500/10 text-brand-600 dark:text-brand-400 font-extrabold px-2 py-0.5 rounded-full border border-brand-500/20 uppercase tracking-wider">
+            {/* Color Palette Card (2/3) */}
+            <div className="lg:col-span-2 p-4 rounded-2xl glass-card border border-slate-200/80 dark:border-slate-800/80 space-y-3 flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Palette className="w-3.5 h-3.5 text-brand-500" />
+                  {t('colorPalette', 'Theme Color Palette')}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[8.5px] bg-brand-500/10 text-brand-600 dark:text-brand-400 font-extrabold px-2 py-0.5 rounded-full border border-brand-500/20 uppercase tracking-wider">
                     {brandColorsList.length} Fetched
                   </span>
+                  <button
+                    type="button"
+                    onClick={toggleEditBrandColors}
+                    className="p-1 rounded-md text-slate-400 hover:text-brand-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1 text-xs font-semibold"
+                    title="Edit Brand Colors"
+                  >
+                    {editState['brandColors'] ? <Check className="w-3.5 h-3.5 text-emerald-500 font-bold" /> : <Edit3 className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {brandColorsList.length > 0 ? (
-                    brandColorsList.map((hex, idx) => {
-                      const colorLabel = idx === 0 ? 'Primary' : idx === 1 ? 'Secondary' : idx === 2 ? 'Accent' : 'Neutral';
-                      const isCopied = copiedColor === hex;
-                      return (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => handleCopyColor(hex)}
-                          title={`Click to copy ${hex}`}
-                          className="group relative flex flex-col items-center p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 hover:border-brand-500/60 hover:shadow-md transition-all cursor-pointer text-left"
+              <div className="grid grid-cols-4 gap-2.5 w-full">
+                {(() => {
+                  const isEditingColors = editState['brandColors'];
+                  const activeColors = isEditingColors && colorDrafts ? colorDrafts : (brandColorsList.length > 0 ? brandColorsList : ['#3B82F6', '#1E40AF', '#60A5FA', '#0F172A']);
+                  return activeColors.map((hex, idx) => {
+                    const colorLabel = idx === 0 ? 'Primary' : idx === 1 ? 'Secondary' : idx === 2 ? 'Accent' : 'Neutral';
+                    const isCopied = copiedColor === hex;
+
+                    return (
+                      <div
+                        key={idx}
+                        className="group relative flex flex-col items-center px-1.5 py-2 rounded-xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800/60 hover:border-brand-500/60 transition-all text-center w-full min-w-0"
+                      >
+                        <div
+                          className="w-full h-8 rounded-lg mb-1.5 shadow-inner border border-black/10 dark:border-white/10 flex items-center justify-center relative overflow-hidden transition-transform group-hover:scale-105 cursor-pointer"
+                          style={{ backgroundColor: hex || '#ffffff' }}
+                          onClick={() => !isEditingColors && handleCopyColor(hex)}
                         >
-                          <div
-                            className="w-full h-8 rounded-lg mb-1.5 shadow-inner border border-black/10 dark:border-white/10 flex items-center justify-center relative overflow-hidden transition-transform group-hover:scale-105"
-                            style={{ backgroundColor: hex }}
-                          >
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 text-white rounded px-1.5 py-0.5 text-[9px] font-bold backdrop-blur-xs flex items-center gap-1">
+                          {isEditingColors ? (
+                            <input
+                              type="color"
+                              value={typeof hex === 'string' && hex.startsWith('#') && hex.length === 7 ? hex : '#3B82F6'}
+                              onChange={(e) => handleColorDraftChange(idx, e.target.value)}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                              title="Click to choose custom color"
+                            />
+                          ) : (
+                            <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 text-white rounded px-1.5 py-0.5 text-[8.5px] font-bold backdrop-blur-xs flex items-center gap-0.5">
                               {isCopied ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
                               {isCopied ? 'Copied' : 'Copy'}
                             </span>
-                          </div>
-                          <div className="w-full flex items-center justify-between">
-                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">{colorLabel}</span>
-                            <span className="text-[10px] font-mono font-bold text-slate-700 dark:text-slate-200 group-hover:text-brand-500 transition-colors">{hex}</span>
-                          </div>
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <div className="col-span-4 p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      Brand colors could not be reliably detected.
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Quick Provenance Attributes */}
-              <div className="space-y-3 text-xs">
-                {/* Industry */}
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{t('industry', 'Industry')}</span>
-                    <ProvenanceBadge provenanceObj={effectiveProfile?.industryProvenance} />
-                  </div>
-                  <span className="font-semibold text-slate-900 dark:text-white">
-                    {effectiveProfile?.industryCategory || <span className="text-slate-400 font-normal italic">Not available from official sources</span>}
-                  </span>
-                </div>
-
-                {/* Headquarters */}
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">Headquarters</span>
-                    <ProvenanceBadge provenanceObj={effectiveProfile?.headquartersProvenance} />
-                  </div>
-                  <span className="font-semibold text-slate-900 dark:text-white">
-                    {effectiveProfile?.headquarters || <span className="text-slate-400 font-normal italic">Address not found</span>}
-                  </span>
-                </div>
-
-                {/* Parent Company */}
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">Parent Company</span>
-                    <ProvenanceBadge provenanceObj={effectiveProfile?.parentCompanyProvenance} />
-                  </div>
-                  <span className="font-semibold text-slate-900 dark:text-white">
-                    {effectiveProfile?.parentCompany || <span className="text-slate-400 font-normal italic">No parent company detected</span>}
-                  </span>
-                </div>
-
-                {/* Tagline */}
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">Tagline / Slogan</span>
-                    <ProvenanceBadge provenanceObj={effectiveProfile?.taglineProvenance} />
-                  </div>
-                  <span className="font-semibold text-slate-900 dark:text-white">
-                    {effectiveProfile?.tagline ? `"${effectiveProfile.tagline}"` : <span className="text-slate-400 font-normal italic">Not Specified in Evidence</span>}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Target Audience Section */}
-            <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <Target className="w-4 h-4 text-brand-500" /> Target Audience
-                </h2>
-                <ProvenanceBadge provenanceObj={effectiveProfile?.targetAudienceProvenance} />
-              </div>
-              {Array.isArray(effectiveProfile?.targetAudience) && effectiveProfile.targetAudience.length > 0 ? (
-                <div className="space-y-1.5">
-                  {effectiveProfile.targetAudience.map((aud, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-200">
-                      <span className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
-                      {aud}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-400 font-normal italic">
-                  Target audience could not be reliably detected from website evidence.
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Center & Right: Strategy, Pillars, Extracted Claims */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Mission & Vision Statements */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                    <Compass className="w-4 h-4 text-purple-500" /> Mission Statement
-                  </h2>
-                  <ProvenanceBadge provenanceObj={effectiveProfile?.missionStatementProvenance} />
-                </div>
-                <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
-                  {effectiveProfile?.missionStatement ? `"${effectiveProfile.missionStatement}"` : <span className="text-slate-400 font-normal italic">Mission statement not available from official sources</span>}
-                </p>
-              </div>
-
-              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-cyan-500" /> Company Vision
-                  </h2>
-                  <ProvenanceBadge provenanceObj={effectiveProfile?.visionProvenance} />
-                </div>
-                <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
-                  {effectiveProfile?.vision ? `"${effectiveProfile.vision}"` : <span className="text-slate-400 font-normal italic">Vision statement not available from official sources</span>}
-                </p>
-              </div>
-            </div>
-
-            {/* Core Products & Services */}
-            <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <Zap className="w-4 h-4 text-amber-500" /> Core Products & Services
-                </h2>
-                <ProvenanceBadge provenanceObj={effectiveProfile?.coreProductsServicesProvenance} />
-              </div>
-              {Array.isArray(effectiveProfile?.coreProductsServices) && effectiveProfile.coreProductsServices.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {effectiveProfile.coreProductsServices.map((prod, i) => (
-                    <div key={i} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
-                      <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
-                      {prod}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-400 font-normal italic">No explicit product category headings extracted.</p>
-              )}
-            </div>
-
-            {/* Extracted Marketing Claims (Unverified) */}
-            {Array.isArray(effectiveProfile?.extractedClaims) && effectiveProfile.extractedClaims.length > 0 && (
-              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                    <FileText className="w-4 h-4 text-blue-500" /> Extracted Marketing Claims (Unverified)
-                  </h2>
-                  <span className="text-[9px] bg-slate-100 text-slate-500 font-extrabold px-2 py-0.5 rounded-full border border-slate-200">
-                    ⚠️ Scraped Marketing Statements
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {effectiveProfile.extractedClaims.map((claim, i) => (
-                    <div key={i} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
-                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">"{claim.claimText || claim}"</p>
-                      <span className="text-[9px] text-slate-400 block">Source: Official Website DOM Heading</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Scraped Evidence Pages (DOM Text + Visual Screenshots) */}
-            {Array.isArray(effectiveProfile?.pagesEvidence) && effectiveProfile.pagesEvidence.length > 0 && (
-              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                    <Globe className="w-4 h-4 text-brand-500" /> Scraped Evidence Sources (DOM Text & Visual Screenshots)
-                  </h2>
-                  <span className="text-[9px] bg-brand-500/10 text-brand-600 font-extrabold px-2.5 py-1 rounded-full border border-brand-500/20">
-                    {effectiveProfile.pagesEvidence.length} Crawled Pages
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {effectiveProfile.pagesEvidence.map((page, i) => (
-                    <div key={i} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                      <div className="min-w-0 flex-1 pr-2">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="text-[8px] font-extrabold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded uppercase">
-                            {page.pageType || 'PAGE'}
-                          </span>
-                          <p className="font-bold text-xs text-slate-900 dark:text-white truncate">{page.pageTitle || page.url}</p>
+                          )}
                         </div>
-                        <p className="text-[10px] text-slate-400 truncate">{page.url}</p>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <span className="text-[8px] bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80 dark:border-emerald-800/80">
-                          ✓ Text Scraped
-                        </span>
-                        {(page.hasScreenshot || page.screenshotStatus === 'SUCCESS') && (
-                          <span className="text-[8px] bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80 dark:border-indigo-800/80">
-                            📸 Screenshot Captured
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {/* Content Rules / Dos & Don'ts */}
-            <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-              <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                <MessageSquare className="w-4 h-4 text-blue-500" /> {t('commRules', "COMMUNICATION RULES (DOS & DON'TS)")}
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 space-y-2">
-                  <span className="font-bold text-emerald-700 dark:text-emerald-300 block uppercase text-[10px]">Do's</span>
-                  <ul className="space-y-1 text-slate-700 dark:text-slate-300">
-                    {(effectiveProfile?.dosAndDonts?.dos || effectiveProfile?.doWords || (Array.isArray(effectiveProfile?.brandVoice?.dos) ? effectiveProfile.brandVoice.dos : null) || ['Use grounded facts from official evidence', 'Maintain clear professional brand tone']).map((d, i) => (
-                      <li key={i}>✓ {d}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 space-y-2">
-                  <span className="font-bold text-red-700 dark:text-red-300 block uppercase text-[10px]">Don'ts</span>
-                  <ul className="space-y-1 text-slate-700 dark:text-slate-300">
-                    {(effectiveProfile?.dosAndDonts?.donts || effectiveProfile?.dontWords || (Array.isArray(effectiveProfile?.brandVoice?.donts) ? effectiveProfile.brandVoice.donts : null) || ['Avoid unverified claims or unsupported statistics', 'Avoid generic marketing buzzwords']).map((d, i) => (
-                      <li key={i}>✗ {d}</li>
-                    ))}
-                  </ul>
-                </div>
+                        <div className="w-full flex flex-col items-center justify-center gap-0.5">
+                          <span className="text-[8px] sm:text-[9px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-tight text-center whitespace-nowrap">
+                            {colorLabel}
+                          </span>
+                          {isEditingColors ? (
+                            <input
+                              type="text"
+                              value={hex ?? ''}
+                              onChange={(e) => handleColorDraftChange(idx, e.target.value)}
+                              placeholder="#000000"
+                              className="w-full text-[9.5px] font-mono font-bold text-center text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-brand-500/40 rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-brand-500"
+                            />
+                          ) : (
+                            <span className="text-[9.5px] sm:text-[10.5px] font-mono font-bold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 transition-colors text-center whitespace-nowrap">
+                              {hex}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
           </div>
-        </div>
-        <div className="flex justify-end">
+
+          {/* ROW 2: Horizontal Quick Attributes Bar (4 Equal Columns) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            {/* Industry */}
+            <div className="p-3 rounded-xl glass-card border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[9.5px]">{t('industry', 'Industry')}</span>
+                <button
+                  type="button"
+                  onClick={() => toggleEdit('industryCategory')}
+                  className="p-0.5 rounded text-slate-400 hover:text-brand-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  title="Edit Industry"
+                >
+                  {editState['industryCategory'] ? <Check className="w-3 h-3 text-emerald-500 font-bold" /> : <Edit3 className="w-3 h-3" />}
+                </button>
+              </div>
+              {editState['industryCategory'] ? (
+                <input
+                  type="text"
+                  value={effectiveProfile?.industryCategory || ''}
+                  onChange={(e) => handleFieldChangeLocal('industryCategory', e.target.value)}
+                  placeholder="Enter industry category..."
+                  className="w-full text-xs font-semibold text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-brand-500/50 rounded-md p-1 outline-none"
+                  autoFocus
+                />
+              ) : (
+                <span className="font-bold text-slate-900 dark:text-white text-xs truncate">
+                  {effectiveProfile?.industryCategory || <span className="text-slate-400 font-normal italic">Not specified</span>}
+                </span>
+              )}
+            </div>
+
+            {/* Headquarters */}
+            <div className="p-3 rounded-xl glass-card border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[9.5px]">Headquarters</span>
+                <button
+                  type="button"
+                  onClick={() => toggleEdit('headquarters')}
+                  className="p-0.5 rounded text-slate-400 hover:text-brand-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  title="Edit Headquarters"
+                >
+                  {editState['headquarters'] ? <Check className="w-3 h-3 text-emerald-500 font-bold" /> : <Edit3 className="w-3 h-3" />}
+                </button>
+              </div>
+              {editState['headquarters'] ? (
+                <input
+                  type="text"
+                  value={effectiveProfile?.headquarters || ''}
+                  onChange={(e) => handleFieldChangeLocal('headquarters', e.target.value)}
+                  placeholder="Enter headquarters address..."
+                  className="w-full text-xs font-semibold text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-brand-500/50 rounded-md p-1 outline-none"
+                  autoFocus
+                />
+              ) : (
+                <span className="font-bold text-slate-900 dark:text-white text-xs truncate">
+                  {effectiveProfile?.headquarters || <span className="text-slate-400 font-normal italic">Address not found</span>}
+                </span>
+              )}
+            </div>
+
+            {/* Tagline */}
+            <div className="p-3 rounded-xl glass-card border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[9.5px]">Tagline / Slogan</span>
+                <button
+                  type="button"
+                  onClick={() => toggleEdit('tagline')}
+                  className="p-0.5 rounded text-slate-400 hover:text-brand-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  title="Edit Tagline"
+                >
+                  {editState['tagline'] ? <Check className="w-3 h-3 text-emerald-500 font-bold" /> : <Edit3 className="w-3 h-3" />}
+                </button>
+              </div>
+              {editState['tagline'] ? (
+                <input
+                  type="text"
+                  value={effectiveProfile?.tagline || ''}
+                  onChange={(e) => handleFieldChangeLocal('tagline', e.target.value)}
+                  placeholder="Enter tagline / slogan..."
+                  className="w-full text-xs font-semibold text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-brand-500/50 rounded-md p-1 outline-none"
+                  autoFocus
+                />
+              ) : (
+                <span className="font-bold text-slate-900 dark:text-white text-xs truncate">
+                  {effectiveProfile?.tagline ? `"${effectiveProfile.tagline}"` : <span className="text-slate-400 font-normal italic">Not Specified</span>}
+                </span>
+              )}
+            </div>
+
+            {/* Contact Info */}
+            <div className="p-3 rounded-xl glass-card border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[9.5px]">Contact Info</span>
+                <button
+                  type="button"
+                  onClick={() => toggleEdit('contactInfo')}
+                  className="p-0.5 rounded text-slate-400 hover:text-brand-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  title="Edit Contact Info"
+                >
+                  {editState['contactInfo'] ? <Check className="w-3 h-3 text-emerald-500 font-bold" /> : <Edit3 className="w-3 h-3" />}
+                </button>
+              </div>
+              {editState['contactInfo'] ? (
+                <input
+                  type="text"
+                  value={
+                    typeof effectiveProfile?.contactInfo === 'string'
+                      ? effectiveProfile.contactInfo
+                      : (`${effectiveProfile?.contactInfo?.email || ''}${effectiveProfile?.contactInfo?.phone ? ' | Phone: ' + effectiveProfile.contactInfo.phone : ''}`)
+                  }
+                  onChange={(e) => handleFieldChangeLocal('contactInfo', e.target.value)}
+                  placeholder="Enter contact email / phone..."
+                  className="w-full text-xs font-semibold text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-brand-500/50 rounded-md p-1 outline-none"
+                  autoFocus
+                />
+              ) : (
+                <span className="font-bold text-slate-900 dark:text-white text-xs truncate">
+                  {typeof effectiveProfile?.contactInfo === 'string'
+                    ? (effectiveProfile.contactInfo || <span className="text-slate-400 font-normal italic">Not Specified</span>)
+                    : (
+                        (effectiveProfile?.contactInfo?.email || effectiveProfile?.contactInfo?.phone)
+                          ? `${effectiveProfile?.contactInfo?.email || ''}${effectiveProfile?.contactInfo?.phone ? ' | ' + effectiveProfile.contactInfo.phone : ''}`
+                          : <span className="text-slate-400 font-normal italic">Not Specified</span>
+                      )
+                  }
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* ROW 3: Balanced 2-Column Grid for Core DNA Statements */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            
+            {/* LEFT COLUMN: Mission & Target Audience */}
+            <div className="space-y-4">
+              {/* Mission Statement */}
+              <div className="p-4 rounded-2xl glass-card border border-slate-200/80 dark:border-slate-800/80 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <Compass className="w-3.5 h-3.5 text-purple-500" /> Mission Statement
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => toggleEdit('missionStatement')}
+                    className="p-1 rounded-md text-slate-400 hover:text-brand-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    title="Edit Mission Statement"
+                  >
+                    {editState['missionStatement'] ? <Check className="w-3.5 h-3.5 text-emerald-500 font-bold" /> : <Edit3 className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+                {editState['missionStatement'] ? (
+                  <textarea
+                    rows={2}
+                    value={effectiveProfile?.missionStatement || ''}
+                    onChange={(e) => handleFieldChangeLocal('missionStatement', e.target.value)}
+                    placeholder="Enter mission statement..."
+                    className="w-full text-xs font-medium text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-brand-500/50 rounded-lg p-2 outline-none leading-relaxed"
+                    autoFocus
+                  />
+                ) : (
+                  <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+                    {effectiveProfile?.missionStatement ? `"${effectiveProfile.missionStatement}"` : <span className="text-slate-400 font-normal italic">Mission statement not available</span>}
+                  </p>
+                )}
+              </div>
+
+              {/* Target Audience Section */}
+              <div className="p-4 rounded-2xl glass-card border border-slate-200/80 dark:border-slate-800/80 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5 text-brand-500" /> Target Audience
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => toggleEdit('targetAudience')}
+                    className="p-1 rounded-md text-slate-400 hover:text-brand-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    title="Edit Target Audience"
+                  >
+                    {editState['targetAudience'] ? <Check className="w-3.5 h-3.5 text-emerald-500 font-bold" /> : <Edit3 className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+                {editState['targetAudience'] ? (
+                  <textarea
+                    rows={3}
+                    value={Array.isArray(effectiveProfile?.targetAudience) ? effectiveProfile.targetAudience.join('\n') : (effectiveProfile?.targetAudience || '')}
+                    onChange={(e) => handleFieldChangeLocal('targetAudience', e.target.value)}
+                    placeholder="Enter target audience segments (one per line)..."
+                    className="w-full text-xs font-semibold text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-brand-500/50 rounded-lg p-2 outline-none leading-relaxed"
+                    autoFocus
+                  />
+                ) : Array.isArray(effectiveProfile?.targetAudience) && effectiveProfile.targetAudience.length > 0 ? (
+                  <div className="space-y-1">
+                    {effectiveProfile.targetAudience.map((aud, i) => (
+                      <div key={i} className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0" />
+                        {aud}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 font-normal italic">
+                    Target audience not specified. Click edit icon to add.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN: Vision & Core Products */}
+            <div className="space-y-4">
+              {/* Company Vision */}
+              <div className="p-4 rounded-2xl glass-card border border-slate-200/80 dark:border-slate-800/80 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-cyan-500" /> Company Vision
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => toggleEdit('vision')}
+                    className="p-1 rounded-md text-slate-400 hover:text-brand-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    title="Edit Vision Statement"
+                  >
+                    {editState['vision'] ? <Check className="w-3.5 h-3.5 text-emerald-500 font-bold" /> : <Edit3 className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+                {editState['vision'] ? (
+                  <textarea
+                    rows={2}
+                    value={effectiveProfile?.vision || ''}
+                    onChange={(e) => handleFieldChangeLocal('vision', e.target.value)}
+                    placeholder="Enter vision statement..."
+                    className="w-full text-xs font-medium text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-brand-500/50 rounded-lg p-2 outline-none leading-relaxed"
+                    autoFocus
+                  />
+                ) : (
+                  <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+                    {effectiveProfile?.vision ? `"${effectiveProfile.vision}"` : <span className="text-slate-400 font-normal italic">Vision statement not available</span>}
+                  </p>
+                )}
+              </div>
+
+              {/* Core Products & Services */}
+              <div className="p-4 rounded-2xl glass-card border border-slate-200/80 dark:border-slate-800/80 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-amber-500" /> Core Products & Services
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => toggleEdit('coreProductsServices')}
+                    className="p-1 rounded-md text-slate-400 hover:text-brand-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    title="Edit Products & Services"
+                  >
+                    {editState['coreProductsServices'] ? <Check className="w-3.5 h-3.5 text-emerald-500 font-bold" /> : <Edit3 className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+                {editState['coreProductsServices'] ? (
+                  <textarea
+                    rows={3}
+                    value={Array.isArray(effectiveProfile?.coreProductsServices) ? effectiveProfile.coreProductsServices.join('\n') : (effectiveProfile?.coreProductsServices || '')}
+                    onChange={(e) => handleFieldChangeLocal('coreProductsServices', e.target.value)}
+                    placeholder="Enter core products & services (one per line)..."
+                    className="w-full text-xs font-semibold text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-brand-500/50 rounded-lg p-2 outline-none leading-relaxed"
+                    autoFocus
+                  />
+                ) : Array.isArray(effectiveProfile?.coreProductsServices) && effectiveProfile.coreProductsServices.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {effectiveProfile.coreProductsServices.map((prod, i) => (
+                      <div key={i} className="p-2 rounded-xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800/60 flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+                        {prod}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 font-normal italic">No core products specified. Click edit icon to add.</p>
+                )}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Extracted Marketing Claims (Unverified) */}
+          {Array.isArray(effectiveProfile?.extractedClaims) && effectiveProfile.extractedClaims.length > 0 && (
+            <div className="p-4 rounded-2xl glass-card border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-blue-500" /> Extracted Marketing Claims (Unverified)
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {effectiveProfile.extractedClaims.map((claim, i) => (
+                  <div key={i} className="p-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800/60 space-y-0.5">
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200">"{claim.claimText || claim}"</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end pt-1">
             <button
               onClick={() => {
                 if (setBrandDnaData) setBrandDnaData(effectiveProfile);
@@ -691,3 +936,5 @@ export const BrandDnaModule = () => {
     </div>
   );
 };
+
+export default BrandDnaModule;

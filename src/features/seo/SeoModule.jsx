@@ -294,10 +294,7 @@ export const SeoModule = () => {
             <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">{t('seoTitle', 'SEO Intelligence & Brief Builder')}</h1>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 pl-10">
-            AI-powered keyword clustering, topic mapping & 8-step brief generation for <strong className="text-slate-800 dark:text-white">{activeWorkspace.brandName}</strong>
-            {activeWorkspace.industryCategory && (
-              <span className="ml-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] font-semibold">{activeWorkspace.industryCategory}</span>
-            )}
+            Keyword clustering, topic mapping & 8-step brief generation for <strong className="text-slate-800 dark:text-white">{activeWorkspace.brandName}</strong>
           </p>
         </div>
       </div>

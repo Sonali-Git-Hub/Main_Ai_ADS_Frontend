@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { campaignAPI } from '../../services/api';
 import {
@@ -75,6 +75,16 @@ export const CalendarModule = () => {
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const detailCardRef = useRef(null);
+
+  const handleDateSelect = (cellDate) => {
+    setSelectedDate(cellDate);
+    setTimeout(() => {
+      if (detailCardRef.current) {
+        detailCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 50);
+  };
 
   // Post Editing State
   const [isEditingPost, setIsEditingPost] = useState(false);
@@ -272,9 +282,7 @@ export const CalendarModule = () => {
   // Derived counts for Stats
   const totalCount = campaignPosts.length;
   const generatedCount = campaignPosts.filter(p => ['Generated', 'Approved', 'Scheduled', 'Published'].includes(p.status)).length;
-  const approvedCount = campaignPosts.filter(p => p.approvalStatus === 'Approved').length;
   const scheduledCount = campaignPosts.filter(p => p.status === 'Scheduled').length;
-  const publishedCount = campaignPosts.filter(p => p.status === 'Published').length;
   const remainingCount = totalCount - generatedCount;
   const progressPercent = totalCount > 0 ? Math.round((generatedCount / totalCount) * 100) : 0;
 
@@ -549,35 +557,46 @@ export const CalendarModule = () => {
 
   // Render Campaign Progress Card Component
   const campaignProgressCard = (
-    <div className="bg-white dark:bg-[#0d131f] p-5 rounded-[24px] border border-slate-200 dark:border-slate-800 shadow-md flex flex-col justify-between min-h-[380px]">
+    <div className="bg-white dark:bg-[#0d131f] p-5 rounded-[24px] border border-slate-200 dark:border-slate-800 shadow-md flex flex-col justify-between space-y-4">
       <div>
+        {/* Header */}
         <div className="flex justify-between items-center pb-2.5 border-b border-slate-200 dark:border-slate-800 mb-3">
           <div>
-            <h3 className="text-[10px] font-black text-slate-850 dark:text-white uppercase tracking-widest">Campaign Progress: {currentCampaign?.campaignName || 'NEW LAUNCH'}</h3>
+            <h3 className="text-[10px] font-black text-slate-850 dark:text-white uppercase tracking-widest">
+              Campaign Progress: {currentCampaign?.campaignName || 'NEW LAUNCH'}
+            </h3>
             <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">{totalCount} Scheduled Publication Days</p>
           </div>
-          <span className="text-[9px] font-black text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2.5 py-1 rounded-full">{progressPercent}% Completed</span>
+          <span className="text-[9px] font-black text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2.5 py-1 rounded-full">
+            {progressPercent}% Completed
+          </span>
         </div>
 
-        <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mb-3">
-          <div className="bg-brand-600 h-full transition-all duration-1000" style={{ width: `${progressPercent}%` }} />
+        {/* Progress Bar */}
+        <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden mb-4">
+          <div className="bg-gradient-to-r from-brand-600 to-indigo-600 h-full transition-all duration-1000" style={{ width: `${progressPercent}%` }} />
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5">
+        {/* 4 Stat Cards in 4 Separate Small Centered Rows (Positioned Downward) */}
+        <div className="flex flex-col gap-2.5 items-center mt-7 mb-3">
           {[
-            { label: "Total Posts", val: totalCount },
-            { label: "Generated", val: generatedCount },
-            { label: "Approved", val: approvedCount },
-            { label: "Scheduled", val: scheduledCount },
-            { label: "Published", val: publishedCount },
-            { label: "Remaining", val: remainingCount }
+            { label: "Total Posts", val: totalCount, icon: <FileText className="w-3.5 h-3.5 text-indigo-500" />, bg: "bg-indigo-500/5 dark:bg-indigo-500/10 border-indigo-500/20" },
+            { label: "Generated", val: generatedCount, icon: <Sparkles className="w-3.5 h-3.5 text-emerald-500" />, bg: "bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20" },
+            { label: "Scheduled", val: scheduledCount, icon: <Clock className="w-3.5 h-3.5 text-amber-500" />, bg: "bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/20" },
+            { label: "Remaining", val: remainingCount, icon: <Layers className="w-3.5 h-3.5 text-brand-500" />, bg: "bg-brand-500/5 dark:bg-brand-500/10 border-brand-500/20" }
           ].map((c, idx) => (
-            <div key={idx} className="p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-center">
-              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">{c.label}</span>
-              <span className="text-xs font-black text-slate-800 dark:text-white">{c.val}</span>
+            <div key={idx} className={`py-1.5 px-3 rounded-xl border ${c.bg} flex flex-col items-center justify-center text-center gap-0.5 max-w-[200px] w-full transition-all hover:scale-[1.01]`}>
+              <div className="flex items-center gap-1.5">
+                <div className="p-1 rounded-md bg-white dark:bg-slate-800 shadow-sm shrink-0">
+                  {c.icon}
+                </div>
+                <span className="text-[9px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider">{c.label}</span>
+              </div>
+              <span className="text-xs font-black text-slate-900 dark:text-white leading-none">{c.val}</span>
             </div>
           ))}
         </div>
+
       </div>
     </div>
   );
@@ -671,7 +690,7 @@ export const CalendarModule = () => {
                   <div key={cellIdx} className="flex justify-center items-center relative h-8">
                     <div className="relative">
                       <button
-                        onClick={() => setSelectedDate(cellDate)}
+                        onClick={() => handleDateSelect(cellDate)}
                         className={`w-7 h-7 rounded-full flex items-center justify-center transition-all text-[11px] font-black ${
                           hasPost
                             ? `${platformBg} text-white shadow-sm`
@@ -716,7 +735,7 @@ export const CalendarModule = () => {
           </div>
 
           {/* Active selected day details card */}
-          <div className="min-h-[380px] flex flex-col">
+          <div ref={detailCardRef} className="min-h-[380px] flex flex-col scroll-mt-6">
             {activePost ? (
               <div className="bg-white dark:bg-[#0d131f] border border-slate-200 dark:border-slate-800 rounded-[24px] p-5 hover:shadow-lg transition-all flex flex-col justify-between min-h-[380px] h-full flex-1">
                 <div className="space-y-3">
@@ -735,11 +754,6 @@ export const CalendarModule = () => {
                       >
                         {isEditingPost ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
                       </button>
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                        activePost.status === 'Draft' ? 'bg-slate-100 dark:bg-slate-800 text-slate-500' : 'bg-brand-500/10 text-brand-600 dark:text-brand-400'
-                      }`}>
-                        {activePost.status}
-                      </span>
                     </div>
                   </div>
 
@@ -954,64 +968,7 @@ export const CalendarModule = () => {
                   )}
                 </div>
                 
-                {/* Post Pipeline Control Panel */}
-                <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-3 space-y-2">
-                  <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Pipeline Action</span>
-                  {activePost.status === 'Draft' && (
-                    <button
-                      disabled={actionLoading}
-                      onClick={() => handleGeneratePost(activePost._id)}
-                      className="w-full py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
-                    >
-                      {actionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                      Generate Post Content
-                    </button>
-                  )}
-                  {activePost.status === 'Generated' && (
-                    <div className="flex gap-2">
-                      <button
-                        disabled={actionLoading}
-                        onClick={() => handleUpdatePostStatus(activePost._id, 'Approved', 'Approved')}
-                        className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
-                      >
-                        {actionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                        Approve Post
-                      </button>
-                      <button
-                        disabled={actionLoading}
-                        onClick={() => handleUpdatePostStatus(activePost._id, 'Draft', 'Rejected')}
-                        className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
-                      >
-                        Reject Post
-                      </button>
-                    </div>
-                  )}
-                  {activePost.status === 'Approved' && (
-                    <button
-                      disabled={actionLoading}
-                      onClick={() => handleUpdatePostStatus(activePost._id, 'Scheduled')}
-                      className="w-full py-2 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
-                    >
-                      {actionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                      Schedule Publication
-                    </button>
-                  )}
-                  {activePost.status === 'Scheduled' && (
-                    <button
-                      disabled={actionLoading}
-                      onClick={() => handleUpdatePostStatus(activePost._id, 'Published')}
-                      className="w-full py-2 bg-indigo-650 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95"
-                    >
-                      {actionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                      Publish Now
-                    </button>
-                  )}
-                  {activePost.status === 'Published' && (
-                    <div className="py-2 text-center bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 rounded-xl text-[10px] font-black uppercase tracking-wider">
-                      🎉 Post Published Successfully
-                    </div>
-                  )}
-                </div>
+
 
                 <div className="flex gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-3">
                   <button
