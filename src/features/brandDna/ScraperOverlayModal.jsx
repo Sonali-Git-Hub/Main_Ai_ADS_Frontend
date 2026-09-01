@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { normalizeBrandDna } from '../../utils/normalizeBrandDna';
-import { X, Dna, Globe, Sparkles, CheckCircle2, ShieldAlert, ArrowRight, Target, Users, Share2, Mail, Phone, MapPin, Award, FileText } from 'lucide-react';
+import { X, Dna, Globe, Sparkles, ArrowRight, FileText, Edit3 } from 'lucide-react';
 
 export const ScraperOverlayModal = () => {
   const { isScraperOpen, setIsScraperOpen, addWorkspace, activeWorkspace, scraperMode, setActiveModule, t } = useWorkspace();
@@ -90,6 +90,9 @@ export const ScraperOverlayModal = () => {
       setResult(null);
       setUrl('');
       setBrandName('');
+      if (window.location.pathname !== '/brand-dna') {
+        window.location.href = '/brand-dna';
+      }
     }
   };
 
@@ -149,74 +152,65 @@ export const ScraperOverlayModal = () => {
                   <label className="block text-xs font-bold text-slate-800 mb-1.5">{t('targetDomainUrl', 'Target Domain URL')}</label>
                   <div className="relative">
                     <Globe className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                    <input 
+                    <input
                       type="text"
+                      placeholder="e.g. https://nike.com"
                       value={url}
                       onChange={(e) => setUrl(e.target.value)}
-                      placeholder="https://www.flipkart.com/"
-                      className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl px-4 py-2.5 text-xs pl-10 font-medium"
+                      className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all font-semibold"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-800 mb-1.5">{t('brandNameOptional', 'Brand Name (Optional)')}</label>
-                  <input 
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">{t('brandNameOptional', 'Brand / Company Name (Optional)')}</label>
+                  <input
                     type="text"
+                    placeholder="e.g. Nike"
                     value={brandName}
                     onChange={(e) => setBrandName(e.target.value)}
-                    placeholder="e.g. Flipkart"
-                    className="w-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl px-4 py-2.5 text-xs font-medium"
+                    className="w-full px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all font-semibold"
                   />
                 </div>
+
+                <button
+                  onClick={handleScrape}
+                  disabled={loading || !url.trim()}
+                  className="w-full btn-primary py-3 rounded-xl font-bold text-xs shadow-lg shadow-brand-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <Sparkles className="w-4 h-4 animate-spin text-amber-300" />
+                      {t('scrapingWebsiteLive', 'Scraping Website & Extracting Brand DNA...')}
+                    </>
+                  ) : (
+                    <>
+                      <Dna className="w-4 h-4" />
+                      {t('extractBrandDnaMemory', 'Extract Brand DNA Memory')}
+                    </>
+                  )}
+                </button>
               </>
             ) : (
-              <div className="p-6 rounded-2xl border-2 border-dashed border-brand-500/40 bg-brand-500/5 text-center space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-500 flex items-center justify-center mx-auto font-bold text-lg">
-                  📄
+              /* FILE TAB */
+              <div className="space-y-4 text-center p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-500 flex items-center justify-center mx-auto">
+                  <FileText className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="text-xs font-extrabold text-slate-900">{t('uploadBrandDeckGuide', 'Upload Official Brand Guideline PDF / PPT Deck')}</p>
-                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">{t('supportsFileTypes', 'Supports .pdf, .pptx, .docx, .xlsx files up to 25MB')}</p>
+                  <h4 className="font-extrabold text-sm text-slate-900">{t('dragDropBrandPdf', 'Upload Brand Identity PDF or Presentation')}</h4>
+                  <p className="text-xs text-slate-500 mt-1">{t('aiExtractsColorsTone', 'AI will extract brand guidelines, colors, voice, tagline, and products')}</p>
                 </div>
-                <label className="inline-block px-4 py-2 bg-brand-500 text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-brand-600 transition-colors shadow-md">
-                  {t('browseBrandFile', 'Browse Brand File')}
-                  <input type="file" onChange={handleFileUpload} accept=".pdf,.pptx,.docx,.xlsx" className="hidden" />
+
+                <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl cursor-pointer shadow-md transition-all">
+                  <span>{loading ? t('processingFile', 'Analyzing File...') : t('selectFileBtn', 'Select PDF / Document')}</span>
+                  <input type="file" accept=".pdf,.doc,.docx,.txt" onChange={handleFileUpload} className="hidden" />
                 </label>
-                {selectedFile && (
-                  <p className="text-xs font-bold text-brand-500 pt-1">{t('selected', 'Selected')}: {selectedFile.name}</p>
-                )}
               </div>
             )}
-
-
-            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-1">
-              <p className="font-bold text-brand-500">{t('tenBrandDnaPointsTitle', '10 Specific Brand DNA Data Points Extracted:')}</p>
-              <ul className="grid grid-cols-2 gap-1 text-[11px] text-slate-600 font-semibold pt-1">
-                <li>{t('dnaPoint1', '1. Target Personas (3-5)')}</li>
-                <li>{t('dnaPoint2', '2. Voice & Tone (1-5 Score)')}</li>
-                <li>{t('dnaPoint3', '3. Competitors Landscape')}</li>
-                <li>{t('dnaPoint4', '4. Content Pillars (3-4)')}</li>
-                <li>{t('dnaPoint5', '5. Social Media Presence')}</li>
-                <li>{t('dnaPoint6', '6. Favicon / OG Logo URL')}</li>
-                <li>{t('dnaPoint7', '7. Contact Info (Email, Phone)')}</li>
-                <li>{t('dnaPoint8', '8. Industry Category')}</li>
-                <li>{t('dnaPoint9', '9. Mission Statement')}</li>
-                <li>{t('dnaPoint10', '10. Tagline / Main Slogan')}</li>
-              </ul>
-            </div>
-
-            <button
-              onClick={handleScrape}
-              disabled={loading}
-              className="w-full btn-primary py-3 rounded-xl font-bold text-xs shadow-lg shadow-brand-500/30"
-            >
-              {loading ? <Sparkles className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              {loading ? t('analyzingHtml', 'Analyzing HTML & Extracting 10 Brand DNA Points...') : t('autoScrapeButton', 'Auto Scrape Domain & Extract 10 Brand DNA Points')}
-            </button>
           </div>
         ) : (
-          /* Step 2: Display Extracted 10 Brand DNA Data Points */
+          /* Step 2: Preview Extracted DNA (Editable Fields) */
           <div className="space-y-4 animate-in fade-in">
             {/* Top Brand Banner */}
             <div className="p-4 rounded-2xl bg-brand-500/10 border border-brand-500/30 flex items-center justify-between">
@@ -235,7 +229,7 @@ export const ScraperOverlayModal = () => {
                 <div>
                   <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
                     {result.brandName}
-                    <span className="text-[10px] bg-brand-500 text-white px-2 py-0.5 rounded-full font-extrabold">{result.industryCategory || result.industry || 'Not Specified in Evidence'}</span>
+                    <span className="text-[10px] bg-brand-500 text-white px-2 py-0.5 rounded-full font-extrabold">{result.industryCategory || result.industry || 'Not Specified'}</span>
                   </h3>
                   <p className="text-xs font-bold text-brand-500">{result.domainUrl}</p>
                 </div>
@@ -260,74 +254,127 @@ export const ScraperOverlayModal = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {/* BRAND NAME */}
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">BRAND NAME</span>
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">BRAND NAME</span>
+                      <Edit3 className="w-3 h-3 text-slate-400" />
                     </div>
-                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.brandName}</p>
+                    <input
+                      type="text"
+                      value={result.brandName || ''}
+                      onChange={(e) => setResult(prev => ({ ...prev, brandName: e.target.value }))}
+                      placeholder="Enter brand name..."
+                      className="w-full font-bold text-slate-900 text-xs bg-transparent border-none outline-none p-0"
+                    />
                   </div>
 
                   {/* TAGLINE */}
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">TAGLINE</span>
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">TAGLINE</span>
+                      <Edit3 className="w-3 h-3 text-slate-400" />
                     </div>
-                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.tagline || <span className="text-slate-400 font-normal italic">Not Specified in Evidence</span>}</p>
+                    <input
+                      type="text"
+                      value={result.tagline || ''}
+                      onChange={(e) => setResult(prev => ({ ...prev, tagline: e.target.value }))}
+                      placeholder="Enter tagline / slogan..."
+                      className="w-full font-bold text-slate-900 text-xs bg-transparent border-none outline-none p-0"
+                    />
                   </div>
 
                   {/* WEBSITE */}
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">WEBSITE</span>
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">WEBSITE</span>
+                      <Edit3 className="w-3 h-3 text-slate-400" />
                     </div>
-                    <p className="font-bold text-brand-500 text-xs mt-0.5 truncate">{result.domainUrl}</p>
+                    <input
+                      type="text"
+                      value={result.domainUrl || ''}
+                      onChange={(e) => setResult(prev => ({ ...prev, domainUrl: e.target.value, website: e.target.value }))}
+                      placeholder="Enter domain URL..."
+                      className="w-full font-bold text-brand-500 text-xs bg-transparent border-none outline-none p-0"
+                    />
                   </div>
 
                   {/* INDUSTRY */}
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">INDUSTRY</span>
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">INDUSTRY</span>
+                      <Edit3 className="w-3 h-3 text-slate-400" />
                     </div>
-                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.industryCategory || result.industry || <span className="text-slate-400 font-normal italic">Not Specified in Evidence</span>}</p>
+                    <input
+                      type="text"
+                      value={result.industryCategory || result.industry || ''}
+                      onChange={(e) => setResult(prev => ({ ...prev, industryCategory: e.target.value, industry: e.target.value }))}
+                      placeholder="Enter industry category..."
+                      className="w-full font-bold text-slate-900 text-xs bg-transparent border-none outline-none p-0"
+                    />
                   </div>
 
                   {/* BUSINESS TYPE */}
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">BUSINESS TYPE</span>
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">BUSINESS TYPE</span>
+                      <Edit3 className="w-3 h-3 text-slate-400" />
                     </div>
-                    <p className="font-bold text-slate-900 text-xs mt-0.5">{Array.isArray(result.businessType) ? result.businessType.join(' & ') : (result.businessType || <span className="text-slate-400 font-normal italic">Not Specified in Evidence</span>)}</p>
+                    <input
+                      type="text"
+                      value={Array.isArray(result.businessType) ? result.businessType.join(' & ') : (result.businessType || '')}
+                      onChange={(e) => setResult(prev => ({ ...prev, businessType: e.target.value }))}
+                      placeholder="Enter business type..."
+                      className="w-full font-bold text-slate-900 text-xs bg-transparent border-none outline-none p-0"
+                    />
                   </div>
 
                   {/* HEADQUARTERS */}
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">HEADQUARTERS</span>
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">HEADQUARTERS</span>
+                      <Edit3 className="w-3 h-3 text-slate-400" />
                     </div>
-                    <p className="font-bold text-slate-900 text-xs mt-0.5">{result.headquarters || <span className="text-slate-400 font-normal italic">Address Not Found</span>}</p>
+                    <input
+                      type="text"
+                      value={result.headquarters || ''}
+                      onChange={(e) => setResult(prev => ({ ...prev, headquarters: e.target.value }))}
+                      placeholder="Enter headquarters location..."
+                      className="w-full font-bold text-slate-900 text-xs bg-transparent border-none outline-none p-0"
+                    />
                   </div>
 
                   {/* CONTACT INFO */}
-                  <div className="sm:col-span-2 p-2.5 rounded-xl bg-white border border-slate-200">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">CONTACT INFO</span>
+                  <div className="sm:col-span-2 p-2.5 rounded-xl bg-white border border-slate-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">CONTACT INFO</span>
+                      <Edit3 className="w-3 h-3 text-slate-400" />
                     </div>
-                    <p className="font-bold text-slate-900 text-xs mt-0.5">
-                      {(() => {
-                        const email = result.contactInfo?.email;
-                        const phone = result.contactInfo?.phone;
-                        if (!email && !phone) return <span className="text-slate-400 font-normal italic">No Contact Info Specified in Evidence</span>;
-                        return `${email || 'Email Not Specified'}${phone ? ' | Phone: ' + phone : ''}`;
-                      })()}
-                    </p>
+                    <input
+                      type="text"
+                      value={
+                        typeof result.contactInfo === 'string'
+                          ? result.contactInfo
+                          : (`${result.contactInfo?.email || ''}${result.contactInfo?.phone ? ' | Phone: ' + result.contactInfo.phone : ''}`)
+                      }
+                      onChange={(e) => setResult(prev => ({ ...prev, contactInfo: e.target.value }))}
+                      placeholder="Enter contact email / phone..."
+                      className="w-full font-bold text-slate-900 text-xs bg-transparent border-none outline-none p-0"
+                    />
                   </div>
 
                   {/* COMPANY DESCRIPTION */}
-                  <div className="sm:col-span-2 p-2.5 rounded-xl bg-white border border-slate-200">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">COMPANY DESCRIPTION</span>
+                  <div className="sm:col-span-2 p-2.5 rounded-xl bg-white border border-slate-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">COMPANY DESCRIPTION</span>
+                      <Edit3 className="w-3 h-3 text-slate-400" />
                     </div>
-                    <p className="font-medium text-slate-700 text-xs mt-1 leading-relaxed">{result.companyDescription || result.positioningSummary || result.metaDescription || <span className="text-slate-400 font-normal italic">Not Specified in Evidence</span>}</p>
+                    <textarea
+                      rows={3}
+                      value={result.companyDescription || result.positioningSummary || result.metaDescription || ''}
+                      onChange={(e) => setResult(prev => ({ ...prev, companyDescription: e.target.value }))}
+                      placeholder="Enter company description..."
+                      className="w-full font-medium text-slate-700 text-xs bg-transparent border-none outline-none p-0 leading-relaxed resize-y"
+                    />
                   </div>
                 </div>
               </div>
@@ -341,67 +388,41 @@ export const ScraperOverlayModal = () => {
                 </div>
 
                 {/* MISSION */}
-                <div className="p-2.5 rounded-xl bg-white border border-slate-200">
-                  <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">MISSION</span>
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">MISSION</span>
+                    <Edit3 className="w-3 h-3 text-slate-400" />
                   </div>
-                  <p className="font-medium text-slate-700 text-xs mt-1 leading-relaxed">{result.missionStatement || result.mission || <span className="text-slate-400 font-normal italic">Not Specified in Evidence</span>}</p>
+                  <textarea
+                    rows={2}
+                    value={result.missionStatement || result.mission || ''}
+                    onChange={(e) => setResult(prev => ({ ...prev, missionStatement: e.target.value, mission: e.target.value }))}
+                    placeholder="Enter mission statement..."
+                    className="w-full font-medium text-slate-700 text-xs bg-transparent border-none outline-none p-0 leading-relaxed resize-y"
+                  />
                 </div>
 
                 {/* VISION */}
-                <div className="p-2.5 rounded-xl bg-white border border-slate-200">
-                  <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">VISION</span>
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">VISION</span>
+                    <Edit3 className="w-3 h-3 text-slate-400" />
                   </div>
-                  <p className="font-medium text-slate-700 text-xs mt-1 leading-relaxed">{result.vision || <span className="text-slate-400 font-normal italic">Not Specified in Evidence</span>}</p>
+                  <textarea
+                    rows={2}
+                    value={result.vision || ''}
+                    onChange={(e) => setResult(prev => ({ ...prev, vision: e.target.value }))}
+                    placeholder="Enter vision statement..."
+                    className="w-full font-medium text-slate-700 text-xs bg-transparent border-none outline-none p-0 leading-relaxed resize-y"
+                  />
                 </div>
               </div>
-
-              {/* SECTION 3: SCRAPED PAGE EVIDENCE (DOM TEXT + VISUAL SCREENSHOTS) */}
-              {Array.isArray(result.pagesEvidence) && result.pagesEvidence.length > 0 && (
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                    <span className="font-extrabold text-brand-500 uppercase text-[11px] tracking-wider flex items-center gap-1.5">
-                      📸 Scraped Page Evidence (DOM Text & Visual Screenshots)
-                    </span>
-                    <span className="text-[10px] bg-brand-500/10 text-brand-600 font-extrabold px-2 py-0.5 rounded-full border border-brand-500/20">
-                      {result.pagesEvidence.length} Crawled Sources
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    {result.pagesEvidence.map((page, idx) => (
-                      <div key={idx} className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-center justify-between">
-                        <div className="min-w-0 flex-1 pr-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[8px] font-extrabold bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded uppercase border border-slate-200">
-                              {page.pageType || 'PAGE'}
-                            </span>
-                            <p className="font-bold text-slate-900 text-xs truncate">{page.pageTitle || page.url}</p>
-                          </div>
-                          <p className="text-[10px] text-slate-400 truncate mt-0.5">{page.url}</p>
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="text-[8px] bg-emerald-50 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded border border-emerald-200/80">
-                            ✓ Text Scraped
-                          </span>
-                          {(page.hasScreenshot || page.screenshotStatus === 'SUCCESS') && (
-                            <span className="text-[8px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.5 rounded border border-indigo-200/80">
-                              📸 Screenshot Captured
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
             </div>
 
             <button
               onClick={confirmSaveWorkspace}
-              className="w-full btn-primary py-3 rounded-xl font-bold text-xs shadow-lg shadow-brand-500/30"
+              className="w-full btn-primary py-3 rounded-xl font-bold text-xs shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2"
             >
               <ArrowRight className="w-4 h-4" />
               Save & Lock Brand DNA Memory

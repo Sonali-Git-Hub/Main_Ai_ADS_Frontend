@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { strategyAPI } from '../../services/api';
 import { resolveBrandVisualAsset } from '../../services/brandVisualResolver';
@@ -384,7 +385,8 @@ export const StrategyModule = () => {
 
   const weekStats = [1,2,3,4].map(w => {
     const days = thirtyDayPlan.filter(d => getWeekLabel(d.day) === w);
-    return { week: w, count: days.length, theme: days[0]?.topic?.split(' ').slice(0,3).join(' ') || `Week ${w}` };
+    const fullTheme = days[0]?.topic || days[0]?.theme || days[0]?.title || `Week ${w} Strategy Focus`;
+    return { week: w, count: days.length, theme: fullTheme };
   });
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -436,11 +438,6 @@ export const StrategyModule = () => {
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   AI-generated 30-day growth blueprint for{' '}
                   <span className="font-bold text-slate-800 dark:text-white">{activeWorkspace.brandName}</span>
-                  {activeWorkspace.industryCategory && (
-                    <span className="ml-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-semibold">
-                      {activeWorkspace.industryCategory}
-                    </span>
-                  )}
                 </p>
               </div>
             </div>
@@ -451,7 +448,7 @@ export const StrategyModule = () => {
                 {[
                   { id: 'overview',   label: t('overviewTab', 'Overview'),   icon: BarChart2 },
                   { id: 'campaigns',  label: t('campaignsTab', 'Campaigns'),  icon: Megaphone },
-                  { id: 'plan',       label: t('masterStrategyTab', 'Master Strategy (30 Day Strategy)'), icon: Calendar  },
+                  { id: 'plan',       label: t('masterStrategyTab', '30 Day Strategy'), icon: Calendar  },
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -783,7 +780,7 @@ export const StrategyModule = () => {
                       <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Week {ws.week}</span>
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${selectedWeek === String(ws.week) ? 'bg-brand-500/15 text-brand-600 dark:text-brand-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>{ws.count} days</span>
                     </div>
-                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 leading-snug truncate">{ws.theme}...</p>
+                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 leading-snug line-clamp-2">{ws.theme}</p>
                   </div>
                 ))}
               </div>
@@ -925,18 +922,7 @@ export const StrategyModule = () => {
             </div>
           )}
 
-          {/* Generate Calendar Button at bottom of 30-Day Plan */}
-          {filteredPlan.length > 0 && (
-            <div className="flex justify-center mt-6">
-              <button 
-                onClick={handleGenerateCalendar}
-                className="btn-primary text-sm flex items-center gap-2 px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-extrabold transition-all duration-200 shadow-lg hover:shadow-brand-500/25 hover:-translate-y-0.5"
-              >
-                <Calendar className="w-5 h-5" />
-                Generate Calendar
-              </button>
-            </div>
-          )}
+
         </div>
       )}
 
@@ -1020,49 +1006,28 @@ export const StrategyModule = () => {
       )}
 
       {/* ══════════ WORKFLOW ACTION BANNER ══════════ */}
-      {!generatedDoc && (
-        <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 animate-in fade-in">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <h3 className="font-extrabold text-slate-900 dark:text-white text-sm flex items-center gap-2">
-              <Layers className="w-5 h-5 text-brand-500" />
-              Overview Ready — {activeWorkspace.brandName}
-            </h3>
-            <button 
-              onClick={handleGenerate}
-              disabled={isGenerating}
-              className="btn-primary text-xs flex items-center gap-1.5 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold transition-colors"
-            >
-              {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-amber-300 text-amber-300" />}
-              {isGenerating ? 'Generating...' : 'Generate 30 Days Plan'}
-            </button>
-          </div>
-          <p className="text-xs text-slate-500">
-            Review your brand's AI-mapped objectives and channel mix above, then click generate to build a day-by-day actionable marketing strategy.
-          </p>
-        </div>
-      )}
-      {/* ─── Schedule Days Pop Up Modal ─── */}
-      {showScheduleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-md p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+        {/* ══════════ SCHEDULE CONTENT CALENDAR MODAL ══════════ */}
+      {showScheduleModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200 p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-md p-4 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto my-auto text-slate-900 dark:text-white">
             
             {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-sm font-extrabold text-white uppercase tracking-widest flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-brand-400" />
-                Schedule Content Calendar
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-brand-500 dark:text-brand-400 shrink-0" />
+                <span>Schedule Content Calendar</span>
               </h3>
               <button 
                 onClick={() => setShowScheduleModal(false)}
-                className="text-slate-400 hover:text-white transition-colors"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Content */}
-            <div className="space-y-4 py-2">
-              <p className="text-xs text-slate-300 leading-relaxed">
+            <div className="space-y-4 py-1">
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 Enter the number of days you would like to generate and populate in your Content Calendar from your Strategy Hub.
               </p>
               
@@ -1079,36 +1044,38 @@ export const StrategyModule = () => {
                     max={thirtyDayPlan.length || 30}
                     value={scheduleDays}
                     onChange={(e) => setScheduleDays(e.target.value)}
-                    className="flex-1 px-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-extrabold text-base focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all"
+                    className="flex-1 min-w-0 px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-extrabold text-sm sm:text-base focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 shadow-sm transition-all"
                     placeholder="Enter days (e.g. 30)"
                   />
-                  <span className="px-4 py-3 rounded-2xl bg-brand-500/10 border border-brand-500/30 text-brand-600 dark:text-brand-400 font-black text-xs uppercase tracking-wider shrink-0">
+                  <span className="px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-brand-500/10 border border-brand-500/30 text-brand-600 dark:text-brand-400 font-black text-xs uppercase tracking-wider shrink-0">
                     Days
                   </span>
                 </div>
 
                 {/* Preset Quick Select Pills */}
-                <div className="flex items-center gap-1.5 pt-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase mr-1">Quick Select:</span>
-                  {[7, 14, 21, 30].map(d => {
-                    const maxPlan = thirtyDayPlan.length || 30;
-                    if (d > maxPlan) return null;
-                    const isSelected = String(scheduleDays) === String(d);
-                    return (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => setScheduleDays(String(d))}
-                        className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all border ${
-                          isSelected
-                            ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
-                        }`}
-                      >
-                        {d} Days
-                      </button>
-                    );
-                  })}
+                <div className="space-y-1.5 pt-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Quick Select:</span>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[7, 14, 21, 30].map(d => {
+                      const maxPlan = thirtyDayPlan.length || 30;
+                      if (d > maxPlan) return null;
+                      const isSelected = String(scheduleDays) === String(d);
+                      return (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => setScheduleDays(String(d))}
+                          className={`py-2 rounded-xl text-xs font-bold transition-all border text-center ${
+                            isSelected
+                              ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+                          }`}
+                        >
+                          {d} Days
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-1">
@@ -1118,40 +1085,41 @@ export const StrategyModule = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
               <button
                 onClick={() => setShowScheduleModal(false)}
-                className="px-4 py-2 text-xs font-bold rounded-xl text-slate-400 hover:text-white transition-colors"
+                className="w-full sm:w-auto px-4 py-2.5 text-xs font-bold rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => confirmGenerateCalendar(scheduleDays)}
                 disabled={!scheduleDays || Number(scheduleDays) < 1 || Number(scheduleDays) > thirtyDayPlan.length}
-                className="btn-primary text-xs flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed bg-brand-600 hover:bg-brand-500 text-white"
+                className="w-full sm:w-auto btn-primary text-xs flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed bg-brand-600 hover:bg-brand-500 text-white"
               >
-                Confirm & Generate
+                Generate
               </button>
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ══════════ BUILD CAMPAIGN MODAL ══════════ */}
-      {buildCampaignModal && selectedCampaignIdea && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-md animate-in fade-in duration-200 p-4">
-          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+      {buildCampaignModal && selectedCampaignIdea && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200 p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto my-auto">
 
             {/* Modal Header */}
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3">
+            <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-md shrink-0">
                   <Megaphone className="w-4.5 h-4.5 text-white" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h2 className="text-base font-extrabold text-slate-900 dark:text-white leading-tight">Build Campaign</h2>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug max-w-xs truncate">{selectedCampaignIdea.title}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug break-words">{selectedCampaignIdea.title}</p>
                 </div>
               </div>
               <button
@@ -1163,7 +1131,7 @@ export const StrategyModule = () => {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-5">
+            <div className="p-4 sm:p-6 space-y-5">
 
               {/* Campaign Goal Preview */}
               <div className="p-3.5 rounded-2xl bg-brand-500/5 dark:bg-brand-500/10 border border-brand-500/20 flex items-start gap-3">
@@ -1189,7 +1157,7 @@ export const StrategyModule = () => {
                     max="365"
                     value={campaignDuration}
                     onChange={(e) => setCampaignDuration(e.target.value)}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-extrabold text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all"
+                    className="flex-1 min-w-0 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-extrabold text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all"
                     placeholder="e.g. 30"
                   />
                   <span className="px-3.5 py-2.5 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 font-black text-xs uppercase tracking-wider shrink-0">Days</span>
@@ -1214,7 +1182,7 @@ export const StrategyModule = () => {
                 </div>
               </div>
 
-      {/* Divider with Optional label */}
+              {/* Divider with Optional label */}
               <div className="relative">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100 dark:border-slate-800" /></div>
                 <div className="relative flex justify-center">
@@ -1271,10 +1239,10 @@ export const StrategyModule = () => {
             </div>
 
             {/* Modal Footer — Primary CTA */}
-            <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-3">
+            <div className="px-4 sm:px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3">
               <button
                 onClick={() => setBuildCampaignModal(false)}
-                className="px-4 py-2.5 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+                className="w-full sm:w-auto px-4 py-2.5 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
               >
                 Cancel
               </button>
@@ -1295,6 +1263,21 @@ export const StrategyModule = () => {
             </div>
 
           </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ══════════ STICKY FLOATING GENERATE CALENDAR BUTTON ══════════ */}
+      {generatedDoc && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-in fade-in slide-in-from-bottom-4 duration-300 shrink-0">
+          <button 
+            onClick={handleGenerateCalendar}
+            className="flex items-center gap-2.5 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full font-extrabold text-xs sm:text-sm transition-all duration-200 shadow-2xl shadow-emerald-600/40 border border-emerald-400/30 hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md whitespace-nowrap"
+            title="Generate content calendar events from strategy"
+          >
+            <Calendar className="w-5 h-5 text-white shrink-0" />
+            <span className="tracking-wide">Generate Calendar</span>
+          </button>
         </div>
       )}
 
