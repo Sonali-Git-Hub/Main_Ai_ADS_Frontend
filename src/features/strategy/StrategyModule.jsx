@@ -331,31 +331,87 @@ export const StrategyModule = () => {
     setShowScheduleModal(true);
   };
 
-  const confirmGenerateCalendar = (numDays) => {
-    const daysToGen = Math.min(Number(numDays) || 30, thirtyDayPlan.length);
+  const [isCreatingCalendarCampaign, setIsCreatingCalendarCampaign] = useState(false);
+
+  const confirmGenerateCalendar = async (numDays) => {
+    const daysToGen = Math.min(Number(numDays) || 30, Math.max(30, thirtyDayPlan.length || 30));
     localStorage.setItem('aisa_selected_schedule_days', String(daysToGen));
-    const today = new Date();
-    
-    // Filter plan to only generate up to daysToGen
-    const planToUse = thirtyDayPlan.filter(item => item.day <= daysToGen);
+    setIsCreatingCalendarCampaign(true);
 
-    const eventsToCreate = planToUse.map(item => {
-      const eventDate = new Date(today);
-      eventDate.setDate(today.getDate() + item.day);
-      
-      return {
-        title: item.topic || `Day ${item.day} Content`,
-        date: eventDate.toISOString().split('T')[0],
-        platform: item.platform || 'Blog',
-        pillar: activeWorkspace.brandName || 'Brand Strategy',
-        status: 'SCHEDULED',
-        owner: 'Content Strategist'
+    try {
+      const today = new Date();
+      const end = new Date(today);
+      end.setDate(today.getDate() + (daysToGen - 1));
+
+      // Filter plan to only generate up to daysToGen
+      const planToUse = (thirtyDayPlan.length >= daysToGen)
+        ? thirtyDayPlan.filter(item => item.day <= daysToGen)
+        : Array.from({ length: daysToGen }, (_, i) => {
+            const day = i + 1;
+            const existing = thirtyDayPlan.find(d => d.day === day);
+            if (existing) return existing;
+            const pillar = contentPillars[i % (contentPillars.length || 1)] || 'Product Value';
+            return {
+              day,
+              platform: bestPlatforms[i % (bestPlatforms.length || 1)] || 'Instagram',
+              topic: `Day ${day}: Strategic ${pillar} for ${activeWorkspace?.brandName || 'Brand'}`,
+              pillar,
+              actionItem: `Publish content showcasing ${pillar} benefits and drive engagement.`
+            };
+          });
+
+      const brandName = activeWorkspace?.brandName || 'Brand';
+      const wsId = activeWorkspace?.id || activeWorkspace?._id || 'ws_001';
+
+      // Extract unique platforms
+      const platformsToUse = [...new Set(planToUse.map(d => {
+        const raw = (d.platform || '').toLowerCase();
+        if (raw.includes('linkedin')) return 'LinkedIn';
+        if (raw.includes('instagram') || raw.includes('reels')) return 'Instagram';
+        if (raw.includes('email') || raw.includes('newsletter')) return 'Email';
+        if (raw.includes('youtube') || raw.includes('video')) return 'YouTube';
+        if (raw.includes('blog') || raw.includes('seo')) return 'Blog';
+        return 'Instagram';
+      }))];
+
+      const payload = {
+        workspaceId: wsId,
+        campaignName: `${brandName} ${daysToGen}-Day Strategy Campaign`,
+        campaignGoal: businessGoal || activeWorkspace?.currentStrategy?.businessGoal || 'Comprehensive Growth Roadmap',
+        startDate: today.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0],
+        postingFrequency: postingFrequency || 'Daily',
+        platforms: platformsToUse.length > 0 ? platformsToUse : ['Instagram', 'LinkedIn', 'YouTube'],
       };
-    });
 
-    bulkAddCalendarEvents(eventsToCreate);
-    setShowScheduleModal(false);
-    setActiveModule('calendar'); // Transition to calendar view
+      const res = await campaignAPI.create(payload);
+      if (res.success && res.campaign) {
+        await campaignAPI.generatePlan(res.campaign._id, { strategyPlan: planToUse });
+        localStorage.setItem('aisa_selected_campaign_id', res.campaign._id);
+      }
+
+      const eventsToCreate = planToUse.map(item => {
+        const eventDate = new Date(today);
+        eventDate.setDate(today.getDate() + (item.day - 1));
+        
+        return {
+          title: item.topic || `Day ${item.day} Content`,
+          date: eventDate.toISOString().split('T')[0],
+          platform: item.platform || 'Blog',
+          pillar: activeWorkspace?.brandName || 'Brand Strategy',
+          status: 'SCHEDULED',
+          owner: 'Content Strategist'
+        };
+      });
+
+      bulkAddCalendarEvents(eventsToCreate);
+    } catch (e) {
+      console.warn('Calendar campaign generation notice:', e.message);
+    } finally {
+      setIsCreatingCalendarCampaign(false);
+      setShowScheduleModal(false);
+      setActiveModule('calendar'); // Transition to calendar view
+    }
   };
 
   // ─── Derived data ─────────────────────────────────────────────────────────
@@ -500,9 +556,6 @@ export const StrategyModule = () => {
                   </div>
                   {t('objectivesPathTitle', 'Objectives & Conversion Path')}
                 </h2>
-                <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" /> Click to edit
-                </span>
               </div>
 
               <div className="space-y-3">
@@ -820,9 +873,8 @@ export const StrategyModule = () => {
                       const platformRaw = (item.platform || 'instagram').toLowerCase();
                       const isEmail = platformRaw.includes('email') || platformRaw.includes('newsletter');
                       const isBlog = platformRaw.includes('blog') || platformRaw.includes('seo') || platformRaw.includes('article');
-                      const isNewspaper = platformRaw.includes('press') || platformRaw.includes('newspaper');
-                      const type = isEmail ? 'EMAIL' : isBlog ? 'BLOG' : isNewspaper ? 'NEWSPAPER' : 'SOCIAL';
-                      const platform = isEmail ? 'email' : isBlog ? 'blog' : isNewspaper ? 'newspaper' : platformRaw.includes('linkedin') ? 'linkedin' : platformRaw.includes('twitter') ? 'twitter' : 'instagram';
+                      const type = isEmail ? 'EMAIL' : isBlog ? 'BLOG' : 'SOCIAL';
+                      const platform = isEmail ? 'email' : isBlog ? 'blog' : platformRaw.includes('linkedin') ? 'linkedin' : platformRaw.includes('twitter') ? 'twitter' : 'instagram';
 
                       const brandName = activeWorkspace?.brandName || 'Redbus';
                       const isReelsOrStory = platformRaw.includes('reel') || platformRaw.includes('tiktok') || platformRaw.includes('story');
@@ -1088,10 +1140,17 @@ export const StrategyModule = () => {
               </button>
               <button
                 onClick={() => confirmGenerateCalendar(scheduleDays)}
-                disabled={!scheduleDays || Number(scheduleDays) < 1 || Number(scheduleDays) > thirtyDayPlan.length}
+                disabled={isCreatingCalendarCampaign || !scheduleDays || Number(scheduleDays) < 1 || Number(scheduleDays) > (thirtyDayPlan.length || 30)}
                 className="w-full sm:w-auto btn-primary text-xs flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed bg-brand-600 hover:bg-brand-500 text-white"
               >
-                Generate
+                {isCreatingCalendarCampaign ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  'Generate'
+                )}
               </button>
             </div>
 

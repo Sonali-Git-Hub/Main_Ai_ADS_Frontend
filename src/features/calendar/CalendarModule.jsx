@@ -98,9 +98,20 @@ export const CalendarModule = () => {
       const res = await campaignAPI.list({ workspaceId });
       if (res.success && res.campaigns) {
         setCampaigns(res.campaigns);
-        // Automatically select the first campaign if available
-        if (res.campaigns.length > 0 && !currentCampaign) {
-          handleSelectCampaign(res.campaigns[0]);
+        
+        const savedCampaignId = localStorage.getItem('aisa_selected_campaign_id');
+        let target = null;
+        if (savedCampaignId) {
+          target = res.campaigns.find(c => c._id === savedCampaignId);
+          localStorage.removeItem('aisa_selected_campaign_id');
+        }
+        
+        if (!target && res.campaigns.length > 0) {
+          target = res.campaigns[0];
+        }
+
+        if (target) {
+          handleSelectCampaign(target);
         }
       }
     } catch (err) {
@@ -402,6 +413,38 @@ export const CalendarModule = () => {
               <span>New</span>
             </button>
           </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 mb-3 bg-slate-100 dark:bg-slate-900/80 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+          <span className="text-[9px] font-black uppercase text-slate-400 px-2 tracking-wider">Duration:</span>
+          {[7, 14, 30].map(days => {
+            const isSelected = activeDaysCount === days;
+            return (
+              <button
+                key={days}
+                type="button"
+                onClick={() => {
+                  const today = new Date();
+                  const end = new Date(today);
+                  end.setDate(today.getDate() + (days - 1));
+                  const brandName = activeWorkspace?.brandName || 'Brand';
+                  setCampaignConfig(prev => ({
+                    ...prev,
+                    campaignName: `${brandName} ${days}-Day Campaign`,
+                    startDate: today.toISOString().split('T')[0],
+                    endDate: end.toISOString().split('T')[0],
+                  }));
+                }}
+                className={`flex-1 py-1 text-[10px] font-black rounded-lg transition-all ${
+                  isSelected
+                    ? 'bg-brand-600 text-white shadow-sm shadow-brand-500/30'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                }`}
+              >
+                {days} Days
+              </button>
+            );
+          })}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

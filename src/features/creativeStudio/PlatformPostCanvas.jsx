@@ -33,49 +33,27 @@ const ContentPill = ({ label, value, color = "slate" }) => {
   );
 };
 
-const HeaderRow = ({ platform, topic, formatLabel, isSocial, onPlatformChange, onSaveAsset, isSaving }) => (
+const HeaderRow = ({ platform, topic, onSaveAsset, isSaving }) => (
   <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[10px] font-black uppercase tracking-widest">{platform.toUpperCase()}</span>
-      <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-[9px] font-bold uppercase">{formatLabel}</span>
+    <div className="flex items-center gap-3 min-w-0">
+      <span className="px-3.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-black uppercase tracking-wider shrink-0">
+        {platform ? platform.toUpperCase() : 'POST'}
+      </span>
+      <span className="text-xs text-slate-500 font-medium truncate">
+        Topic: <strong className="text-slate-800 dark:text-slate-200 font-bold">"{topic}"</strong>
+      </span>
     </div>
 
-    {isSocial && (
-      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200 dark:border-slate-700">
-        {[
-          { id: 'instagram', label: 'Instagram' },
-          { id: 'linkedin',  label: 'LinkedIn' },
-          { id: 'twitter',   label: 'Twitter / X' },
-          { id: 'facebook',  label: 'Facebook' },
-        ].map(p => (
-          <button
-            key={p.id}
-            onClick={() => onPlatformChange && onPlatformChange(p.id)}
-            className={`px-3 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all ${
-              platform === p.id
-                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
+    {onSaveAsset && (
+      <button
+        onClick={onSaveAsset}
+        disabled={isSaving}
+        className="py-2 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60 shrink-0"
+      >
+        {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FolderPlus className="w-3.5 h-3.5" />}
+        {isSaving ? "Saving..." : "Save to Asset Library"}
+      </button>
     )}
-
-    <div className="flex items-center gap-3 ml-auto">
-      <span className="text-[10px] text-slate-500 font-medium hidden md:block">Topic: <strong className="text-slate-800 dark:text-slate-200">"{topic}"</strong></span>
-      {onSaveAsset && (
-        <button
-          onClick={onSaveAsset}
-          disabled={isSaving}
-          className="py-2 px-4 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-lg shadow-brand-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60"
-        >
-          {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FolderPlus className="w-3.5 h-3.5" />}
-          {isSaving ? "Saving..." : "Save to Asset Library"}
-        </button>
-      )}
-    </div>
   </div>
 );
 
@@ -528,9 +506,8 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
 
   const isCarousel  = rawPostType.includes("carousel");
   const isEmail     = rawType==="EMAIL"     || platform==="email";
-  const isNewspaper = rawType==="NEWSPAPER" || platform==="newspaper" || platform==="press_release";
   const isBlog      = rawType==="BLOG"      || platform==="blog"      || platform==="seo";
-  const formatLabel = isCarousel?"Carousel":isEmail?"Email Template":isNewspaper?"Newspaper / Press":isBlog?"SEO Blog Article":"Single Image Post";
+  const formatLabel = isCarousel?"Carousel":isEmail?"Email Template":isBlog?"SEO Blog Article":"Single Image Post";
 
   // ─── Save Asset to Library & Redirect ─────────────────────────────────────
   const [isSavingAsset, setIsSavingAsset] = useState(false);
@@ -552,11 +529,6 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
       assetType = 'EMAIL';
       assetName = `Email: ${generatedContent?.subject || hook || topic}`;
       assetContent = `Subject: ${generatedContent?.subject || hook}\nPreheader: ${generatedContent?.preheader || shortCap}\n\n${generatedContent?.body || longCap || caption}`;
-      assetUrl = visualUrl;
-    } else if (isNewspaper) {
-      assetType = 'NEWSPAPER';
-      assetName = `Press Release: ${generatedContent?.headline || hook || topic}`;
-      assetContent = `${generatedContent?.leadParagraph || ''}\n\n${generatedContent?.bodyContent || longCap || caption}`;
       assetUrl = visualUrl;
     } else if (isCarousel) {
       assetType = 'CAROUSEL';
@@ -662,7 +634,12 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
         <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="space-y-4">
-            <CopySidebar hook={hook} story={story} shortCap={shortCap} longCap={longCap} cta={cta} extras={[{label:"Email Subject",value:emailSubject,color:"amber"},{label:"Preheader",value:emailPre,color:"slate"}]} />
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">Email Campaign Specs</span>
+              <ContentPill label="Subject Line" value={emailSubject} color="brand" />
+              {emailPre && <ContentPill label="Preheader Text" value={emailPre} color="indigo" />}
+              <ContentPill label="Sender Brand" value={brand} color="slate" />
+            </div>
           </div>
           <div className="lg:col-span-2">
             <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-2xl font-sans">
@@ -670,17 +647,23 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
                 <div className="flex items-center gap-1.5 mb-2"><div className="w-3 h-3 rounded-full bg-red-400"/><div className="w-3 h-3 rounded-full bg-amber-400"/><div className="w-3 h-3 rounded-full bg-emerald-400"/></div>
                 <div className="grid grid-cols-[45px_1fr] gap-1 text-[11px] text-slate-600 dark:text-slate-300">
                   <span className="font-black uppercase text-slate-400">From:</span><span className="font-semibold">{brand} &lt;noreply@{domain}&gt;</span>
-                  <span className="font-black uppercase text-slate-400">To:</span><span className="font-semibold">Subscribers & Audience List</span>
+                  <span className="font-black uppercase text-slate-400">To:</span><span className="font-semibold">Subscribers &amp; Audience List</span>
                   <span className="font-black uppercase text-slate-400">Sub:</span><span className="font-extrabold text-slate-900 dark:text-white">{emailSubject}</span>
                   {emailPre && <><span className="font-black uppercase text-slate-400">Pre:</span><span className="italic text-slate-500">{emailPre}</span></>}
                 </div>
               </div>
               <div className="bg-white dark:bg-slate-900 p-6 space-y-5">
                 <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-sans">{emailBody||caption}</div>
-                {story && (<div className="p-4 rounded-xl bg-brand-500/5 border border-brand-500/20"><span className="text-[8px] font-black uppercase tracking-widest text-brand-500 block mb-1">Storytelling Angle</span><p className="text-xs text-slate-700 dark:text-slate-300 italic leading-relaxed">{story}</p></div>)}
-                {shortCap && (<div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"><span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">P.S.</span><p className="text-xs text-slate-600 dark:text-slate-400 italic">{shortCap}</p></div>)}
-                {cta && <div className="text-center py-3"><button className="py-3 px-8 rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 text-white font-bold text-xs shadow-lg hover:shadow-xl transition-all">{cta}</button></div>}
-                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 whitespace-pre-wrap"><p className="font-medium">{"Warm regards,\n"+brand+" Team"}</p></div>
+                {contentData?.cta && (
+                  <div className="text-center py-3">
+                    <button className="py-3 px-8 rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 text-white font-bold text-xs shadow-lg hover:shadow-xl transition-all">
+                      {contentData.cta}
+                    </button>
+                  </div>
+                )}
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 whitespace-pre-wrap">
+                  <p className="font-medium">{"Warm regards,\n"+brand+" Team"}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -688,95 +671,82 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
       </div>
     );
   }
-  // ── C. NEWSPAPER ──
-  if (isNewspaper) {
-    const headline    = generatedContent?.headline    || hook;
-    const subheadline = generatedContent?.subheadline || ("Exclusive Report by "+brand);
-    const dateline    = generatedContent?.dateline    || ("MUMBAI, INDIA - "+new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"}));
-    const leadPara    = generatedContent?.leadParagraph || caption;
-    const bodyContent = generatedContent?.bodyContent   || longCap || caption;
-    return (
-      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
-        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="space-y-4">
-            <CopySidebar hook={hook} story={story} shortCap={shortCap} longCap={longCap} cta={cta} hashtags={hashtags}
-              extras={[{label:"Headline",value:headline,color:"amber"},{label:"Sub-Headline",value:subheadline,color:"slate"},{label:"Dateline",value:dateline,color:"slate"},{label:"Lead Para",value:leadPara,color:"brand"}]} />
-          </div>
-          <div className="lg:col-span-2">
-            <div className="rounded-3xl overflow-hidden border border-slate-300 dark:border-slate-700 shadow-2xl font-serif">
-              <div className="bg-slate-900 text-white px-6 py-4 text-center space-y-1">
-                <p className="text-[8px] font-sans font-black uppercase tracking-[0.3em] text-slate-400">National Press Bureau - Sponsored</p>
-                <h1 className="text-xl font-black uppercase tracking-tight">{brand.toUpperCase()} GAZETTE</h1>
-                <p className="text-[10px] font-sans text-slate-400">{dateline}</p>
-              </div>
-              <div className="bg-amber-50/30 dark:bg-slate-950 p-6 space-y-4">
-                <div className="border-b-2 border-slate-900 dark:border-slate-100 pb-3 space-y-1">
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight uppercase">{headline}</h2>
-                  <p className="text-sm font-bold font-sans text-amber-700 dark:text-amber-400">{subheadline}</p>
-                </div>
-                <div className="aspect-video rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 float-right ml-5 mb-4 w-[45%]">
-                  <img src={visualUrl} alt={topic} className="w-full h-full object-cover" />
-                </div>
-                <p className="text-sm font-bold text-slate-900 dark:text-white leading-relaxed font-sans">{leadPara}</p>
-                {story && (<div className="border-l-4 border-amber-500 pl-4 my-2 clear-both"><p className="text-xs font-sans text-slate-700 dark:text-slate-300 italic leading-relaxed">{story}</p></div>)}
-                <div className="text-xs text-slate-700 dark:text-slate-300 font-sans leading-relaxed whitespace-pre-wrap clear-both">{bodyContent}</div>
-                {shortCap && (<div className="my-4 p-4 border-y-2 border-slate-900 dark:border-slate-100 text-center"><p className="text-base font-black italic text-slate-900 dark:text-white">"{shortCap}"</p></div>)}
-                <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-200 dark:border-slate-700">
-                  <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider mr-1">Keywords:</span>
-                  {hashArr.map((h,i)=><span key={i} className="text-[9px] font-bold text-amber-700 dark:text-amber-400">{h}</span>)}
-                </div>
-                <div className="mt-2 p-3 rounded-xl bg-slate-900 text-white text-center font-sans"><p className="text-xs font-bold">{cta}</p></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  // ── D. BLOG ──
+  // ── C. BLOG ──
   if (isBlog) {
     const blogTitle   = contentData?.title || hook || topic;
     const blogContent = contentData?.content || contentData?.body || longCap || caption;
-    const metaDesc    = contentData?.metaDescription || shortCap || "";
+    const metaDesc    = contentData?.metaDescription || "";
+    const wordCount   = contentData?.wordCount || (blogContent ? blogContent.split(/\s+/).length : 0);
+    const kwList      = Array.isArray(contentData?.keywords) ? contentData.keywords : [];
+
     return (
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
         <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="space-y-4">
             <VisualControls visualStyle={visualStyle} setVisualStyle={setVisualStyle} generating={generating} onGenerate={handleGenerateVisual} />
-            <CopySidebar hook={blogTitle} story={story} shortCap={shortCap} longCap={blogContent} cta={cta} hashtags={hashtags} extras={[{label:"Meta Description",value:metaDesc,color:"purple"}]} />
+            
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">Article Specifications</span>
+              <ContentPill label="Article Title" value={blogTitle} color="brand" />
+              {metaDesc && <ContentPill label="Meta Description" value={metaDesc} color="purple" />}
+              {kwList.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-[8px] font-black uppercase tracking-widest text-indigo-500">Target Keywords</span>
+                  <div className="flex flex-wrap gap-1">
+                    {kwList.map((kw, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold">
+                        {kw}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-bold">
+                <div>Word Count: <span className="text-slate-900 dark:text-white font-extrabold">{wordCount || 1800}</span></div>
+                <div>Read Time: <span className="text-slate-900 dark:text-white font-extrabold">{contentData?.readingTime || '5 min'}</span></div>
+              </div>
+            </div>
           </div>
+
           <div className="lg:col-span-2">
             <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-2xl bg-white dark:bg-slate-900 font-sans">
               <div className="aspect-video relative overflow-hidden">
                 <img src={visualUrl} alt={topic} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 to-transparent flex items-end p-6">
-                  <div className="space-y-1"><span className="text-[9px] font-black uppercase tracking-widest text-brand-400">SEO Blog Article</span><h2 className="text-white font-extrabold text-xl leading-tight">{blogTitle}</h2></div>
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-brand-400">SEO Blog Article</span>
+                    <h2 className="text-white font-extrabold text-xl leading-tight">{blogTitle}</h2>
+                  </div>
                 </div>
               </div>
               <div className="p-6 space-y-4">
                 <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-400 font-bold">
                   <span className="font-black text-slate-700 dark:text-slate-300">{brand}</span><span>·</span>
                   <span>{new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}</span><span>·</span>
-                  <span className="text-purple-500">5 min read</span><span>·</span><span className="text-emerald-500">SEO Optimised</span>
+                  <span className="text-purple-500">{contentData?.readingTime || '5 min read'}</span><span>·</span>
+                  <span className="text-emerald-500">SEO Optimised</span>
                 </div>
                 {metaDesc && <p className="text-xs text-slate-500 italic border-l-4 border-purple-500 pl-3 leading-relaxed">{metaDesc}</p>}
-                {story && (<div className="p-3 rounded-xl bg-brand-500/5 border border-brand-500/20"><span className="text-[8px] font-black uppercase text-brand-500 tracking-widest block mb-1">Storytelling Angle</span><p className="text-xs text-slate-700 dark:text-slate-300 italic leading-relaxed">{story}</p></div>)}
                 <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-sans space-y-2">
                   {renderFormattedArticle(blogContent)}
                 </div>
-                {shortCap && shortCap!==blogContent && <p className="text-xs text-slate-500 dark:text-slate-400 italic">{shortCap}</p>}
-                <div className="flex flex-wrap gap-1.5 pt-2">{hashArr.map((h,i)=><span key={i} className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-[9px] font-bold">{h}</span>)}</div>
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <button className="py-2.5 px-6 rounded-xl bg-brand-600 text-white font-bold text-xs shadow-md">{cta}</button>
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`# ${blogTitle}\n\n${blogContent}`);
+                      alert('Blog article copied to clipboard!');
+                    }}
+                    className="py-2 px-4 rounded-xl btn-secondary text-xs font-bold flex items-center gap-1.5"
+                  >
+                    <Copy className="w-3.5 h-3.5" /> Copy Full Article
+                  </button>
                   <button
                     onClick={handleSaveToAssetLibrary}
                     disabled={isSavingAsset}
-                    className="py-2 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-colors"
+                    className="py-2.5 px-5 rounded-xl btn-primary font-bold text-xs flex items-center gap-1.5 shadow-md"
                   >
-                    <FolderPlus className="w-3.5 h-3.5 text-brand-500" />
-                    Save Blog to Assets
+                    <FolderPlus className="w-3.5 h-3.5" /> Save Blog to Assets
                   </button>
                 </div>
               </div>
@@ -833,78 +803,221 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
 
   return (
     <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
-      <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} isSocial={true} onPlatformChange={setPlatform} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-4 space-y-4">
-          <VisualControls visualStyle={visualStyle} setVisualStyle={setVisualStyle} generating={generating} onGenerate={handleGenerateVisual} />
-          <CopySidebar hook={hook} story={story} shortCap={shortCap} longCap={longCap} cta={cta} hashtags={hashtags} />
-        </div>
-        <div className="lg:col-span-8 flex flex-col space-y-4">
+      <HeaderRow 
+        platform={platform} 
+        topic={topic} 
+        onSaveAsset={handleSaveToAssetLibrary} 
+        isSaving={isSavingAsset} 
+      />
 
-          {/* Dedicated Image Showcase Card */}
-          <div className="w-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden p-6 space-y-5">
-            {/* Header info */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <h3 className="text-xs font-black uppercase text-slate-800 dark:text-white tracking-wider">AI Visual Asset Showcase</h3>
-              </div>
-              <span className="text-[10px] font-extrabold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-3 py-1 rounded-full border border-brand-500/20">
-                {visualStyle}
-              </span>
-            </div>
-
-            {/* High-Res Image Display */}
-            <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-video bg-slate-950 shadow-inner group">
-              <img src={visualUrl} alt={topic} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/50 to-transparent flex flex-col sm:flex-row justify-between sm:items-end gap-2">
-                <div className="space-y-0.5">
-                  <p className="text-white font-extrabold text-xs sm:text-sm line-clamp-1">"{hook}"</p>
-                  <p className="text-slate-300 text-[10px] font-medium">{brand} · High-Res Render</p>
-                </div>
-                <span className="text-[9px] font-mono text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded border border-slate-700 self-start sm:self-auto">1080 × 1080</span>
-              </div>
-            </div>
-
-            {/* Direct Action Bar: Download, Share, Save */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <button
-                onClick={handleDownloadImage}
-                disabled={downloading}
-                className="py-3 px-4 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-brand-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                {downloading ? "Preparing..." : "Download Image"}
-              </button>
-
-              <button
-                onClick={handleShareImage}
-                className="py-3 px-4 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Share2 className="w-4 h-4" />
-                {copiedShare ? "Link & Copy Shared!" : "Share Image & Copy"}
-              </button>
-
-              <button
-                onClick={handleSaveToAssetLibrary}
-                disabled={isSavingAsset}
-                className="py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-              >
-                {isSavingAsset ? <Loader2 className="w-4 h-4 animate-spin" /> : <FolderPlus className="w-4 h-4" />}
-                {isSavingAsset ? "Saving..." : "Save to Library"}
-              </button>
-            </div>
-
-            {/* Success Status Note */}
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs flex items-center justify-between font-medium">
-              <span className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                AI Visual synthesized and ready for high-resolution download & sharing.
-              </span>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Ready</span>
-            </div>
+      {/* ── 1. PROMINENT HERO IMAGE SHOWCASE (TOP) ── */}
+      <div className="w-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden p-6 space-y-5">
+        {/* Header & Visual Style Controls */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <h3 className="text-xs font-black uppercase text-slate-800 dark:text-white tracking-wider">AI Visual Asset Showcase</h3>
+            <span className="text-[10px] font-extrabold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-3 py-0.5 rounded-full border border-brand-500/20">
+              {visualStyle}
+            </span>
           </div>
 
+          <div className="flex items-center gap-2 flex-wrap">
+            <select 
+              value={visualStyle} 
+              onChange={(e) => setVisualStyle(e.target.value)} 
+              className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none"
+            >
+              <option>Glassmorphic Modern 3D</option>
+              <option>Minimalist Corporate Tech</option>
+              <option>Cyberpunk Neon Gradients</option>
+              <option>Photorealistic B2B Studio</option>
+              <option>Bold Editorial Fashion</option>
+            </select>
+
+            <button 
+              onClick={handleGenerateVisual} 
+              disabled={generating} 
+              className="btn-primary py-2 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60 shadow-md hover:scale-105 transition-all"
+            >
+              {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              {generating ? "Generating Visual..." : "Regenerate Image"}
+            </button>
+          </div>
+        </div>
+
+        {/* High-Res Image Display */}
+        <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-video max-h-[520px] bg-slate-950 shadow-inner group flex items-center justify-center">
+          <img src={visualUrl} alt={topic} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/50 to-transparent flex flex-col sm:flex-row justify-between sm:items-end gap-2">
+            <div className="space-y-0.5">
+              <p className="text-white font-extrabold text-xs sm:text-sm line-clamp-1">"{hook}"</p>
+              <p className="text-slate-300 text-[10px] font-medium">{brand} · High-Res 8K Studio Render</p>
+            </div>
+            <span className="text-[9px] font-mono text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded border border-slate-700 self-start sm:self-auto">1080 × 1080 · HQ</span>
+          </div>
+        </div>
+
+        {/* Direct Action Bar: Download, Share, Save */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <button
+            onClick={handleDownloadImage}
+            disabled={downloading}
+            className="py-3 px-4 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-brand-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {downloading ? "Preparing..." : "Download Image"}
+          </button>
+
+          <button
+            onClick={handleShareImage}
+            className="py-3 px-4 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Share2 className="w-4 h-4" />
+            {copiedShare ? "Link & Copy Shared!" : "Share Image & Copy"}
+          </button>
+
+          <button
+            onClick={handleSaveToAssetLibrary}
+            disabled={isSavingAsset}
+            className="py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+          >
+            {isSavingAsset ? <Loader2 className="w-4 h-4 animate-spin" /> : <FolderPlus className="w-4 h-4" />}
+            {isSavingAsset ? "Saving..." : "Save to Library"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── 2. STRUCTURED CONTENT & COPY SUITE (BELOW THE IMAGE) ── */}
+      <div className="w-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-6 space-y-5">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">
+              ✍️
+            </div>
+            <div>
+              <h3 className="text-xs font-black uppercase text-slate-800 dark:text-white tracking-wider">
+                Post Content & Copy Breakdown
+              </h3>
+              <p className="text-[10px] text-slate-500">
+                Generated high-converting copy, hashtags, and CTA synchronized with this visual.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              const fullText = `HOOK:\n${hook}\n\nSTORYTELLING:\n${story}\n\nSHORT CAPTION:\n${shortCap}\n\nLONG CAPTION:\n${longCap}\n\nCTA:\n${cta}\n\nHASHTAGS:\n${hashtags}`;
+              navigator.clipboard.writeText(fullText);
+              alert("All post content copied to clipboard!");
+            }}
+            className="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all"
+          >
+            <Copy className="w-3.5 h-3.5" /> Copy All Content
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Card 1: Hook */}
+          {hook && (
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2 hover:border-brand-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-widest text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-md">
+                  🚀 Hook / Headline
+                </span>
+                <button onClick={() => navigator.clipboard.writeText(hook)} className="p-1 text-slate-400 hover:text-brand-500 transition-colors" title="Copy Hook">
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs font-extrabold text-slate-900 dark:text-white leading-relaxed">
+                {hook}
+              </p>
+            </div>
+          )}
+
+          {/* Card 2: Storytelling Angle */}
+          {story && (
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2 hover:border-purple-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-md">
+                  📖 Storytelling Angle
+                </span>
+                <button onClick={() => navigator.clipboard.writeText(story)} className="p-1 text-slate-400 hover:text-purple-500 transition-colors" title="Copy Story">
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 font-medium italic leading-relaxed">
+                "{story}"
+              </p>
+            </div>
+          )}
+
+          {/* Card 3: Short Caption */}
+          {shortCap && (
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2 hover:border-indigo-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md">
+                  ✍️ Short Caption
+                </span>
+                <button onClick={() => navigator.clipboard.writeText(shortCap)} className="p-1 text-slate-400 hover:text-indigo-500 transition-colors" title="Copy Short Caption">
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+                {shortCap}
+              </p>
+            </div>
+          )}
+
+          {/* Card 4: Long Caption */}
+          {longCap && (
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2 md:col-span-2 hover:border-emerald-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
+                  📝 Long Caption / Full Narrative
+                </span>
+                <button onClick={() => navigator.clipboard.writeText(longCap)} className="p-1 text-slate-400 hover:text-emerald-500 transition-colors" title="Copy Long Caption">
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed whitespace-pre-wrap">
+                {longCap}
+              </p>
+            </div>
+          )}
+
+          {/* Card 5: Call To Action (CTA) */}
+          {cta && (
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2 hover:border-amber-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md">
+                  🎯 Call To Action (CTA)
+                </span>
+                <button onClick={() => navigator.clipboard.writeText(cta)} className="p-1 text-slate-400 hover:text-amber-500 transition-colors" title="Copy CTA">
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs font-bold text-slate-900 dark:text-white leading-relaxed">
+                {cta}
+              </p>
+            </div>
+          )}
+
+          {/* Card 6: SEO Hashtags */}
+          {hashtags && (
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2 md:col-span-2 lg:col-span-3 hover:border-cyan-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md">
+                  🏷️ SEO Hashtags
+                </span>
+                <button onClick={() => navigator.clipboard.writeText(hashtags)} className="p-1 text-slate-400 hover:text-cyan-500 transition-colors" title="Copy Hashtags">
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs font-bold text-cyan-600 dark:text-cyan-400 leading-relaxed">
+                {hashtags}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -72,8 +72,6 @@ export const TRANSLATIONS = {
     "creative": "9. Creative Studio",
     "assets": "10. Asset Library",
     "websiteBuilder": "11. AI Website Builder",
-    "analytics": "12. Analytics",
-    "team": "13. Team & RBAC",
     "settings": "12. Settings & Billing",
     "settingsBtn": "Settings & Billing",
     "quickSocialPost": "Quick Social Post",
@@ -2419,15 +2417,15 @@ export const WorkspaceProvider = ({ children }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newAsset)
-      }).catch(() => {});
-    } catch (e) {}
+      }).catch(() => { });
+    } catch (e) { }
 
     setGlobalAssets(prev => {
       const updated = [newAsset, ...prev];
       try {
         if (activeWorkspaceId) localStorage.setItem(`aisa_assets_${activeWorkspaceId}`, JSON.stringify(updated));
         localStorage.setItem('aisa_global_assets', JSON.stringify(updated));
-      } catch (e) {}
+      } catch (e) { }
       return updated;
     });
 
@@ -2440,7 +2438,7 @@ export const WorkspaceProvider = ({ children }) => {
       try {
         if (activeWorkspaceId) localStorage.setItem(`aisa_assets_${activeWorkspaceId}`, JSON.stringify(updated));
         localStorage.setItem('aisa_global_assets', JSON.stringify(updated));
-      } catch (e) {}
+      } catch (e) { }
       return updated;
     });
   };
@@ -2570,7 +2568,7 @@ export const WorkspaceProvider = ({ children }) => {
               cleanTitle = parsed.title || cleanTitle;
               cleanMeta = parsed.metaDescription || '';
             }
-          } catch (e) {}
+          } catch (e) { }
         }
 
         const contentPayload = item.payload || {

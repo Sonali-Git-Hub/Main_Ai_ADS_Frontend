@@ -1,36 +1,32 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { 
   LayoutDashboard, 
   Dna, 
-  Target, 
   Search, 
+  Target, 
+  Layers, 
   Calendar, 
   PenTool, 
-  Globe,
-  Layers, 
-  Palette, 
-  Repeat, 
-  FolderKanban, 
   CheckCircle2, 
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  PanelLeftOpen,
-  PanelLeftClose,
-  Send,
-  Zap,
+  Palette, 
+  FolderKanban, 
+  Globe, 
+  Settings, 
+  X,
   User as UserIcon,
-  Shield,
-  X
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 
-export const Sidebar = () => {
-  const { activeModule, setActiveModule, setIsQuickPostOpen, setIsSettingsModalOpen, user, userAvatar, activeWorkspace, t, isMobileMenuOpen, setIsMobileMenuOpen } = useWorkspace();
-  const [collapsed, setCollapsed] = useState(false);
+export const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
+  const { activeModule, setActiveModule, activeWorkspace, setIsSettingsModalOpen, collapsed, setCollapsed, user, t } = useWorkspace();
 
+  const userAvatar = user?.avatarUrl || user?.photoURL || user?.avatar || '';
   const userName = (() => {
-    if (user?.name && user.name.trim() && user.name.toLowerCase() !== 'user') return user.name;
+    if (user?.name && user.name.trim()) return user.name;
+    if (user?.displayName && user.displayName.trim()) return user.displayName;
+    if (user?.fullName && user.fullName.trim()) return user.fullName;
     if (user?.username && user.username.trim()) return user.username;
     if (user?.email) {
       const prefix = user.email.split('@')[0];
