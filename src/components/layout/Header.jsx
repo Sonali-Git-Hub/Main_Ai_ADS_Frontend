@@ -83,8 +83,9 @@ export const Header = () => {
   }, []);
 
   return (
-    <header className="h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-[#090d16]/90 backdrop-blur-md sticky top-0 z-30 px-2 sm:px-6 flex items-center justify-between gap-1 sm:gap-4 transition-colors w-full overflow-x-clip">
-      {/* Left: Mobile Toggle, Back Button & Workspace Switcher */}
+    <header className="h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-[#090d16]/90 backdrop-blur-md sticky top-0 z-30 transition-colors w-full overflow-x-clip">
+      <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 h-full flex items-center justify-between gap-1 sm:gap-4">
+        {/* Left: Mobile Toggle, Back Button & Workspace Switcher */}
       <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1 sm:flex-initial">
         {/* Mobile Navigation Drawer Toggle */}
         <button
@@ -270,6 +271,7 @@ export const Header = () => {
           {theme === 'dark' ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" />}
         </button>
       </div>
-    </header>
+    </div>
+  </header>
   );
 };

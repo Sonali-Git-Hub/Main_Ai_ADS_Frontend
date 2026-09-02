@@ -3,7 +3,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { brandAPI } from '../../services/api';
 import { normalizeBrandDna, getProvenanceBadgeInfo } from '../../utils/normalizeBrandDna';
 import {
-  Dna, Globe, CheckCircle2, Save, RefreshCw, Sparkles, Loader2,
+  Dna, Globe, CheckCircle2, Save, RefreshCw, Sparkles, Loader2, Search,
   AlertCircle, ShieldCheck, Target, MessageSquare, Zap, Layers,
   Compass, AlertTriangle, FileText, BarChart2, Palette, Copy, Check, Edit3
 } from 'lucide-react';
@@ -384,7 +384,7 @@ export const BrandDnaModule = () => {
   // ── End No Brand Gate ──────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-4 animate-in fade-in max-w-7xl mx-auto px-1 sm:px-4 pt-1 pb-6">
+    <div className="space-y-4 animate-in fade-in w-full max-w-[1600px] mx-auto px-1 sm:px-4 pt-1 pb-6">
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 sm:p-5 rounded-2xl glass-card border border-slate-200 dark:border-slate-800">
         <div className="space-y-0.5">
@@ -402,21 +402,22 @@ export const BrandDnaModule = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto shrink-0 mt-2 md:mt-0">
           <button
             onClick={handleRunAiAnalysis}
             disabled={analyzing}
-            className="btn-primary py-2 px-4 text-xs flex-1 md:flex-none flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3.5 py-1.5 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white font-bold text-[11px] sm:text-xs transition-all flex-1 sm:flex-none flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-            {analyzing ? 'Re-Scraping Brand Intelligence...' : t('runDeepAiAnalysis', 'Run Deep AI Analysis')}
+            {analyzing ? <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" /> : <Sparkles className="w-3.5 h-3.5 shrink-0" />}
+            <span>{analyzing ? 'Re-Scraping Intelligence...' : t('runDeepAiAnalysis', 'Run Deep AI Analysis')}</span>
           </button>
           {effectiveProfile && (
             <button
               onClick={handleSaveProfile}
-              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 flex-1 md:flex-none"
+              className="px-3.5 py-1.5 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] sm:text-xs font-bold transition-all border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-center gap-1.5 flex-1 sm:flex-none whitespace-nowrap active:scale-95"
             >
-              <Save className="w-3.5 h-3.5 text-emerald-500" /> Save Profile
+              <Save className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+              <span>Save Profile</span>
             </button>
           )}
         </div>
@@ -920,15 +921,18 @@ export const BrandDnaModule = () => {
             </div>
           )}
 
-          <div className="flex justify-end pt-1">
+          {/* Fixed Bottom Center Action Button (Theme Glassmorphism Effect) */}
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <button
               onClick={() => {
                 if (setBrandDnaData) setBrandDnaData(effectiveProfile);
                 if (setActiveModule) setActiveModule('seo');
               }}
-              className="btn-primary py-2 px-5 text-xs font-bold flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg rounded-full transition-transform hover:scale-105"
+              className="flex items-center gap-2.5 px-6 py-3 bg-emerald-600/80 dark:bg-emerald-600/70 backdrop-blur-xl border border-emerald-400/40 text-white rounded-full font-extrabold text-xs sm:text-sm transition-all duration-300 shadow-2xl shadow-emerald-600/35 hover:shadow-emerald-500/50 hover:bg-emerald-500/90 hover:border-emerald-300/60 hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap group"
+              title="Continue to SEO Intelligence"
             >
-              <Zap className="w-3.5 h-3.5 text-amber-300" /> Run SEO Research from Brand DNA →
+              <Search className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
+              <span>Continue to SEO</span>
             </button>
           </div>
         </div>

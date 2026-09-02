@@ -94,7 +94,7 @@ export const AnalyticsModule = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in max-w-7xl mx-auto p-6">
+    <div className="space-y-6 animate-in fade-in w-full max-w-[1600px] mx-auto p-6">
       {/* Header Bar */}
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">

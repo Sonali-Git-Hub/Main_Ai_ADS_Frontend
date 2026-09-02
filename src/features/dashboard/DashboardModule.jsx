@@ -72,7 +72,7 @@ export const DashboardModule = () => {
   ];
 
   return (
-    <div className="space-y-4 animate-in fade-in max-w-7xl mx-auto px-1 sm:px-4 pt-1 pb-6">
+    <div className="space-y-4 animate-in fade-in w-full max-w-[1600px] mx-auto px-1 sm:px-4 pt-1 pb-6">
       {/* Banner */}
       <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-brand-50 via-white to-purple-50 dark:from-brand-900/60 dark:via-slate-900 dark:to-purple-950/60 border border-brand-200 dark:border-brand-500/30 shadow-lg relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div className="relative z-10 space-y-1">
@@ -88,8 +88,8 @@ export const DashboardModule = () => {
 
         <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full md:w-auto relative z-10">
           <button
-            onClick={() => setActiveModule('brands')}
-            className="btn-secondary text-xs flex-1 md:flex-none flex items-center justify-center gap-1.5 py-2.5 px-3"
+            onClick={() => openScraperModal ? openScraperModal() : setIsScraperOpen(true)}
+            className="btn-secondary text-xs flex-1 md:flex-none flex items-center justify-center gap-1.5 py-2.5 px-3 cursor-pointer"
           >
             <Dna className="w-4 h-4 text-brand-600 dark:text-brand-400" />
             <span className="truncate">{t('brandDna', 'Enter Your Brand')}</span>

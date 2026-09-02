@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 export const CalendarModule = () => {
-  const { activeWorkspace, setActiveModule, calendarEvents, setStudioTarget, setGeneratedContent, generatedStrategy, t } = useWorkspace();
+  const { activeWorkspace, setActiveModule, calendarEvents, setStudioTarget, setGeneratedContent, generatedStrategy, studioTarget, t } = useWorkspace();
   const workspaceId = activeWorkspace?._id || activeWorkspace?.id || 'ws_001';
 
   // Read 30-day strategy plan from workspace or context
@@ -122,6 +122,30 @@ export const CalendarModule = () => {
   useEffect(() => {
     loadCampaignHistory();
   }, [loadCampaignHistory]);
+
+  // Re-fetch posts whenever CalendarModule mounts or gains focus
+  const refreshCampaignPosts = useCallback(async () => {
+    if (!currentCampaign?._id) return;
+    try {
+      const res = await campaignAPI.getPosts(currentCampaign._id);
+      if (res?.success && res?.posts) {
+        setCampaignPosts(res.posts);
+      }
+    } catch (err) {
+      console.warn('[Calendar] Posts refresh note:', err.message);
+    }
+  }, [currentCampaign?._id]);
+
+  useEffect(() => {
+    refreshCampaignPosts();
+  }, [refreshCampaignPosts]);
+
+  // Window focus listener — updates metrics in real-time when returning from another tab/module
+  useEffect(() => {
+    const onFocus = () => refreshCampaignPosts();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [refreshCampaignPosts]);
 
   // Load specific campaign details
   const handleSelectCampaign = async (campaign) => {
@@ -970,8 +994,18 @@ export const CalendarModule = () => {
                 
 
 
-                <div className="flex gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-3">
+                <div className="flex flex-col gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-3">
+                  {/* Generated badge — shown when post is already generated */}
+                  {['Generated', 'Approved', 'Scheduled', 'Published'].includes(activePost.status) && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400">
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">
+                        Content Generated · {activePost.status}
+                      </span>
+                    </div>
+                  )}
                   <button
+                    disabled={['Generated', 'Approved', 'Scheduled', 'Published'].includes(activePost.status)}
                     onClick={() => {
                       const platform = (activePost.platform || 'instagram').toLowerCase();
                       const topic = activePost.postObjective || activePost.title || activePost.postFor || 'Campaign Update';
@@ -1032,15 +1066,25 @@ export const CalendarModule = () => {
                         autoGenerate: true,
                         imageAspect: aspect,
                         strategyPillar: activePost.postFor || activePost.strategyPillar || 'Brand Awareness',
-                        campaignStage: activePost.campaignStage || 'Awareness'
+                        campaignStage: activePost.campaignStage || 'Awareness',
+                        // Calendar post linking — used by Creative Studio to mark post Generated on success
+                        calendarPostId: activePost._id,
+                        campaignId: currentCampaign?._id,
                       });
-                      // Route to Content Studio to draft the post
+                      // Route to Creative Studio to create the post
                       setActiveModule('studio');
                     }}
-                    className="w-full py-3 bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer"
+                    className={`w-full py-3 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                      ['Generated', 'Approved', 'Scheduled', 'Published'].includes(activePost.status)
+                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-60'
+                        : 'bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white shadow-lg shadow-brand-500/20 active:scale-98 cursor-pointer'
+                    }`}
                   >
-                    <ArrowRight className="w-4 h-4 text-white" />
-                    CONTINUE TO CONTENT STUDIO
+                    <ArrowRight className="w-4 h-4" />
+                    {['Generated', 'Approved', 'Scheduled', 'Published'].includes(activePost.status)
+                      ? 'Already Generated'
+                      : 'CONTINUE TO CREATIVE STUDIO'
+                    }
                   </button>
                 </div>
               </div>

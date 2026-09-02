@@ -354,14 +354,14 @@ export const StrategyModule = () => {
             return {
               day,
               platform: bestPlatforms[i % (bestPlatforms.length || 1)] || 'Instagram',
-              topic: `Day ${day}: Strategic ${pillar} for ${activeWorkspace.brandName}`,
+              topic: `Day ${day}: Strategic ${pillar} for ${activeWorkspace?.brandName || 'Brand'}`,
               pillar,
               actionItem: `Publish content showcasing ${pillar} benefits and drive engagement.`
             };
           });
 
       const brandName = activeWorkspace?.brandName || 'Brand';
-      const wsId = activeWorkspace.id || activeWorkspace._id;
+      const wsId = activeWorkspace?.id || activeWorkspace?._id || 'ws_001';
 
       // Extract unique platforms
       const platformsToUse = [...new Set(planToUse.map(d => {
@@ -377,7 +377,7 @@ export const StrategyModule = () => {
       const payload = {
         workspaceId: wsId,
         campaignName: `${brandName} ${daysToGen}-Day Strategy Campaign`,
-        campaignGoal: businessGoal || 'Comprehensive Growth Roadmap',
+        campaignGoal: businessGoal || activeWorkspace?.currentStrategy?.businessGoal || 'Comprehensive Growth Roadmap',
         startDate: today.toISOString().split('T')[0],
         endDate: end.toISOString().split('T')[0],
         postingFrequency: postingFrequency || 'Daily',
@@ -398,7 +398,7 @@ export const StrategyModule = () => {
           title: item.topic || `Day ${item.day} Content`,
           date: eventDate.toISOString().split('T')[0],
           platform: item.platform || 'Blog',
-          pillar: activeWorkspace.brandName || 'Brand Strategy',
+          pillar: activeWorkspace?.brandName || 'Brand Strategy',
           status: 'SCHEDULED',
           owner: 'Content Strategist'
         };
@@ -1144,10 +1144,17 @@ export const StrategyModule = () => {
               </button>
               <button
                 onClick={() => confirmGenerateCalendar(scheduleDays)}
-                disabled={!scheduleDays || Number(scheduleDays) < 1 || Number(scheduleDays) > thirtyDayPlan.length}
+                disabled={isCreatingCalendarCampaign || !scheduleDays || Number(scheduleDays) < 1 || Number(scheduleDays) > (thirtyDayPlan.length || 30)}
                 className="w-full sm:w-auto btn-primary text-xs flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed bg-brand-600 hover:bg-brand-500 text-white"
               >
-                Generate
+                {isCreatingCalendarCampaign ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  'Generate'
+                )}
               </button>
             </div>
 
