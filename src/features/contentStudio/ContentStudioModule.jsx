@@ -654,7 +654,7 @@ export const ContentStudioModule = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in max-w-7xl mx-auto p-6">
+    <div className="space-y-6 animate-in fade-in w-full max-w-[1600px] mx-auto p-6">
       {activeSubPage ? (
         <div className="space-y-6">
           {/* DEDICATED CHANNEL SUB-PAGE VIEW */}

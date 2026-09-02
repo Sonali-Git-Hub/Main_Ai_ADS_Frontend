@@ -39,7 +39,7 @@ export const TeamRbacModule = () => {
   ];
 
   return (
-    <div className="space-y-6 animate-in fade-in max-w-7xl mx-auto p-6">
+    <div className="space-y-6 animate-in fade-in w-full max-w-[1600px] mx-auto p-6">
       {/* Invite Modal */}
       {showInviteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
