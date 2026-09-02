@@ -142,7 +142,7 @@ const MainContent = () => {
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <Header />
-        <main className="p-3 sm:p-6 flex-1 overflow-y-auto w-full max-w-[1600px] mx-auto">
+        <main className="p-3 sm:p-4 lg:p-5 flex-1 overflow-y-auto w-full max-w-[1600px] mx-auto">
           {renderModule()}
         </main>
       </div>
@@ -158,10 +158,19 @@ const MainContent = () => {
       {!isAISAAssistantOpen && (
         <button
           onClick={() => setIsAISAAssistantOpen(true)}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-xl shadow-brand-500/30 transition-all hover:scale-105 active:scale-95 group"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black shadow-2xl shadow-cyan-500/30 border-2 border-cyan-500/60 hover:border-cyan-400 p-0.5 transition-all hover:scale-110 active:scale-95 group overflow-hidden"
           title="Open AI Ads™ Chatbot Assistant"
         >
-          <Bot className="w-5 h-5 sm:w-6 sm:h-6" />
+          <img
+            src="/brain-icon-dark.jpg"
+            alt="AI Ads™ Assistant"
+            className="w-full h-full object-cover rounded-full group-hover:scale-105 transition-transform"
+          />
+          {/* Live Pulsing Glow Ring */}
+          <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-cyan-500 border-2 border-black"></span>
+          </span>
         </button>
       )}
     </div>

@@ -219,8 +219,8 @@ Keep your response short, concise, and to the point. DO NOT give long detailed r
         {/* Drawer Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/30 p-1 flex items-center justify-center shadow-sm shrink-0">
-              <img src="/logo.png" alt="AI Ads™ Logo" className="w-full h-full object-contain rounded-lg" />
+            <div className="w-8 h-8 rounded-xl bg-black border border-cyan-500/50 p-0.5 flex items-center justify-center shadow-md overflow-hidden shrink-0">
+              <img src="/brain-icon-dark.jpg" alt="AI Brain" className="w-full h-full object-cover rounded-lg" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -277,8 +277,8 @@ Keep your response short, concise, and to the point. DO NOT give long detailed r
               className={`flex gap-3 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {m.sender === 'assistant' && (
-                <div className="w-7 h-7 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/30 p-1 flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                  <img src="/logo.png" alt="AI Ads™ Logo" className="w-full h-full object-contain rounded-lg" />
+                <div className="w-7 h-7 rounded-xl bg-black border border-cyan-500/50 p-0.5 flex items-center justify-center shrink-0 mt-0.5 shadow-sm overflow-hidden">
+                  <img src="/brain-icon-dark.jpg" alt="AI Brain" className="w-full h-full object-cover rounded-lg" />
                 </div>
               )}
               <div className={`max-w-[85%] rounded-2xl p-3.5 text-xs leading-relaxed font-medium ${

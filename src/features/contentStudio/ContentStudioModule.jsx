@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { contentAPI, campaignAPI } from '../../services/api';
 import { resolveBrandVisualAsset } from '../../services/brandVisualResolver';
@@ -13,6 +13,22 @@ export const ContentStudioModule = () => {
   const { activeWorkspace, setActiveModule, setApprovalsQueue, studioTarget, setStudioTarget, setGeneratedContent, t } = useWorkspace();
   const [activeSubPage, setActiveSubPage] = useState(null); // null = Main Hub, 'BLOG', 'SOCIAL', 'EMAIL', 'NEWSPAPER'
   const [tab, setTab] = useState('BLOG'); // BLOG, SOCIAL, EMAIL, AD_COPY
+
+  // Auto-sync subpage tab from studioTarget or URL pathname
+  useEffect(() => {
+    const path = window.location.pathname;
+    const targetChannel = studioTarget?.subPage || studioTarget?.targetTab || (
+      path.includes('/content-studio/blog') ? 'BLOG' :
+      path.includes('/content-studio/social') ? 'SOCIAL' :
+      path.includes('/content-studio/email') ? 'EMAIL' :
+      path.includes('/content-studio/newspaper') ? 'NEWSPAPER' : null
+    );
+
+    if (targetChannel) {
+      setActiveSubPage(targetChannel);
+      setTab(targetChannel);
+    }
+  }, [studioTarget]);
 
   const openSubPage = (channelId) => {
     setActiveSubPage(channelId);
@@ -50,6 +66,7 @@ export const ContentStudioModule = () => {
 
   const closeSubPage = () => {
     setActiveSubPage(null);
+    if (setStudioTarget) setStudioTarget(null);
     if (window.location.pathname !== '/content-studio') {
       window.history.pushState({ subPage: null }, '', '/content-studio');
     }
@@ -61,6 +78,7 @@ export const ContentStudioModule = () => {
   const [draftingBlog, setDraftingBlog] = useState(false);
   const [blogDraft, setBlogDraft] = useState(null);
   const [factCheck, setFactCheck] = useState(null);
+  const [blogCanvasMode, setBlogCanvasMode] = useState('edit'); // 'edit' | 'preview'
 
   // Social Studio State
   const [socialTopic, setSocialTopic] = useState('3 Reasons to Centralize Brand DNA');
@@ -108,6 +126,98 @@ export const ContentStudioModule = () => {
   const [newspaperDraft, setNewspaperDraft] = useState(null);
 
   const workspaceId = activeWorkspace?._id || activeWorkspace?.id;
+
+  // ─── Article & Text Cleaner Helper (Strips all markdown symbols #, ##, **, etc.) ──
+  const cleanArticleText = useCallback((text) => {
+    if (!text || typeof text !== 'string') return '';
+    return text
+      // Replace escaped characters
+      .replace(/\\n/g, '\n')
+      .replace(/\\t/g, '\t')
+      .replace(/\\"/g, '"')
+      // Remove markdown headers: "# Title", "## Title", "### Title" -> "Title"
+      .replace(/^#{1,6}\s+/gm, '')
+      // Remove bold and italic markers: "**text**" -> "text", "*text*" -> "text", "__text__" -> "text"
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/__([^_]+)__/g, '$1')
+      .replace(/_([^_]+)_/g, '$1')
+      // Remove markdown links: "[text](url)" -> "text"
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // Remove horizontal rules
+      .replace(/^[\s*_-]{3,}\s*$/gm, '')
+      // Replace markdown list dashes/asterisks with clean bullet dots
+      .replace(/^\*\s+/gm, '• ')
+      .replace(/^-\s+/gm, '• ')
+      // Normalize excessive blank lines
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }, []);
+
+  // ─── Live & Editable Prompt Builders ───────────────────────────────────────
+  const buildBlogPrompt = useCallback((topic = blogTopic, kw = blogKeywords) => {
+    const brand = activeWorkspace?.brandName || 'Brand';
+    const industry = activeWorkspace?.industryCategory || 'General';
+    return `Draft an authoritative, SEO-optimized blog article for ${brand} (${industry}) titled "${topic}" targeting keywords (${kw || 'growth, brand strategy'}). Include structured headings, actionable takeaways, and a brand-aligned conclusion.`;
+  }, [activeWorkspace, blogTopic, blogKeywords]);
+
+  const buildSocialPrompt = useCallback((topic = socialTopic, plat = socialPlatform, type = socialPostType) => {
+    const brand = activeWorkspace?.brandName || 'Brand';
+    return `Generate high-impact ${plat.toUpperCase()} ${type.replace('_', ' ')} copy for ${brand} on "${topic}". Focus on a pattern-interrupt hook, engaging storytelling, concise & narrative captions, curated hashtags, and a clear call-to-action.`;
+  }, [activeWorkspace, socialTopic, socialPlatform, socialPostType]);
+
+  const buildSocialImagePrompt = useCallback((topic = socialTopic, style = visualStyle) => {
+    const brand = activeWorkspace?.brandName || 'Brand';
+    return `Commercial advertising photography representing "${topic}" for ${brand} — cinematic ${style} lighting, 8k resolution, premium studio composition, and award-winning editorial aesthetic.`;
+  }, [activeWorkspace, socialTopic, visualStyle]);
+
+  const buildEmailPrompt = useCallback((form = emailForm) => {
+    const brand = activeWorkspace?.brandName || 'Brand';
+    return `Draft a high-converting ${form.purpose} email for ${brand}:\nSubject / Focus: "${form.subject || `${brand} — ${form.purpose}`}"\nRecipient Audience: ${form.recipient}\nTone: ${form.tone}\nContext: ${form.context || 'Strategic brand communication'}\nKey Highlights: ${form.keyPoints || 'Core product value & announcements'}\nCall to Action: ${form.cta || 'Explore now'}\nSender: ${form.senderName || brand} (${form.senderDesignation || 'Marketing Lead'})`;
+  }, [activeWorkspace, emailForm]);
+
+  const buildNewspaperPrompt = useCallback((topic = newspaperTopic, format = newspaperFormat, tone = newspaperTone, dateline = newspaperDateline) => {
+    const brand = activeWorkspace?.brandName || 'Brand';
+    return `Draft an official ${format} press release for ${brand} in AP Corporate Journalism standard:\nHeadline / Announcement: "${topic}"\nDateline: ${dateline}\nTone: ${tone}\nStructure: FOR IMMEDIATE RELEASE, Executive Summary, Strategic Highlights, Leadership Commentary, Corporate Backgrounder, and Media Contact Bureau.`;
+  }, [activeWorkspace, newspaperTopic, newspaperFormat, newspaperTone, newspaperDateline]);
+
+  const buildAdPrompt = useCallback((prod = adProduct, plat = adPlatform) => {
+    const brand = activeWorkspace?.brandName || 'Brand';
+    return `Create high-converting ${plat} ad copy variations for ${brand}:\nProduct / Service: "${prod}"\nDirectives: 3 High-CTR Hook Variations, Primary Text with PAS framework, Punchy Headline, Sub-headline, and Action CTA.`;
+  }, [activeWorkspace, adProduct, adPlatform]);
+
+  // Prompt States (Editable by user)
+  const [blogPrompt, setBlogPrompt] = useState(() => buildBlogPrompt('How AI Ads Eliminates Agency Bottlenecks', 'AI marketing, content velocity, brand DNA'));
+  const [socialPrompt, setSocialPrompt] = useState(() => buildSocialPrompt('3 Reasons to Centralize Brand DNA', 'instagram', 'educational'));
+  const [socialImagePrompt, setSocialImagePrompt] = useState(() => buildSocialImagePrompt('3 Reasons to Centralize Brand DNA', 'Photorealistic Commercial'));
+  const [emailPrompt, setEmailPrompt] = useState(() => buildEmailPrompt(emailForm));
+  const [newspaperPrompt, setNewspaperPrompt] = useState(() => buildNewspaperPrompt());
+  const [adCopyPrompt, setAdCopyPrompt] = useState(() => buildAdPrompt());
+
+  // Automatically update default prompt when parameters change
+  React.useEffect(() => {
+    setBlogPrompt(buildBlogPrompt(blogTopic, blogKeywords));
+  }, [buildBlogPrompt, blogTopic, blogKeywords]);
+
+  React.useEffect(() => {
+    setSocialPrompt(buildSocialPrompt(socialTopic, socialPlatform, socialPostType));
+  }, [buildSocialPrompt, socialTopic, socialPlatform, socialPostType]);
+
+  React.useEffect(() => {
+    setSocialImagePrompt(buildSocialImagePrompt(socialTopic, visualStyle));
+  }, [buildSocialImagePrompt, socialTopic, visualStyle]);
+
+  React.useEffect(() => {
+    setEmailPrompt(buildEmailPrompt(emailForm));
+  }, [buildEmailPrompt, emailForm]);
+
+  React.useEffect(() => {
+    setNewspaperPrompt(buildNewspaperPrompt(newspaperTopic, newspaperFormat, newspaperTone, newspaperDateline));
+  }, [buildNewspaperPrompt, newspaperTopic, newspaperFormat, newspaperTone, newspaperDateline]);
+
+  React.useEffect(() => {
+    setAdCopyPrompt(buildAdPrompt(adProduct, adPlatform));
+  }, [buildAdPrompt, adProduct, adPlatform]);
 
   // ─── Direct Redirect & Pre-fill from Calendar / Other Modules ────────────────
   React.useEffect(() => {
@@ -258,16 +368,45 @@ export const ContentStudioModule = () => {
         topic,
         keywords,
         brandName: brand,
-        industry: activeWorkspace?.industryCategory || 'General'
+        industry: activeWorkspace?.industryCategory || 'General',
+        customPrompt: blogPrompt || buildBlogPrompt(topic, keywords)
       });
       if (res?.draft || res?.article) {
-        const draft = res.draft || res.article;
-        const finalContent = typeof draft === 'object' && draft !== null
-          ? (draft.content || draft.body || JSON.stringify(draft, null, 2))
-          : String(draft);
+        let draft = res.draft || res.article;
+        if (draft && typeof draft === 'object' && draft.data) {
+          draft = draft.data;
+        }
+
+        let finalTitle = topic;
+        let finalContent = '';
+
+        if (typeof draft === 'string') {
+          try {
+            const parsed = JSON.parse(draft);
+            const dataObj = parsed.data || parsed;
+            finalTitle = dataObj.title || dataObj.headline || topic;
+            finalContent = dataObj.content || dataObj.body || dataObj.article || draft;
+          } catch {
+            finalContent = draft;
+          }
+        } else if (typeof draft === 'object' && draft !== null) {
+          finalTitle = draft.title || draft.headline || topic;
+          finalContent = draft.content || draft.body || draft.article || draft.text || '';
+          if (!finalContent && draft.sections) {
+            finalContent = draft.sections.map(s => `## ${s.heading || s.title || ''}\n\n${s.body || s.content || ''}`).join('\n\n');
+          }
+        }
+
+        if (typeof finalContent === 'string') {
+          finalContent = cleanArticleText(finalContent);
+        }
+
+        if (typeof finalTitle === 'string') {
+          finalTitle = cleanArticleText(finalTitle);
+        }
 
         setBlogDraft({
-          title: (typeof draft === 'object' && draft?.title) || topic,
+          title: finalTitle || topic,
           content: finalContent
         });
         markCalendarPostGenerated({ caption: finalContent });
@@ -275,44 +414,40 @@ export const ContentStudioModule = () => {
         throw new Error('No draft returned');
       }
     } catch (err) {
-      // Smart fallback: generate a structured blog article locally
+      // Smart fallback: generate a structured blog article locally without markdown symbols
       const kwArr = keywords.split(',').map(k => k.trim()).filter(Boolean);
-      const fallbackDraft = `**By ${brand} Editorial Team** | ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}\n\n` +
-        `---\n\n` +
-        `## Introduction\n\n` +
-        `In today's rapidly evolving landscape, **${topic.toLowerCase()}** has become a critical focus area for forward-thinking brands. ` +
+      const fallbackDraft = `By ${brand} Editorial Team | ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}\n\n` +
+        `Introduction\n\n` +
+        `In today's rapidly evolving landscape, ${topic.toLowerCase()} has become a critical focus area for forward-thinking brands. ` +
         `${brand} has been at the forefront of this transformation, driving innovation and delivering measurable results across every touchpoint.\n\n` +
         `This comprehensive guide explores the key strategies, insights, and actionable frameworks that define ${brand}'s approach to ${kwArr[0] || 'growth'}.\n\n` +
-        `## Why ${topic} Matters\n\n` +
+        `Why ${topic} Matters\n\n` +
         `The market dynamics around ${kwArr[0] || 'this domain'} are shifting faster than ever. Brands that fail to adapt risk losing relevance. ` +
-        `Here's why ${brand} has doubled down on this initiative:\n\n` +
-        `- **Consumer Expectations**: Modern audiences demand authenticity, speed, and personalization.\n` +
-        `- **Competitive Advantage**: Early movers in ${kwArr[1] || 'innovation'} capture disproportionate market share.\n` +
-        `- **Operational Excellence**: Streamlined processes powered by ${kwArr[2] || 'technology'} reduce costs and improve quality.\n\n` +
-        `## Key Strategies & Framework\n\n` +
-        `### 1. Data-Driven Decision Making\n` +
+        `Here is why ${brand} has doubled down on this initiative:\n\n` +
+        `• Consumer Expectations: Modern audiences demand authenticity, speed, and personalization.\n` +
+        `• Competitive Advantage: Early movers in ${kwArr[1] || 'innovation'} capture disproportionate market share.\n` +
+        `• Operational Excellence: Streamlined processes powered by ${kwArr[2] || 'technology'} reduce costs and improve quality.\n\n` +
+        `Key Strategies and Framework\n\n` +
+        `1. Data-Driven Decision Making\n` +
         `${brand} leverages analytics and real-time insights to inform every strategic decision. By anchoring campaigns to verified brand DNA, ` +
         `every piece of content maintains consistency while maximizing impact.\n\n` +
-        `### 3. Multi-Channel Orchestration\n` +
+        `2. Multi-Channel Orchestration\n` +
         `From social media to email campaigns, from blog content to press releases — ${brand} ensures a unified brand voice across every channel, ` +
         `powered by centralized ${kwArr[0] || 'content strategy'}.\n\n` +
-        `## Results & Impact\n\n` +
-        `| Metric | Before | After | Improvement |\n` +
-        `|--------|--------|-------|-------------|\n` +
-        `| Content Output | 12 pieces/month | 48 pieces/month | +300% |\n` +
-        `| Brand Consistency Score | 67% | 94% | +40% |\n` +
-        `| Engagement Rate | 2.1% | 5.8% | +176% |\n` +
-        `| Time to Publish | 5 days | 1.5 days | -70% |\n\n` +
-        `## Conclusion\n\n` +
-        `${topic} is not just a trend — it's the foundation for sustainable growth. ${brand}'s commitment to excellence, ` +
+        `Results and Impact\n\n` +
+        `Content Output: 12 pieces/month before -> 48 pieces/month (+300%)\n` +
+        `Brand Consistency Score: 67% before -> 94% (+40%)\n` +
+        `Engagement Rate: 2.1% before -> 5.8% (+176%)\n` +
+        `Time to Publish: 5 days before -> 1.5 days (-70%)\n\n` +
+        `Conclusion\n\n` +
+        `${topic} is not just a trend — it is the foundation for sustainable growth. ${brand}'s commitment to excellence, ` +
         `innovation, and brand integrity positions it as a leader in ${activeWorkspace?.industryCategory || 'the industry'}.\n\n` +
-        `---\n\n` +
-        `*Keywords: ${kwArr.join(', ')}*\n\n` +
-        `*Published by ${brand} Content Intelligence Engine — AI Ads™ Platform*`;
+        `Keywords: ${kwArr.join(', ')}\n\n` +
+        `Published by ${brand} Content Intelligence Engine — AI Ads Platform`;
 
       setBlogDraft({
-        title: topic,
-        content: fallbackDraft
+        title: cleanArticleText(topic),
+        content: cleanArticleText(fallbackDraft)
       });
     }
 
@@ -356,7 +491,6 @@ export const ContentStudioModule = () => {
 
 
   // ─── Social Post Generation ──────────────────────────────────────────────────
-  // ─── Social Post Generation ──────────────────────────────────────────────────
   const handleGenerateSocial = async () => {
     setDraftingSocial(true);
     try {
@@ -366,11 +500,13 @@ export const ContentStudioModule = () => {
         platform: socialPlatform,
         topic: socialTopic,
         postType: socialPostType,
+        customPrompt: socialPrompt || buildSocialPrompt(socialTopic, socialPlatform, socialPostType),
+        imagePrompt: socialImagePrompt || buildSocialImagePrompt(socialTopic, visualStyle)
       });
 
       const brand = activeWorkspace?.brandName || 'Brand';
       const initialAspect = (socialPlatform.includes('reel') || socialPlatform.includes('tiktok') || socialPlatform.includes('story')) ? '9:16' : socialPlatform === 'instagram' ? '1:1' : '16:9';
-      const imgPrompt = res?.data?.imagePrompt || `${socialTopic} — ${brand} commercial advertising photography, 8k`;
+      const imgPrompt = res?.data?.imagePrompt || socialImagePrompt || `${socialTopic} — ${brand} commercial advertising photography, 8k`;
       const imgUrl = res?.data?.imageUrl || resolveBrandVisualAsset({
         prompt: imgPrompt,
         brandName: brand,
@@ -399,7 +535,7 @@ export const ContentStudioModule = () => {
       console.error('Social post error:', err.message);
       const brand = activeWorkspace?.brandName || 'Brand';
       const initialAspect = (socialPlatform.includes('reel') || socialPlatform.includes('tiktok') || socialPlatform.includes('story')) ? '9:16' : socialPlatform === 'instagram' ? '1:1' : '16:9';
-      const fallbackPrompt = `${socialTopic} — ${brand} commercial photography, 8k`;
+      const fallbackPrompt = socialImagePrompt || `${socialTopic} — ${brand} commercial photography, 8k`;
       const fallbackImg = resolveBrandVisualAsset({
         prompt: fallbackPrompt,
         brandName: brand,
@@ -437,7 +573,7 @@ export const ContentStudioModule = () => {
     try {
       const nextIndex = visualVariationIndex + 1;
       setVisualVariationIndex(nextIndex);
-      const promptToUse = (customPrompt || socialResult?.imagePrompt || socialTopic).trim();
+      const promptToUse = (customPrompt || socialImagePrompt || socialResult?.imagePrompt || socialTopic).trim();
       const brand = activeWorkspace?.brandName || 'Brand';
       const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -450,7 +586,7 @@ export const ContentStudioModule = () => {
           brandColors: activeWorkspace?.brandColors,
           industry: activeWorkspace?.industryCategory || activeWorkspace?.niche,
           tagline: activeWorkspace?.tagline,
-          companyDescription: activeWorkspace?.companyDescription || activeWorkspace?.metaDescription,
+          companyDescription: activeWorkspace?.metaDescription || activeWorkspace?.positioningSummary,
           topic: socialTopic,
           prompt: promptToUse,
           platform: socialPlatform,
@@ -481,7 +617,7 @@ export const ContentStudioModule = () => {
     } catch (err) {
       console.warn('[handleRegenerateImage] Client fallback:', err.message);
       const fallbackUrl = resolveBrandVisualAsset({
-        prompt: customPrompt || socialTopic,
+        prompt: customPrompt || socialImagePrompt || socialTopic,
         brandName: activeWorkspace?.brandName || 'Brand',
         topic: socialTopic,
         style: customStyle,
@@ -526,6 +662,7 @@ export const ContentStudioModule = () => {
         platform: socialPlatform,
         topic: socialTopic,
         postType: socialPostType,
+        customPrompt: socialPrompt
       });
       if (res.data) {
         setSocialResult((prev) => ({
@@ -563,7 +700,8 @@ export const ContentStudioModule = () => {
         senderName: emailForm.senderName || activeWorkspace?.brandName || 'Marketing Team',
         senderDesignation: emailForm.senderDesignation || 'Marketing Lead',
         senderCompany: emailForm.senderCompany || activeWorkspace?.brandName || 'Brand',
-        lengthFormat: emailForm.lengthFormat || 'detailed'
+        lengthFormat: emailForm.lengthFormat || 'detailed',
+        customPrompt: emailPrompt || buildEmailPrompt(emailForm)
       });
       if (res.email) {
         setEmailResult(res.email);
@@ -595,6 +733,7 @@ export const ContentStudioModule = () => {
         brandName: activeWorkspace?.brandName,
         product: adProduct,
         adPlatform,
+        customPrompt: adCopyPrompt || buildAdPrompt(adProduct, adPlatform)
       });
       if (res.adCopy) {
         setAdResult(res.adCopy);
@@ -676,100 +815,202 @@ export const ContentStudioModule = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in w-full max-w-[1600px] mx-auto p-6">
+    <div className="space-y-3 animate-in fade-in w-full">
       {activeSubPage ? (
-        <div className="space-y-6">
+        <div className="space-y-3">
           {/* DEDICATED CHANNEL SUB-PAGE VIEW */}
-          <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
             <button
               onClick={closeSubPage}
-              className="btn-secondary text-xs py-2 px-3 flex items-center gap-2 hover:border-brand-500 transition-colors"
+              className="btn-secondary text-xs py-1 px-2.5 flex items-center gap-1.5 hover:border-brand-500 transition-colors shadow-xs"
             >
-              <ArrowLeft className="w-4 h-4 text-brand-500" />
+              <ArrowLeft className="w-3.5 h-3.5 text-brand-500" />
               <span>Back to {t('studioTitle', 'Content Studio')}</span>
             </button>
 
             <div className="text-right">
-              <span className="text-[10px] font-extrabold uppercase text-brand-600 dark:text-brand-400 tracking-wider">Dedicated Drafting Engine</span>
-              <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">{subPageTitles[activeSubPage] || 'Channel Studio'}</h2>
+              <span className="text-[8px] font-extrabold uppercase text-brand-600 dark:text-brand-400 tracking-wider block">Dedicated Drafting Engine</span>
+              <h2 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-tight">{subPageTitles[activeSubPage] || 'Channel Studio'}</h2>
             </div>
           </div>
 
           {/* Render Active Sub-Page parameters & editor canvas */}
           {tab === 'BLOG' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('blog', 'Blog')} Parameters</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="p-4 sm:p-5 rounded-2xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('blog', 'Blog')} Parameters</h2>
+                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 uppercase tracking-wider">
+                    {activeWorkspace?.brandName || 'Brand DNA'}
+                  </span>
+                </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Article Topic</label>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Article Topic</label>
                   <textarea
-                    rows={3}
+                    rows={2}
                     value={blogTopic}
                     onChange={(e) => setBlogTopic(e.target.value)}
-                    className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-brand-500 font-medium"
+                    placeholder="Enter article topic..."
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Keywords (comma-separated)</label>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Keywords (comma-separated)</label>
                   <input
                     type="text"
                     value={blogKeywords}
                     onChange={(e) => setBlogKeywords(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-brand-500 font-medium"
+                    placeholder="e.g. AI marketing, SEO growth, brand velocity"
                   />
                 </div>
+
+                {/* ── LIVE & EDITABLE AI BLOG PROMPT ── */}
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500/20 transition-all space-y-1.5">
+                  <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800/80">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3 text-brand-500" /> AI Generation Prompt
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[8px] font-extrabold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded-md">
+                        EDITABLE
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setBlogPrompt(buildBlogPrompt(blogTopic, blogKeywords))}
+                        className="text-[9px] font-bold text-slate-500 hover:text-brand-500 underline flex items-center gap-0.5"
+                        title="Reset to default prompt based on topic and keywords"
+                      >
+                        <RefreshCw className="w-2.5 h-2.5" /> Reset
+                      </button>
+                    </div>
+                  </div>
+                  <textarea
+                    rows={3}
+                    value={blogPrompt}
+                    onChange={(e) => setBlogPrompt(e.target.value)}
+                    placeholder="Enter customized prompt instructions for the AI blog generator..."
+                    className="w-full bg-transparent border-0 p-0 text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-0 resize-none leading-relaxed placeholder-slate-400"
+                  />
+                </div>
+
                 <button
                   onClick={handleDraftBlog}
                   disabled={draftingBlog}
-                  className="w-full btn-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="w-full btn-primary py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60 shadow-md shadow-brand-500/20 hover:scale-[1.01] active:scale-95 transition-all"
                 >
                   {draftingBlog ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                   {draftingBlog ? 'Drafting Blog...' : 'Generate Full Article'}
                 </button>
               </div>
 
-              <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Editorial Canvas</span>
+              <div className="lg:col-span-2 p-4 sm:p-5 rounded-2xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5 gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Editorial Canvas</span>
+                    {blogDraft && (
+                      <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[10px] font-bold">
+                        <button
+                          type="button"
+                          onClick={() => setBlogCanvasMode('edit')}
+                          className={`px-2.5 py-0.5 rounded-lg transition-all ${blogCanvasMode === 'edit' ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm font-extrabold' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                        >
+                          Edit Text
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setBlogCanvasMode('preview')}
+                          className={`px-2.5 py-0.5 rounded-lg transition-all ${blogCanvasMode === 'preview' ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm font-extrabold' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                        >
+                          Formatted Preview
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   {blogDraft && (
-                    <button onClick={() => submitToApprovals(blogDraft)} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1">
-                      <Send className="w-3.5 h-3.5" /> Submit to Approvals
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const text = `# ${blogDraft.title}\n\n${blogDraft.content}`;
+                          navigator.clipboard.writeText(text);
+                          alert('Article copied to clipboard!');
+                        }}
+                        className="btn-secondary text-xs py-1 px-2.5 flex items-center gap-1 text-slate-600 dark:text-slate-300"
+                      >
+                        <Copy className="w-3.5 h-3.5" /> Copy
+                      </button>
+                      <button onClick={() => submitToApprovals(blogDraft)} className="btn-primary text-xs py-1 px-3 flex items-center gap-1 shadow-sm">
+                        <Send className="w-3.5 h-3.5" /> Submit to Approvals
+                      </button>
+                    </div>
                   )}
                 </div>
 
-                {factCheck && (
-                  <div className={`p-3.5 rounded-2xl border flex items-center justify-between text-xs ${factCheck.passed ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300' : 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300'
-                    }`}>
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                      <div>
-                        <span className="font-bold uppercase tracking-wider text-[10px]">Fact-Check Verification: {factCheck.status}</span>
-                        <p className="text-[11px] font-medium">Claims verified against Brand DNA repository.</p>
-                      </div>
-                    </div>
-                    <span className="font-extrabold text-sm px-2 py-0.5 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{factCheck.score}%</span>
-                  </div>
-                )}
-
                 {blogDraft ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                      <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/20">
+                        {blogDraft.wordCount || blogDraft.content.split(/\s+/).length} Words
+                      </span>
+                      {blogDraft.keywords?.length > 0 && (
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {blogDraft.keywords.map((kw, i) => (
+                            <span key={i} className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                              #{kw}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <input
                       type="text"
                       value={blogDraft.title}
                       onChange={(e) => setBlogDraft({ ...blogDraft, title: e.target.value })}
-                      className="w-full text-base font-extrabold text-slate-900 dark:text-white bg-transparent border-b border-slate-200 dark:border-slate-800 pb-2 focus:outline-none"
+                      className="w-full text-base font-extrabold text-slate-900 dark:text-white bg-transparent border-b border-slate-200 dark:border-slate-800 pb-1.5 focus:outline-none focus:border-brand-500"
+                      placeholder="Article Title..."
                     />
-                    <textarea
-                      rows={14}
-                      value={blogDraft.content}
-                      onChange={(e) => setBlogDraft({ ...blogDraft, content: e.target.value })}
-                      className="w-full p-4 rounded-2xl font-mono text-xs leading-relaxed text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
-                    />
+
+                    {blogCanvasMode === 'preview' ? (
+                      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 leading-relaxed text-xs space-y-2.5 max-h-[460px] overflow-y-auto font-sans">
+                        {blogDraft.content.split('\n\n').map((para, idx) => {
+                          const trimmed = cleanArticleText(para.trim());
+                          if (!trimmed) return null;
+                          if (trimmed.startsWith('• ') || trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                            const items = trimmed.split('\n').filter(Boolean);
+                            return (
+                              <ul key={idx} className="space-y-1 pl-2 text-slate-700 dark:text-slate-300">
+                                {items.map((it, i) => (
+                                  <li key={i} className="flex items-start gap-2">
+                                    <span className="text-brand-500 font-bold">•</span>
+                                    <span>{it.replace(/^[•*-]\s*/, '')}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            );
+                          }
+                          const isHeading = trimmed.length < 80 && !trimmed.endsWith('.') && !trimmed.includes('\n');
+                          if (isHeading) {
+                            return <h3 key={idx} className="text-xs font-extrabold text-slate-900 dark:text-white pt-1.5 border-b border-slate-100 dark:border-slate-800/80 pb-0.5">{trimmed}</h3>;
+                          }
+                          return <p key={idx} className="text-slate-700 dark:text-slate-300 leading-relaxed">{trimmed}</p>;
+                        })}
+                      </div>
+                    ) : (
+                      <textarea
+                        rows={14}
+                        value={blogDraft.content}
+                        onChange={(e) => setBlogDraft({ ...blogDraft, content: e.target.value })}
+                        className="w-full p-3.5 rounded-xl font-sans text-xs leading-relaxed text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        placeholder="Article content..."
+                      />
+                    )}
                   </div>
                 ) : (
-                  <div className="p-12 text-center text-slate-500 space-y-2">
-                    <FileText className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600" />
+                  <div className="p-8 text-center text-slate-500 space-y-1.5">
+                    <FileText className="w-7 h-7 mx-auto text-slate-400 dark:text-slate-600" />
                     <p className="text-xs font-medium">Enter a topic and click "Generate Full Article" to draft an AI blog article with automatic fact checking.</p>
                   </div>
                 )}
@@ -779,112 +1020,161 @@ export const ContentStudioModule = () => {
 
           {/* 2. {t('socialMedia', 'Social Media')} Studio */}
           {tab === 'SOCIAL' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('socialMedia', 'Social Media')} Parameters</h2>
-                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 uppercase tracking-wider">
+            <div className="space-y-3.5 flex flex-col">
+              {/* TOP: Social Media Parameters (Full-Width Compact) */}
+              <div className="p-4 sm:p-5 rounded-2xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                      <Share2 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('socialMedia', 'Social Media')} Parameters</h2>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Configure audience parameters &amp; custom AI directives</p>
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-black px-2.5 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 uppercase tracking-wider border border-brand-500/20">
                     {activeWorkspace?.brandName || 'Brand DNA'}
                   </span>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Platform</label>
-                  <select
-                    value={socialPlatform}
-                    onChange={(e) => setSocialPlatform(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 capitalize"
-                  >
-                    {['instagram', 'linkedin', 'twitter', 'facebook', 'youtube', 'tiktok'].map((p) => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Post Goal / Type</label>
-                  <select
-                    value={socialPostType}
-                    onChange={(e) => setSocialPostType(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 capitalize"
-                  >
-                    {['educational', 'promotional', 'thought_leadership', 'engagement'].map((t) => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Topic</label>
-                  <textarea
-                    rows={2}
-                    value={socialTopic}
-                    onChange={(e) => setSocialTopic(e.target.value)}
-                    className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
-                    placeholder="Enter post topic or select from strategy..."
-                  />
-                </div>
 
-                {/* ── LIVE AI PROMPT BLUEPRINT PREVIEW ── */}
-                <div className="p-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                      <Sparkles className="w-3 h-3 text-brand-500" /> Active AI Prompt Blueprint
-                    </span>
-                    <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md">
-                      READY
-                    </span>
+                {/* Parameters Sub-grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Platform</label>
+                    <select
+                      value={socialPlatform}
+                      onChange={(e) => setSocialPlatform(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 capitalize font-medium"
+                    >
+                      {['instagram', 'linkedin', 'twitter', 'facebook', 'youtube', 'tiktok'].map((p) => <option key={p} value={p}>{p}</option>)}
+                    </select>
                   </div>
-                  
-                  <div className="space-y-1.5 text-[11px] text-slate-600 dark:text-slate-300 font-mono bg-white/60 dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800/80 leading-relaxed max-h-36 overflow-y-auto">
-                    <p className="text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-widest font-sans">1. Copy Directive:</p>
-                    <p className="text-slate-700 dark:text-slate-300">
-                      Write high-converting {socialPlatform} {socialPostType} copy for <strong>{activeWorkspace?.brandName || 'Brand'}</strong> on "{socialTopic || 'Topic'}" using PAS/AIDA framework.
-                    </p>
-                    
-                    <p className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest font-sans pt-1">2. SEO & Tags Directive:</p>
-                    <p className="text-slate-600 dark:text-slate-400">
-                      Inject 2-3 search intent keywords + 12 curated brand, niche, and viral hashtags with direct CTA.
-                    </p>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Post Goal / Type</label>
+                    <select
+                      value={socialPostType}
+                      onChange={(e) => setSocialPostType(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 capitalize font-medium"
+                    >
+                      {['educational', 'promotional', 'thought_leadership', 'engagement'].map((t) => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Topic</label>
+                    <input
+                      type="text"
+                      value={socialTopic}
+                      onChange={(e) => setSocialTopic(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 font-medium"
+                      placeholder="Enter post topic..."
+                    />
+                  </div>
+                </div>
 
-                    <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest font-sans pt-1">3. Visual Image Prompt:</p>
-                    <p className="text-slate-500 dark:text-slate-400 italic">
-                      "Commercial advertising photography of {socialTopic || 'Topic'} for {activeWorkspace?.brandName || 'Brand'}, 85mm f/1.8 lens, cinematic lighting, 8k resolution"
-                    </p>
+                {/* ── LIVE & EDITABLE AI COPY PROMPT & VISUAL PROMPT GRID ── */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500/20 transition-all space-y-2">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800/80">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <Sparkles className="w-3 h-3 text-brand-500" /> AI Copywriting Prompt
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[8px] font-extrabold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded-md">
+                          EDITABLE
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setSocialPrompt(buildSocialPrompt(socialTopic, socialPlatform, socialPostType))}
+                          className="text-[9px] font-bold text-slate-500 hover:text-brand-500 underline flex items-center gap-0.5"
+                          title="Reset to default copy prompt"
+                        >
+                          <RefreshCw className="w-2.5 h-2.5" /> Reset
+                        </button>
+                      </div>
+                    </div>
+                    <textarea
+                      rows={4}
+                      value={socialPrompt}
+                      onChange={(e) => setSocialPrompt(e.target.value)}
+                      placeholder="Custom copywriting prompt directives..."
+                      className="w-full min-h-[90px] bg-transparent border-0 p-0 text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-0 resize-none leading-relaxed placeholder-slate-400"
+                    />
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-purple-50/40 dark:bg-purple-950/20 border border-purple-200/80 dark:border-purple-800/40 focus-within:border-purple-500 focus-within:ring-1 focus-within:ring-purple-500/20 transition-all space-y-2">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-purple-100 dark:border-purple-900/30">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+                        <ImageIcon className="w-3 h-3" /> AI Visual / Image Prompt
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[8px] font-extrabold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded-md">
+                          EDITABLE
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setSocialImagePrompt(buildSocialImagePrompt(socialTopic, visualStyle))}
+                          className="text-[9px] font-bold text-slate-500 hover:text-purple-500 underline flex items-center gap-0.5"
+                          title="Reset to default visual prompt"
+                        >
+                          <RefreshCw className="w-2.5 h-2.5" /> Reset
+                        </button>
+                      </div>
+                    </div>
+                    <textarea
+                      rows={4}
+                      value={socialImagePrompt}
+                      onChange={(e) => setSocialImagePrompt(e.target.value)}
+                      placeholder="Custom image photography prompt..."
+                      className="w-full min-h-[90px] bg-transparent border-0 p-0 text-xs font-medium text-purple-900 dark:text-purple-200 focus:outline-none focus:ring-0 resize-none leading-relaxed placeholder-purple-400"
+                    />
                   </div>
                 </div>
 
                 <button
                   onClick={handleGenerateSocial}
                   disabled={draftingSocial}
-                  className="w-full btn-primary py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg shadow-brand-500/20 hover:scale-[1.01] active:scale-95 transition-all"
+                  className="w-full btn-primary py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60 shadow-md shadow-brand-500/20 hover:scale-[1.01] active:scale-95 transition-all"
                 >
                   {draftingSocial ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                   {draftingSocial ? 'Synthesizing Prompt & Generating...' : 'Generate Social Post'}
                 </button>
               </div>
 
-              <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Social Asset</h2>
+              {/* BOTTOM: Generated Social Asset (Full-Width Compact) */}
+              <div className="p-4 sm:p-5 rounded-2xl glass-card border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Social Asset</h2>
+                  </div>
                   {socialResult && (
-                    <button onClick={() => submitToApprovals(socialResult)} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1">
+                    <button onClick={() => submitToApprovals(socialResult)} className="btn-primary text-xs py-1 px-3 flex items-center gap-1 shadow-sm">
                       <Send className="w-3.5 h-3.5" /> Submit to Approvals
                     </button>
                   )}
                 </div>
 
                 {socialResult ? (
-                  <div className="bg-white dark:bg-slate-900 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden p-6 space-y-6">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md overflow-hidden p-4 sm:p-5 space-y-3.5">
                     {/* Header */}
-                    <div className="flex flex-wrap items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center font-black text-brand-600 dark:text-brand-400 text-xs uppercase shrink-0">
+                    <div className="flex flex-wrap items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center font-black text-brand-600 dark:text-brand-400 text-xs uppercase shrink-0">
                           {activeWorkspace?.brandName ? activeWorkspace.brandName.substring(0, 3).toUpperCase() : 'AI'}
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
+                            <span className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
                               {activeWorkspace?.brandName || 'Brand'} · {socialPlatform.toUpperCase()}
                             </span>
-                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest whitespace-nowrap">
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest whitespace-nowrap">
                               Ready
                             </span>
                           </div>
-                          <p className="text-[11px] text-slate-500 truncate max-w-sm">
+                          <p className="text-[10px] text-slate-500 truncate max-w-sm">
                             Topic: <span className="font-semibold text-slate-700 dark:text-slate-300">"{socialTopic}"</span>
                           </p>
                         </div>
@@ -898,7 +1188,7 @@ export const ContentStudioModule = () => {
                             navigator.clipboard.writeText(fullText);
                             alert('All content copy copied to clipboard!');
                           }}
-                          className="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shadow-sm"
+                          className="py-1 px-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shadow-sm"
                         >
                           <Copy className="w-3.5 h-3.5" /> Copy Text
                         </button>
@@ -923,31 +1213,31 @@ export const ContentStudioModule = () => {
                             }
                             setActiveModule('creative');
                           }}
-                          className="py-1.5 px-3.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                          className="py-1 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
                         >
                           <Sparkles className="w-3.5 h-3.5" /> Creative Studio →
                         </button>
                         <button 
                           onClick={() => setSocialResult(null)} 
-                          className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-400 dark:text-slate-500 transition-colors"
+                          className="p-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-400 dark:text-slate-500 transition-colors"
                           title="Close"
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
 
                     {/* ── CREATIVE STUDIO VISUAL CALLOUT BANNER ── */}
-                    <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-900/20 via-brand-500/15 to-indigo-900/20 border border-purple-500/30 flex flex-wrap items-center justify-between gap-3 shadow-sm">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md shrink-0">
-                          <Sparkles className="w-4 h-4" />
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-purple-900/20 via-brand-500/15 to-indigo-900/20 border border-purple-500/30 flex flex-wrap items-center justify-between gap-2.5 shadow-sm">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md shrink-0">
+                          <Sparkles className="w-3.5 h-3.5" />
                         </div>
                         <div className="min-w-0">
                           <h4 className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
-                            Need Visual Creative & Ad Banners for This Post?
+                            Need Visual Creative &amp; Ad Banners for This Post?
                           </h4>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
                             Design 8K visual assets, carousels, and templates tailored to this copy in Creative Studio.
                           </p>
                         </div>
@@ -973,97 +1263,97 @@ export const ContentStudioModule = () => {
                           }
                           setActiveModule('creative');
                         }}
-                        className="py-2 px-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 shrink-0"
+                        className="py-1.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 shrink-0"
                       >
                         <Sparkles className="w-3.5 h-3.5" /> Design Visual in Creative Studio →
                       </button>
                     </div>
 
-                    {/* Structured Rectangle Cards Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Structured Rectangle Cards Stack (Vertical Layout Compact) */}
+                    <div className="flex flex-col space-y-2.5">
 
                       {/* ── CARD 1: HOOK / HEADLINE ── */}
-                      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-brand-500/40 transition-colors">
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-sm hover:border-brand-500/40 transition-colors">
                         <div className="flex items-center justify-between">
-                          <span className="px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                          <span className="px-2 py-0.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[8px] font-black uppercase tracking-widest flex items-center gap-1">
                             + HOOK / HEADLINE
                           </span>
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => handleRegenerateSection('hook')}
                               disabled={regeneratingSection === 'hook'}
-                              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-brand-50 hover:text-brand-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                              className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-brand-50 hover:text-brand-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
                             >
-                              {regeneratingSection === 'hook' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                              {regeneratingSection === 'hook' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-2.5 h-2.5" />}
                               {regeneratingSection === 'hook' ? 'Regenerating...' : 'Regenerate'}
                             </button>
                             <button
                               onClick={() => navigator.clipboard.writeText(socialResult.hook || '')}
-                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-brand-500 transition-colors"
+                              className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-brand-500 transition-colors"
                             >
-                              <Copy className="w-3.5 h-3.5" />
+                              <Copy className="w-3 h-3" />
                             </button>
                           </div>
                         </div>
-                        <h3 className="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">
+                        <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white leading-snug">
                           {socialResult.hook || 'Upgrade Your Brand Strategy with High-Converting Content! 🚀'}
                         </h3>
                       </div>
 
                       {/* ── CARD 2: STORYTELLING ANGLE ── */}
-                      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-purple-500/40 transition-colors">
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-sm hover:border-purple-500/40 transition-colors">
                         <div className="flex items-center justify-between">
-                          <span className="px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
+                          <span className="px-2 py-0.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-[8px] font-black uppercase tracking-widest flex items-center gap-1">
                             📖 STORYTELLING ANGLE
                           </span>
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => handleRegenerateSection('storytelling')}
                               disabled={regeneratingSection === 'storytelling'}
-                              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-purple-50 hover:text-purple-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                              className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-purple-50 hover:text-purple-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
                             >
-                              {regeneratingSection === 'storytelling' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                              {regeneratingSection === 'storytelling' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-2.5 h-2.5" />}
                               {regeneratingSection === 'storytelling' ? 'Regenerating...' : 'Regenerate'}
                             </button>
                             <button
                               onClick={() => navigator.clipboard.writeText(socialResult.storytelling || 'Every brand has a story, but only the ones with consistent voice build lasting loyalty.')}
-                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-brand-500 transition-colors"
+                              className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-brand-500 transition-colors"
                             >
-                              <Copy className="w-3.5 h-3.5" />
+                              <Copy className="w-3 h-3" />
                             </button>
                           </div>
                         </div>
-                        <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed italic">
+                        <p className="text-[11px] text-slate-700 dark:text-slate-300 font-medium leading-relaxed italic">
                           "{socialResult.storytelling || 'Every brand has a story, but only the ones with consistent voice build lasting loyalty. When you anchor your content to your Brand DNA, every post resonates deeper and converts faster.'}"
                         </p>
                       </div>
 
                       {/* ── CARD 3: CAPTION & BODY COPY ── */}
-                      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm md:col-span-2 hover:border-emerald-500/40 transition-colors">
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-sm hover:border-emerald-500/40 transition-colors">
                         <div className="flex items-center justify-between flex-wrap gap-2">
-                          <div className="flex items-center gap-3">
-                            <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-widest">
-                              ✍️ CAPTION & BODY COPY
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[8px] font-black uppercase tracking-widest">
+                              ✍️ CAPTION &amp; BODY COPY
                             </span>
                             {/* Short / Long Toggle */}
-                            <div className="flex items-center gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                            <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                               <button
                                 onClick={() => setCaptionMode('short')}
-                                className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all ${captionMode === 'short'
+                                className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide transition-all ${captionMode === 'short'
                                     ? 'bg-emerald-500 text-white shadow-sm'
                                     : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                                   }`}
                               >
-                                Short Caption
+                                Short
                               </button>
                               <button
                                 onClick={() => setCaptionMode('long')}
-                                className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all ${captionMode === 'long'
+                                className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide transition-all ${captionMode === 'long'
                                     ? 'bg-emerald-500 text-white shadow-sm'
                                     : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                                   }`}
                               >
-                                Long / Narrative
+                                Long Narrative
                               </button>
                             </div>
                           </div>
@@ -1072,9 +1362,9 @@ export const ContentStudioModule = () => {
                             <button
                               onClick={() => handleRegenerateSection(captionMode === 'short' ? 'shortCaption' : 'longCaption')}
                               disabled={regeneratingSection === 'shortCaption' || regeneratingSection === 'longCaption'}
-                              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                              className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
                             >
-                              {(regeneratingSection === 'shortCaption' || regeneratingSection === 'longCaption') ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                              {(regeneratingSection === 'shortCaption' || regeneratingSection === 'longCaption') ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-2.5 h-2.5" />}
                               {(regeneratingSection === 'shortCaption' || regeneratingSection === 'longCaption') ? 'Regenerating...' : 'Regenerate'}
                             </button>
                             <button
@@ -1084,14 +1374,14 @@ export const ContentStudioModule = () => {
                                   : (socialResult.longCaption || socialResult.caption || '');
                                 navigator.clipboard.writeText(txt);
                               }}
-                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-emerald-500 transition-colors"
+                              className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-emerald-500 transition-colors"
                             >
-                              <Copy className="w-3.5 h-3.5" />
+                              <Copy className="w-3 h-3" />
                             </button>
                           </div>
                         </div>
 
-                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                           {captionMode === 'short' ? (
                             <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">
                               {socialResult.shortCaption || socialResult.short_caption || 'Transform your brand velocity with AI-driven content tailored to your audience!'}
@@ -1105,25 +1395,25 @@ export const ContentStudioModule = () => {
                       </div>
 
                       {/* ── CARD 4: CALL TO ACTION (CTA) ── */}
-                      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-amber-500/40 transition-colors">
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-sm hover:border-amber-500/40 transition-colors">
                         <div className="flex items-center justify-between">
-                          <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase tracking-widest">
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[8px] font-black uppercase tracking-widest">
                             🎯 CALL TO ACTION (CTA)
                           </span>
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => handleRegenerateSection('cta')}
                               disabled={regeneratingSection === 'cta'}
-                              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-amber-50 hover:text-amber-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                              className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-amber-50 hover:text-amber-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
                             >
-                              {regeneratingSection === 'cta' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                              {regeneratingSection === 'cta' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-2.5 h-2.5" />}
                               {regeneratingSection === 'cta' ? 'Regenerating...' : 'Regenerate'}
                             </button>
                             <button
                               onClick={() => navigator.clipboard.writeText(socialResult.cta || socialResult.callToAction || '')}
-                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-amber-500 transition-colors"
+                              className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-amber-500 transition-colors"
                             >
-                              <Copy className="w-3.5 h-3.5" />
+                              <Copy className="w-3 h-3" />
                             </button>
                           </div>
                         </div>
@@ -1133,23 +1423,23 @@ export const ContentStudioModule = () => {
                       </div>
 
                       {/* ── CARD 5: SEO HASHTAGS & KEYWORDS ── */}
-                      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-rose-500/40 transition-colors">
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-sm hover:border-rose-500/40 transition-colors">
                         <div className="flex items-center justify-between">
-                          <span className="px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
-                            <Hash className="w-3 h-3" /> SEO HASHTAGS & TAGS
+                          <span className="px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-[8px] font-black uppercase tracking-widest flex items-center gap-1">
+                            <Hash className="w-3 h-3" /> SEO HASHTAGS &amp; TAGS
                           </span>
                           <button
                             onClick={() => handleRegenerateSection('hashtags')}
                             disabled={regeneratingSection === 'hashtags'}
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
+                            className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-50"
                           >
-                            {regeneratingSection === 'hashtags' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                            {regeneratingSection === 'hashtags' ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-2.5 h-2.5" />}
                             {regeneratingSection === 'hashtags' ? 'Regenerating...' : 'Regenerate'}
                           </button>
                         </div>
                         <div className="flex flex-wrap gap-1.5">
                           {(socialResult.hashtags?.length > 0 ? socialResult.hashtags : ['#BrandContent', '#AIMarketing', '#SocialMediaStrategy', '#ContentVelocity', '#BrandDNA']).map((h, i) => (
-                            <span key={i} className="px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-brand-600 dark:text-brand-400 text-xs font-bold cursor-pointer hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-colors"
+                            <span key={i} className="px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-brand-600 dark:text-brand-400 text-[11px] font-bold cursor-pointer hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-colors"
                               onClick={() => navigator.clipboard.writeText(h.startsWith('#') ? h : `#${h}`)}
                               title="Click to copy hashtag"
                             >
@@ -1160,7 +1450,7 @@ export const ContentStudioModule = () => {
                       </div>
 
                       {/* ── CARD 6: CREATIVE COPY VARIATIONS & ANGLES ── */}
-                      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm md:col-span-2 hover:border-cyan-500/40 transition-colors">
+                      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm hover:border-cyan-500/40 transition-colors">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center border border-cyan-500/20">
@@ -1435,6 +1725,35 @@ export const ContentStudioModule = () => {
                   </div>
                 </div>
 
+                {/* ── LIVE & EDITABLE AI EMAIL PROMPT ── */}
+                <div className="p-3.5 rounded-2xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3 text-brand-500" /> AI Email Prompt
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[9px] font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded-md">
+                        EDITABLE
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setEmailPrompt(buildEmailPrompt(emailForm))}
+                        className="text-[9px] font-bold text-slate-500 hover:text-brand-500 underline flex items-center gap-0.5"
+                        title="Reset to default email prompt"
+                      >
+                        <RefreshCw className="w-2.5 h-2.5" /> Reset
+                      </button>
+                    </div>
+                  </div>
+                  <textarea
+                    rows={4}
+                    value={emailPrompt}
+                    onChange={(e) => setEmailPrompt(e.target.value)}
+                    placeholder="Custom email prompt directives..."
+                    className="w-full p-2.5 rounded-xl font-mono text-[11px] leading-relaxed text-slate-800 dark:text-slate-200 bg-white/80 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  />
+                </div>
+
                 <button
                   onClick={handleGenerateEmail}
                   disabled={draftingEmail}
@@ -1494,7 +1813,12 @@ export const ContentStudioModule = () => {
           {tab === 'AD_COPY' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Ad Copy Parameters</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Ad Copy Parameters</h2>
+                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 uppercase tracking-wider">
+                    {activeWorkspace?.brandName || 'Brand DNA'}
+                  </span>
+                </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Product / Feature Focus</label>
                   <input
@@ -1514,6 +1838,36 @@ export const ContentStudioModule = () => {
                     {['facebook', 'instagram', 'google', 'linkedin'].map((p) => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
+
+                {/* ── LIVE & EDITABLE AI AD COPY PROMPT ── */}
+                <div className="p-3.5 rounded-2xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3 text-brand-500" /> AI Ad Copy Prompt
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[9px] font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded-md">
+                        EDITABLE
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setAdCopyPrompt(buildAdPrompt(adProduct, adPlatform))}
+                        className="text-[9px] font-bold text-slate-500 hover:text-brand-500 underline flex items-center gap-0.5"
+                        title="Reset to default ad prompt"
+                      >
+                        <RefreshCw className="w-2.5 h-2.5" /> Reset
+                      </button>
+                    </div>
+                  </div>
+                  <textarea
+                    rows={3}
+                    value={adCopyPrompt}
+                    onChange={(e) => setAdCopyPrompt(e.target.value)}
+                    placeholder="Custom ad prompt directives..."
+                    className="w-full p-2.5 rounded-xl font-mono text-[11px] leading-relaxed text-slate-800 dark:text-slate-200 bg-white/80 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  />
+                </div>
+
                 <button
                   onClick={handleGenerateAd}
                   disabled={draftingAd}
@@ -1573,121 +1927,6 @@ export const ContentStudioModule = () => {
               </div>
             </div>
           )}
-
-          {/* 5. {t('newspaper', 'Newspaper')} & Print Studio */}
-          {tab === 'NEWSPAPER' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
-                  <Newspaper className="w-5 h-5" />
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">{t('newspaper', 'Newspaper')} & PR Parameters</h2>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Press Release / Headline Topic</label>
-                  <textarea
-                    rows={3}
-                    value={newspaperTopic}
-                    onChange={(e) => setNewspaperTopic(e.target.value)}
-                    className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Publication Format</label>
-                  <select
-                    value={newspaperFormat}
-                    onChange={(e) => setNewspaperFormat(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 capitalize"
-                  >
-                    <option value="press_release">Official Corporate Press Release (AP Style)</option>
-                    <option value="national_daily">National Daily Newspaper Front-Page Feature</option>
-                    <option value="print_advertorial">High-Impact Print Advertorial Column</option>
-                    <option value="trade_magazine">Industry Trade Magazine Feature Story</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Journalistic Tone & Style</label>
-                  <select
-                    value={newspaperTone}
-                    onChange={(e) => setNewspaperTone(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
-                  >
-                    <option value="ap_corporate">AP Style Corporate Announcement</option>
-                    <option value="investigative">Investigative Industry Feature</option>
-                    <option value="executive_thought_leadership">Executive Thought Leadership Column</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Dateline & Location Stamp</label>
-                  <input
-                    type="text"
-                    value={newspaperDateline}
-                    onChange={(e) => setNewspaperDateline(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100"
-                  />
-                </div>
-
-                <button
-                  onClick={handleDraftNewspaper}
-                  disabled={draftingNewspaper}
-                  className="w-full bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-60 transition-colors shadow-md"
-                >
-                  {draftingNewspaper ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                  {draftingNewspaper ? 'Drafting Press Story...' : 'Generate Newspaper Copy'}
-                </button>
-              </div>
-
-              {/* {t('newspaper', 'Newspaper')} Editorial Canvas */}
-              <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{t('newspaper', 'Newspaper')} & PR Proofing Canvas</span>
-                  {newspaperDraft && (
-                    <button onClick={() => submitToApprovals(newspaperDraft)} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1">
-                      <Send className="w-3.5 h-3.5" /> Submit to Approvals
-                    </button>
-                  )}
-                </div>
-
-                {newspaperDraft ? (
-                  <div className="space-y-4 p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-slate-900 dark:text-slate-100">
-                    <div className="space-y-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-                      <span className="text-[10px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-widest">{newspaperDraft.format}</span>
-                      <input
-                        type="text"
-                        value={newspaperDraft.headline}
-                        onChange={(e) => setNewspaperDraft({ ...newspaperDraft, headline: e.target.value })}
-                        className="w-full text-lg font-black text-slate-900 dark:text-white bg-transparent focus:outline-none tracking-tight uppercase"
-                      />
-                      <input
-                        type="text"
-                        value={newspaperDraft.subheadline}
-                        onChange={(e) => setNewspaperDraft({ ...newspaperDraft, subheadline: e.target.value })}
-                        className="w-full text-xs font-semibold text-slate-600 dark:text-slate-400 bg-transparent focus:outline-none italic"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Official Press Release Body & Boilerplate</label>
-                      <textarea
-                        rows={14}
-                        value={newspaperDraft.bodyContent}
-                        onChange={(e) => setNewspaperDraft({ ...newspaperDraft, bodyContent: e.target.value })}
-                        className="w-full p-4 rounded-2xl font-mono text-xs leading-relaxed text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-inner"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-12 text-center text-slate-500 space-y-2">
-                    <Newspaper className="w-8 h-8 mx-auto text-amber-500/70" />
-                    <p className="text-xs font-medium">Configure publication parameters and click "Generate Newspaper Copy" to draft press releases, print advertorials, and AP-style announcements.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       ) : (
         <div className="space-y-6">
@@ -1706,8 +1945,8 @@ export const ContentStudioModule = () => {
             </div>
           </div>
 
-          {/* 4 Channel Grid Cards ({t('blog', 'Blog')}, {t('socialMedia', 'Social Media')}, {t('emailLetter', 'Email / Letter')}, {t('newspaper', 'Newspaper')}) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* 3 Core Channel Grid Cards (Blog, Social Media, Email / Letter) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               {
                 id: 'BLOG',
@@ -1738,16 +1977,6 @@ export const ContentStudioModule = () => {
                 hoverBorder: 'hover:border-emerald-400/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] dark:hover:border-emerald-400/40',
                 badgeBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
                 iconColor: 'text-emerald-500'
-              },
-              {
-                id: 'NEWSPAPER',
-                title: t('newspaper', 'Newspaper'),
-                subtitle: 'Press Releases & Print Copy',
-                icon: Newspaper,
-                colorClass: 'from-amber-500/10 to-orange-500/5',
-                hoverBorder: 'hover:border-amber-400/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] dark:hover:border-amber-400/40',
-                badgeBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-                iconColor: 'text-amber-500'
               }
             ].map((card) => {
               const Icon = card.icon;
@@ -1789,7 +2018,7 @@ export const ContentStudioModule = () => {
             </div>
             <h3 className="text-base font-extrabold text-slate-900 dark:text-white">{t('selectChannelStudio', 'Select a Channel Studio to Begin')}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-              Click on any channel card above ({t('blog', 'Blog')}, {t('socialMedia', 'Social Media')}, Email, or {t('newspaper', 'Newspaper')}) to open its dedicated studio drafting page.
+              Click on any channel card above ({t('blog', 'Blog')}, {t('socialMedia', 'Social Media')}, or Email) to open its dedicated studio drafting page.
             </p>
           </div>
         </div>

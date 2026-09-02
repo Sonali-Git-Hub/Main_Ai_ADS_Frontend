@@ -721,8 +721,6 @@ export const CreativeStudioModule = () => {
 
     if (type === 'EMAIL' || plat === 'email' || plat === 'newsletter') {
       setSelectedFormat('EMAIL');
-    } else if (type === 'NEWSPAPER' || plat === 'press' || plat === 'press_release' || plat === 'newspaper') {
-      setSelectedFormat('NEWSPAPER');
     } else if (type === 'BLOG' || plat === 'blog' || plat === 'seo' || plat === 'website') {
       setSelectedFormat('BLOG');
     } else if (type === 'SOCIAL' || ['instagram', 'linkedin', 'twitter', 'facebook', 'youtube', 'tiktok'].includes(plat)) {
@@ -804,19 +802,6 @@ export const CreativeStudioModule = () => {
       badgeBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
       iconColor: 'text-amber-500',
       accentClass: 'border-amber-500/30 bg-amber-500/5'
-    },
-    {
-      id: 'NEWSPAPER',
-      type: 'BLOG',
-      platform: 'press',
-      title: 'Newspaper',
-      subtitle: 'Press Releases, Print Copy & Announcements',
-      icon: Newspaper,
-      colorClass: 'from-emerald-500/10 to-teal-500/5',
-      hoverBorder: 'hover:border-emerald-400/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]',
-      badgeBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-      iconColor: 'text-emerald-500',
-      accentClass: 'border-emerald-500/30 bg-emerald-500/5'
     }
   ];
 
@@ -841,15 +826,15 @@ export const CreativeStudioModule = () => {
       cta: 'Read full 2,000-word SEO article',
       hashtags: ['#SEO', '#ContentStrategy', '#B2BGrowth']
     },
-    NEWSPAPER: {
-      type: 'BLOG',
-      platform: 'press',
-      topic: `${activeWorkspace?.brandName || 'Brand'} Newspaper & Press Release`,
-      headline: `PRESS RELEASE: ${activeWorkspace?.brandName || 'Brand'} Announces Major Milestone`,
-      hook: `FOR IMMEDIATE RELEASE — Official Media Statement`,
-      caption: `MUMBAI / NEW DELHI — ${activeWorkspace?.brandName || 'The Company'} today announced a milestone expansion in its digital operations, setting new standards for industry performance...`,
-      cta: 'Media Contact & Press Kit available upon request',
-      hashtags: ['#PressRelease', '#MediaCoverage', '#BrandNews']
+    EMAIL: {
+      type: 'EMAIL',
+      platform: 'email',
+      topic: `${activeWorkspace?.brandName || 'Brand'} Email Newsletter`,
+      headline: `Exclusive Updates from ${activeWorkspace?.brandName || 'our team'}`,
+      hook: `Here is your weekly digest of industry updates and tactical insights.`,
+      caption: `Hello {{First_Name}},\n\nWe are excited to share the latest developments from our product and marketing teams...`,
+      cta: 'Explore All Updates Now',
+      hashtags: ['#Newsletter', '#EmailMarketing']
     }
   };
 

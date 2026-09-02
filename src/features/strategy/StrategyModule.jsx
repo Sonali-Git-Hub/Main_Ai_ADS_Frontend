@@ -556,9 +556,6 @@ export const StrategyModule = () => {
                   </div>
                   {t('objectivesPathTitle', 'Objectives & Conversion Path')}
                 </h2>
-                <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" /> Click to edit
-                </span>
               </div>
 
               <div className="space-y-3">
@@ -876,9 +873,8 @@ export const StrategyModule = () => {
                       const platformRaw = (item.platform || 'instagram').toLowerCase();
                       const isEmail = platformRaw.includes('email') || platformRaw.includes('newsletter');
                       const isBlog = platformRaw.includes('blog') || platformRaw.includes('seo') || platformRaw.includes('article');
-                      const isNewspaper = platformRaw.includes('press') || platformRaw.includes('newspaper');
-                      const type = isEmail ? 'EMAIL' : isBlog ? 'BLOG' : isNewspaper ? 'NEWSPAPER' : 'SOCIAL';
-                      const platform = isEmail ? 'email' : isBlog ? 'blog' : isNewspaper ? 'newspaper' : platformRaw.includes('linkedin') ? 'linkedin' : platformRaw.includes('twitter') ? 'twitter' : 'instagram';
+                      const type = isEmail ? 'EMAIL' : isBlog ? 'BLOG' : 'SOCIAL';
+                      const platform = isEmail ? 'email' : isBlog ? 'blog' : platformRaw.includes('linkedin') ? 'linkedin' : platformRaw.includes('twitter') ? 'twitter' : 'instagram';
 
                       const brandName = activeWorkspace?.brandName || 'Redbus';
                       const isReelsOrStory = platformRaw.includes('reel') || platformRaw.includes('tiktok') || platformRaw.includes('story');

@@ -137,28 +137,47 @@ export const BrandDnaModule = () => {
 
   const workspaceId = activeWorkspace?._id || activeWorkspace?.id;
 
+  const isBrandExist = Boolean(
+    activeWorkspace &&
+    activeWorkspace.id !== 'ws_empty' &&
+    activeWorkspace._id !== 'ws_empty' &&
+    activeWorkspace.brandName &&
+    activeWorkspace.brandName !== 'No Brand Loaded'
+  );
+
   const loadBrandProfile = useCallback(async () => {
-    if (!workspaceId) return;
-    setLoading(true);
+    if (!workspaceId || workspaceId === 'ws_empty') {
+      setLoading(false);
+      return;
+    }
+    if (!isBrandExist) {
+      setLoading(true);
+    }
     setError('');
     try {
       const result = await brandAPI.getProfile(workspaceId);
-      if (result.profile) {
-        setProfile(result.profile);
+      if (result && result.profile) {
+        setProfile(prev => ({
+          ...(isBrandExist ? activeWorkspace : {}),
+          ...result.profile
+        }));
       }
     } catch (err) {
-      // Profile not created yet — offer analysis
       console.log('No brand profile found yet:', err.message);
     } finally {
       setLoading(false);
     }
-  }, [workspaceId]);
+  }, [workspaceId, isBrandExist, activeWorkspace]);
 
   useEffect(() => {
-    setProfile(null); // Reset profile when switching active workspace
+    if (isBrandExist) {
+      setProfile(activeWorkspace);
+    } else {
+      setProfile(null);
+    }
     loadBrandProfile();
     setWebsiteUrl(activeWorkspace?.domainUrl || '');
-  }, [loadBrandProfile, activeWorkspace]);
+  }, [loadBrandProfile, activeWorkspace, isBrandExist]);
 
   const handleRunAiAnalysis = async () => {
     const targetUrl = websiteUrl || activeWorkspace?.domainUrl || '';
@@ -228,18 +247,35 @@ export const BrandDnaModule = () => {
     profile.workspaceId === workspaceId ||
     profile.workspaceId === activeWorkspace?._id ||
     profile.workspaceId === activeWorkspace?.id ||
-    profile.companyName?.toLowerCase() === activeWorkspace?.brandName?.toLowerCase()
+    profile._id === workspaceId ||
+    profile.id === workspaceId ||
+    profile.companyName?.toLowerCase() === activeWorkspace?.brandName?.toLowerCase() ||
+    profile.brandName?.toLowerCase() === activeWorkspace?.brandName?.toLowerCase()
   );
 
   const matchedProfile = isProfileMatching ? profile : null;
 
-  // Single-Ownership Source of Truth: BrandProfile (GET /api/brand/:workspaceId)
-  const canonicalSource = matchedProfile || profile;
+  // Single-Ownership Source of Truth: BrandProfile (GET /api/brand/:workspaceId) merged with activeWorkspace
+  const rawSource = matchedProfile || profile || (isBrandExist ? activeWorkspace : null);
+  const canonicalSource = isBrandExist
+    ? { ...activeWorkspace, ...(rawSource || {}) }
+    : rawSource;
+
   const normalizedDna = canonicalSource ? normalizeBrandDna(canonicalSource) : null;
   const effectiveProfile = normalizedDna ? {
     ...normalizedDna,
+    companyName: normalizedDna.companyName || activeWorkspace?.brandName || 'Brand Workspace',
+    brandName: normalizedDna.brandName || activeWorkspace?.brandName || 'Brand Workspace',
     website: normalizedDna.domainUrl || activeWorkspace?.domainUrl || '',
-    aiConfidence: normalizedDna.confidenceScore || 85
+    aiConfidence: normalizedDna.confidenceScore || 85,
+    industryCategory: normalizedDna.industryCategory || activeWorkspace?.industryCategory || null,
+    headquarters: normalizedDna.headquarters || activeWorkspace?.headquarters || activeWorkspace?.contactInfo?.location || null,
+    tagline: normalizedDna.tagline || activeWorkspace?.tagline || null,
+    missionStatement: normalizedDna.missionStatement || activeWorkspace?.missionStatement || null,
+    vision: normalizedDna.vision || activeWorkspace?.vision || null,
+    targetAudience: (normalizedDna.targetAudience && normalizedDna.targetAudience.length > 0) ? normalizedDna.targetAudience : (Array.isArray(activeWorkspace?.targetAudience) ? activeWorkspace.targetAudience : []),
+    coreProductsServices: (normalizedDna.coreProductsServices && normalizedDna.coreProductsServices.length > 0) ? normalizedDna.coreProductsServices : (Array.isArray(activeWorkspace?.coreProductsServices) ? activeWorkspace.coreProductsServices : []),
+    brandColors: (normalizedDna.brandColors && normalizedDna.brandColors.length > 0) ? normalizedDna.brandColors : (Array.isArray(activeWorkspace?.brandColors) && activeWorkspace.brandColors.length > 0 ? activeWorkspace.brandColors : ['#C13D4A', '#49171C', '#DF9AA1', '#0F172A'])
   } : null;
 
   const handleSaveProfile = async () => {
@@ -275,7 +311,8 @@ export const BrandDnaModule = () => {
   const noBrand =
     !activeWorkspace ||
     activeWorkspace.id === 'ws_empty' ||
-    !workspaceId;
+    activeWorkspace._id === 'ws_empty' ||
+    !isBrandExist;
 
   if (noBrand) {
     return (
@@ -433,8 +470,8 @@ export const BrandDnaModule = () => {
       )}
 
 
-      {/* Input bar for URL / Description ONLY if no workspace is active at all */}
-      {!effectiveProfile && !loading && (
+      {/* Input bar for URL / Description ONLY if no brand/workspace exists */}
+      {!isBrandExist && !effectiveProfile && !loading && (
         <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
           <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Initialize Brand AI Analysis</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

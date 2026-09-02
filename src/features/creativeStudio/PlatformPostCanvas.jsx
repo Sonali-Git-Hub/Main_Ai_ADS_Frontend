@@ -517,9 +517,8 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
 
   const isCarousel  = rawPostType.includes("carousel");
   const isEmail     = rawType==="EMAIL"     || platform==="email";
-  const isNewspaper = rawType==="NEWSPAPER" || platform==="newspaper" || platform==="press_release";
   const isBlog      = rawType==="BLOG"      || platform==="blog"      || platform==="seo";
-  const formatLabel = isCarousel?"Carousel":isEmail?"Email Template":isNewspaper?"Newspaper / Press":isBlog?"SEO Blog Article":"Single Image Post";
+  const formatLabel = isCarousel?"Carousel":isEmail?"Email Template":isBlog?"SEO Blog Article":"Single Image Post";
 
   // ─── Save Asset to Library & Redirect ─────────────────────────────────────
   const [isSavingAsset, setIsSavingAsset] = useState(false);
@@ -541,11 +540,6 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
       assetType = 'EMAIL';
       assetName = `Email: ${generatedContent?.subject || hook || topic}`;
       assetContent = `Subject: ${generatedContent?.subject || hook}\nPreheader: ${generatedContent?.preheader || shortCap}\n\n${generatedContent?.body || longCap || caption}`;
-      assetUrl = visualUrl;
-    } else if (isNewspaper) {
-      assetType = 'NEWSPAPER';
-      assetName = `Press Release: ${generatedContent?.headline || hook || topic}`;
-      assetContent = `${generatedContent?.leadParagraph || ''}\n\n${generatedContent?.bodyContent || longCap || caption}`;
       assetUrl = visualUrl;
     } else if (isCarousel) {
       assetType = 'CAROUSEL';
@@ -651,7 +645,12 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
         <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="space-y-4">
-            <CopySidebar hook={hook} story={story} shortCap={shortCap} longCap={longCap} cta={cta} extras={[{label:"Email Subject",value:emailSubject,color:"amber"},{label:"Preheader",value:emailPre,color:"slate"}]} />
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">Email Campaign Specs</span>
+              <ContentPill label="Subject Line" value={emailSubject} color="brand" />
+              {emailPre && <ContentPill label="Preheader Text" value={emailPre} color="indigo" />}
+              <ContentPill label="Sender Brand" value={brand} color="slate" />
+            </div>
           </div>
           <div className="lg:col-span-2">
             <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-2xl font-sans">
@@ -659,17 +658,23 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
                 <div className="flex items-center gap-1.5 mb-2"><div className="w-3 h-3 rounded-full bg-red-400"/><div className="w-3 h-3 rounded-full bg-amber-400"/><div className="w-3 h-3 rounded-full bg-emerald-400"/></div>
                 <div className="grid grid-cols-[45px_1fr] gap-1 text-[11px] text-slate-600 dark:text-slate-300">
                   <span className="font-black uppercase text-slate-400">From:</span><span className="font-semibold">{brand} &lt;noreply@{domain}&gt;</span>
-                  <span className="font-black uppercase text-slate-400">To:</span><span className="font-semibold">Subscribers & Audience List</span>
+                  <span className="font-black uppercase text-slate-400">To:</span><span className="font-semibold">Subscribers &amp; Audience List</span>
                   <span className="font-black uppercase text-slate-400">Sub:</span><span className="font-extrabold text-slate-900 dark:text-white">{emailSubject}</span>
                   {emailPre && <><span className="font-black uppercase text-slate-400">Pre:</span><span className="italic text-slate-500">{emailPre}</span></>}
                 </div>
               </div>
               <div className="bg-white dark:bg-slate-900 p-6 space-y-5">
                 <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-sans">{emailBody||caption}</div>
-                {story && (<div className="p-4 rounded-xl bg-brand-500/5 border border-brand-500/20"><span className="text-[8px] font-black uppercase tracking-widest text-brand-500 block mb-1">Storytelling Angle</span><p className="text-xs text-slate-700 dark:text-slate-300 italic leading-relaxed">{story}</p></div>)}
-                {shortCap && (<div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"><span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">P.S.</span><p className="text-xs text-slate-600 dark:text-slate-400 italic">{shortCap}</p></div>)}
-                {cta && <div className="text-center py-3"><button className="py-3 px-8 rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 text-white font-bold text-xs shadow-lg hover:shadow-xl transition-all">{cta}</button></div>}
-                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 whitespace-pre-wrap"><p className="font-medium">{"Warm regards,\n"+brand+" Team"}</p></div>
+                {contentData?.cta && (
+                  <div className="text-center py-3">
+                    <button className="py-3 px-8 rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 text-white font-bold text-xs shadow-lg hover:shadow-xl transition-all">
+                      {contentData.cta}
+                    </button>
+                  </div>
+                )}
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 whitespace-pre-wrap">
+                  <p className="font-medium">{"Warm regards,\n"+brand+" Team"}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -677,95 +682,82 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
       </div>
     );
   }
-  // ── C. NEWSPAPER ──
-  if (isNewspaper) {
-    const headline    = generatedContent?.headline    || hook;
-    const subheadline = generatedContent?.subheadline || ("Exclusive Report by "+brand);
-    const dateline    = generatedContent?.dateline    || ("MUMBAI, INDIA - "+new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"}));
-    const leadPara    = generatedContent?.leadParagraph || caption;
-    const bodyContent = generatedContent?.bodyContent   || longCap || caption;
-    return (
-      <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
-        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="space-y-4">
-            <CopySidebar hook={hook} story={story} shortCap={shortCap} longCap={longCap} cta={cta} hashtags={hashtags}
-              extras={[{label:"Headline",value:headline,color:"amber"},{label:"Sub-Headline",value:subheadline,color:"slate"},{label:"Dateline",value:dateline,color:"slate"},{label:"Lead Para",value:leadPara,color:"brand"}]} />
-          </div>
-          <div className="lg:col-span-2">
-            <div className="rounded-3xl overflow-hidden border border-slate-300 dark:border-slate-700 shadow-2xl font-serif">
-              <div className="bg-slate-900 text-white px-6 py-4 text-center space-y-1">
-                <p className="text-[8px] font-sans font-black uppercase tracking-[0.3em] text-slate-400">National Press Bureau - Sponsored</p>
-                <h1 className="text-xl font-black uppercase tracking-tight">{brand.toUpperCase()} GAZETTE</h1>
-                <p className="text-[10px] font-sans text-slate-400">{dateline}</p>
-              </div>
-              <div className="bg-amber-50/30 dark:bg-slate-950 p-6 space-y-4">
-                <div className="border-b-2 border-slate-900 dark:border-slate-100 pb-3 space-y-1">
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight uppercase">{headline}</h2>
-                  <p className="text-sm font-bold font-sans text-amber-700 dark:text-amber-400">{subheadline}</p>
-                </div>
-                <div className="aspect-video rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 float-right ml-5 mb-4 w-[45%]">
-                  <img src={visualUrl} alt={topic} className="w-full h-full object-cover" />
-                </div>
-                <p className="text-sm font-bold text-slate-900 dark:text-white leading-relaxed font-sans">{leadPara}</p>
-                {story && (<div className="border-l-4 border-amber-500 pl-4 my-2 clear-both"><p className="text-xs font-sans text-slate-700 dark:text-slate-300 italic leading-relaxed">{story}</p></div>)}
-                <div className="text-xs text-slate-700 dark:text-slate-300 font-sans leading-relaxed whitespace-pre-wrap clear-both">{bodyContent}</div>
-                {shortCap && (<div className="my-4 p-4 border-y-2 border-slate-900 dark:border-slate-100 text-center"><p className="text-base font-black italic text-slate-900 dark:text-white">"{shortCap}"</p></div>)}
-                <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-200 dark:border-slate-700">
-                  <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider mr-1">Keywords:</span>
-                  {hashArr.map((h,i)=><span key={i} className="text-[9px] font-bold text-amber-700 dark:text-amber-400">{h}</span>)}
-                </div>
-                <div className="mt-2 p-3 rounded-xl bg-slate-900 text-white text-center font-sans"><p className="text-xs font-bold">{cta}</p></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  // ── D. BLOG ──
+  // ── C. BLOG ──
   if (isBlog) {
     const blogTitle   = contentData?.title || hook || topic;
     const blogContent = contentData?.content || contentData?.body || longCap || caption;
-    const metaDesc    = contentData?.metaDescription || shortCap || "";
+    const metaDesc    = contentData?.metaDescription || "";
+    const wordCount   = contentData?.wordCount || (blogContent ? blogContent.split(/\s+/).length : 0);
+    const kwList      = Array.isArray(contentData?.keywords) ? contentData.keywords : [];
+
     return (
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
         <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="space-y-4">
             <VisualControls visualStyle={visualStyle} setVisualStyle={setVisualStyle} generating={generating} onGenerate={handleGenerateVisual} />
-            <CopySidebar hook={blogTitle} story={story} shortCap={shortCap} longCap={blogContent} cta={cta} hashtags={hashtags} extras={[{label:"Meta Description",value:metaDesc,color:"purple"}]} />
+            
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">Article Specifications</span>
+              <ContentPill label="Article Title" value={blogTitle} color="brand" />
+              {metaDesc && <ContentPill label="Meta Description" value={metaDesc} color="purple" />}
+              {kwList.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-[8px] font-black uppercase tracking-widest text-indigo-500">Target Keywords</span>
+                  <div className="flex flex-wrap gap-1">
+                    {kwList.map((kw, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold">
+                        {kw}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-bold">
+                <div>Word Count: <span className="text-slate-900 dark:text-white font-extrabold">{wordCount || 1800}</span></div>
+                <div>Read Time: <span className="text-slate-900 dark:text-white font-extrabold">{contentData?.readingTime || '5 min'}</span></div>
+              </div>
+            </div>
           </div>
+
           <div className="lg:col-span-2">
             <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-2xl bg-white dark:bg-slate-900 font-sans">
               <div className="aspect-video relative overflow-hidden">
                 <img src={visualUrl} alt={topic} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 to-transparent flex items-end p-6">
-                  <div className="space-y-1"><span className="text-[9px] font-black uppercase tracking-widest text-brand-400">SEO Blog Article</span><h2 className="text-white font-extrabold text-xl leading-tight">{blogTitle}</h2></div>
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-brand-400">SEO Blog Article</span>
+                    <h2 className="text-white font-extrabold text-xl leading-tight">{blogTitle}</h2>
+                  </div>
                 </div>
               </div>
               <div className="p-6 space-y-4">
                 <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-400 font-bold">
                   <span className="font-black text-slate-700 dark:text-slate-300">{brand}</span><span>·</span>
                   <span>{new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}</span><span>·</span>
-                  <span className="text-purple-500">5 min read</span><span>·</span><span className="text-emerald-500">SEO Optimised</span>
+                  <span className="text-purple-500">{contentData?.readingTime || '5 min read'}</span><span>·</span>
+                  <span className="text-emerald-500">SEO Optimised</span>
                 </div>
                 {metaDesc && <p className="text-xs text-slate-500 italic border-l-4 border-purple-500 pl-3 leading-relaxed">{metaDesc}</p>}
-                {story && (<div className="p-3 rounded-xl bg-brand-500/5 border border-brand-500/20"><span className="text-[8px] font-black uppercase text-brand-500 tracking-widest block mb-1">Storytelling Angle</span><p className="text-xs text-slate-700 dark:text-slate-300 italic leading-relaxed">{story}</p></div>)}
                 <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-sans space-y-2">
                   {renderFormattedArticle(blogContent)}
                 </div>
-                {shortCap && shortCap!==blogContent && <p className="text-xs text-slate-500 dark:text-slate-400 italic">{shortCap}</p>}
-                <div className="flex flex-wrap gap-1.5 pt-2">{hashArr.map((h,i)=><span key={i} className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-[9px] font-bold">{h}</span>)}</div>
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <button className="py-2.5 px-6 rounded-xl bg-brand-600 text-white font-bold text-xs shadow-md">{cta}</button>
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`# ${blogTitle}\n\n${blogContent}`);
+                      alert('Blog article copied to clipboard!');
+                    }}
+                    className="py-2 px-4 rounded-xl btn-secondary text-xs font-bold flex items-center gap-1.5"
+                  >
+                    <Copy className="w-3.5 h-3.5" /> Copy Full Article
+                  </button>
                   <button
                     onClick={handleSaveToAssetLibrary}
                     disabled={isSavingAsset}
-                    className="py-2 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-colors"
+                    className="py-2.5 px-5 rounded-xl btn-primary font-bold text-xs flex items-center gap-1.5 shadow-md"
                   >
-                    <FolderPlus className="w-3.5 h-3.5 text-brand-500" />
-                    Save Blog to Assets
+                    <FolderPlus className="w-3.5 h-3.5" /> Save Blog to Assets
                   </button>
                 </div>
               </div>

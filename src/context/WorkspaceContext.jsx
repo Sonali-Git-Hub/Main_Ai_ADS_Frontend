@@ -70,12 +70,9 @@ export const TRANSLATIONS = {
     "websiteBuilder": "7. AI Website Builder",
     "campaigns": "8. Campaigns",
     "creative": "9. Creative Studio",
-    "repurpose": "10. Repurpose",
-    "assets": "11. Asset Library",
-    "approvals": "12. Approvals Desk",
-    "analytics": "13. Analytics",
-    "team": "14. Team & RBAC",
-    "settings": "13. Settings & Billing",
+    "assets": "10. Asset Library",
+    "approvals": "11. Approvals Desk",
+    "settings": "12. Settings & Billing",
     "settingsBtn": "Settings & Billing",
     "quickSocialPost": "Quick Social Post",
     "engineActive": "AISA™ Engine Active",
@@ -2420,15 +2417,15 @@ export const WorkspaceProvider = ({ children }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newAsset)
-      }).catch(() => {});
-    } catch (e) {}
+      }).catch(() => { });
+    } catch (e) { }
 
     setGlobalAssets(prev => {
       const updated = [newAsset, ...prev];
       try {
         if (activeWorkspaceId) localStorage.setItem(`aisa_assets_${activeWorkspaceId}`, JSON.stringify(updated));
         localStorage.setItem('aisa_global_assets', JSON.stringify(updated));
-      } catch (e) {}
+      } catch (e) { }
       return updated;
     });
 
@@ -2441,7 +2438,7 @@ export const WorkspaceProvider = ({ children }) => {
       try {
         if (activeWorkspaceId) localStorage.setItem(`aisa_assets_${activeWorkspaceId}`, JSON.stringify(updated));
         localStorage.setItem('aisa_global_assets', JSON.stringify(updated));
-      } catch (e) {}
+      } catch (e) { }
       return updated;
     });
   };
@@ -2530,7 +2527,7 @@ export const WorkspaceProvider = ({ children }) => {
               cleanTitle = parsed.title || cleanTitle;
               cleanMeta = parsed.metaDescription || '';
             }
-          } catch (e) {}
+          } catch (e) { }
         }
 
         const contentPayload = item.payload || {
