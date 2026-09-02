@@ -213,7 +213,7 @@ const renderFormattedArticle = (rawText = '') => {
   });
 };
 
-export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deductVisualCredits, setIsCreditModalOpen }) => {
+export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deductVisualCredits, setIsCreditModalOpen, onContentGenerated }) => {
   const unwrapped = unwrapAndCleanContent(generatedContent);
   const rawType     = (unwrapped?.type     || unwrapped?.postType || generatedContent?.type || generatedContent?.postType || "SOCIAL").toUpperCase();
   const [platform, setPlatform] = useState((unwrapped?.platform || generatedContent?.platform || "instagram").toLowerCase());
@@ -515,6 +515,17 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
       const data = await res.json();
       if (data.success && data.asset?.imageUrl) {
         setVisualUrl(data.asset.imageUrl);
+        // Notify parent (e.g. CalendarModule) that content was successfully generated
+        if (typeof onContentGenerated === 'function') {
+          onContentGenerated({
+            imageUrl: data.asset.imageUrl,
+            caption,
+            hook,
+            hashtags: hashArr,
+            cta,
+            platform,
+          });
+        }
       } else {
         throw new Error(data.error || "API returned no image");
       }

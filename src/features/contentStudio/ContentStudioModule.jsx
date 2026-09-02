@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
-import { contentAPI } from '../../services/api';
+import { contentAPI, campaignAPI } from '../../services/api';
 import { resolveBrandVisualAsset } from '../../services/brandVisualResolver';
 import {
   PenTool, ShieldCheck, ShieldAlert, Sparkles, Send, FileText, Share2,
@@ -29,6 +29,24 @@ export const ContentStudioModule = () => {
       window.history.pushState({ subPage: channelId }, '', subRouteMap[channelId]);
     }
   };
+
+  // Calendar Post Sync Helper — marks post Generated when ANY content type is generated successfully
+  const calendarPostId = studioTarget?.calendarPostId;
+  const markCalendarPostGenerated = useCallback(async (generatedData = {}) => {
+    if (!calendarPostId) return;
+    try {
+      await campaignAPI.updatePost(calendarPostId, {
+        status: 'Generated',
+        caption: generatedData.caption || generatedData.content || generatedData.body || '',
+        imageUrl: generatedData.imageUrl || '',
+        hashtags: generatedData.hashtags || [],
+        cta: generatedData.cta || '',
+      });
+      await campaignAPI.updatePostStatus(calendarPostId, { status: 'Generated' });
+    } catch (err) {
+      console.warn('[Content Studio] Calendar post status sync error:', err.message);
+    }
+  }, [calendarPostId]);
 
   const closeSubPage = () => {
     setActiveSubPage(null);
@@ -244,17 +262,15 @@ export const ContentStudioModule = () => {
       });
       if (res?.draft || res?.article) {
         const draft = res.draft || res.article;
-        if (typeof draft === 'object' && draft !== null) {
-          setBlogDraft({
-            title: draft.title || topic,
-            content: draft.content || draft.body || JSON.stringify(draft, null, 2)
-          });
-        } else {
-          setBlogDraft({
-            title: topic,
-            content: String(draft)
-          });
-        }
+        const finalContent = typeof draft === 'object' && draft !== null
+          ? (draft.content || draft.body || JSON.stringify(draft, null, 2))
+          : String(draft);
+
+        setBlogDraft({
+          title: (typeof draft === 'object' && draft?.title) || topic,
+          content: finalContent
+        });
+        markCalendarPostGenerated({ caption: finalContent });
       } else {
         throw new Error('No draft returned');
       }
@@ -378,6 +394,7 @@ export const ContentStudioModule = () => {
       };
       setSocialResult(payload);
       if (setGeneratedContent) setGeneratedContent(payload);
+      markCalendarPostGenerated(payload);
     } catch (err) {
       console.error('Social post error:', err.message);
       const brand = activeWorkspace?.brandName || 'Brand';
@@ -550,7 +567,7 @@ export const ContentStudioModule = () => {
       });
       if (res.email) {
         setEmailResult(res.email);
-        if (setGeneratedContent) setGeneratedContent({
+        const emailPayload = {
           ...res.email,
           type: 'EMAIL',
           platform: 'email',
@@ -558,7 +575,9 @@ export const ContentStudioModule = () => {
           hook: res.email.subject || res.email.headline || 'Email Update',
           caption: res.email.body || '',
           hashtags: []
-        });
+        };
+        if (setGeneratedContent) setGeneratedContent(emailPayload);
+        markCalendarPostGenerated(emailPayload);
       }
     } catch (err) {
       console.error('Email copy error:', err.message);
@@ -577,7 +596,10 @@ export const ContentStudioModule = () => {
         product: adProduct,
         adPlatform,
       });
-      if (res.adCopy) setAdResult(res.adCopy);
+      if (res.adCopy) {
+        setAdResult(res.adCopy);
+        markCalendarPostGenerated({ caption: res.adCopy.primaryText || res.adCopy.headline || '' });
+      }
     } catch (err) {
       console.error('Ad copy error:', err.message);
     } finally {

@@ -789,17 +789,15 @@ export const SeoModule = () => {
             </div>
           </div>
 
-          {/* Proceed to Strategy CTA */}
-          <div className="mt-8 flex justify-end">
+          {/* Sticky Floating Bottom Center Proceed to Strategy CTA */}
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <button
               onClick={() => setActiveModule('strategy')}
-              className="flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 transition-all hover:scale-105 active:scale-95"
+              className="flex items-center gap-2.5 px-6 py-3 bg-emerald-600/80 dark:bg-emerald-600/70 backdrop-blur-xl border border-emerald-400/40 text-white rounded-full font-extrabold text-xs sm:text-sm transition-all duration-300 shadow-2xl shadow-emerald-600/35 hover:shadow-emerald-500/50 hover:bg-emerald-500/90 hover:border-emerald-300/60 hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap group"
+              title="Proceed to Strategy & Content Planning"
             >
-              <div className="flex flex-col items-start text-left">
-                <span className="text-sm font-bold leading-tight">Proceed to Strategy</span>
-                <span className="text-[10px] font-normal opacity-75 leading-tight">Build your full content & campaign plan</span>
-              </div>
-              <ChevronRight className="w-4 h-4 shrink-0" />
+              <span className="tracking-wide">Proceed to Strategy</span>
+              <ChevronRight className="w-4 h-4 text-white shrink-0 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
         </>
