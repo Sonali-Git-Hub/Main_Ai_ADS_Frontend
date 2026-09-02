@@ -112,20 +112,29 @@ export const CalendarModule = () => {
     loadCampaignHistory();
   }, [loadCampaignHistory]);
 
-  // Re-fetch posts when user navigates back from Creative Studio
-  // studioTarget is cleared or changed when user returns, triggering a refresh
-  useEffect(() => {
-    if (currentCampaign?._id && !studioTarget?.calendarPostId) {
-      // Refresh posts to pick up any 'Generated' status updates from Creative Studio
-      campaignAPI.getPosts(currentCampaign._id).then(res => {
-        if (res?.success && res?.posts) {
-          setCampaignPosts(res.posts);
-        }
-      }).catch(() => {
-        // Non-blocking; ignore if offline
-      });
+  // Re-fetch posts whenever CalendarModule mounts or gains focus
+  const refreshCampaignPosts = useCallback(async () => {
+    if (!currentCampaign?._id) return;
+    try {
+      const res = await campaignAPI.getPosts(currentCampaign._id);
+      if (res?.success && res?.posts) {
+        setCampaignPosts(res.posts);
+      }
+    } catch (err) {
+      console.warn('[Calendar] Posts refresh note:', err.message);
     }
-  }, [studioTarget, currentCampaign?._id]);
+  }, [currentCampaign?._id]);
+
+  useEffect(() => {
+    refreshCampaignPosts();
+  }, [refreshCampaignPosts]);
+
+  // Window focus listener — updates metrics in real-time when returning from another tab/module
+  useEffect(() => {
+    const onFocus = () => refreshCampaignPosts();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [refreshCampaignPosts]);
 
   // Load specific campaign details
   const handleSelectCampaign = async (campaign) => {
