@@ -44,26 +44,7 @@ export const ConversationalBuilder = ({ developerMode = false }) => {
     setPrompt(inputPrompt.trim());
     setBuilderState('BUILDING');
 
-    try {
-      // Step 1: Check clarification
-      const clarifyRes = await websiteBuilderAPI.clarifyRequirement({
-        prompt: inputPrompt.trim(),
-        brandContext: {
-          brandName: activeWorkspace?.brandName || '',
-          industryCategory: activeWorkspace?.industryCategory || ''
-        }
-      });
-
-      if (clarifyRes && clarifyRes.success && clarifyRes.clarification?.needsClarification && clarifyRes.clarification.questions.length > 0) {
-        setClarificationData(clarifyRes.clarification);
-        setBuilderState('CLARIFYING');
-        return;
-      }
-    } catch (err) {
-      console.warn('Clarification analyze note:', err.message);
-    }
-
-    // Direct build if no clarification needed
+    // Direct build execution (bypassing clarification questions per user request)
     executeBuildPipeline(inputPrompt.trim(), {});
   };
 
@@ -198,7 +179,7 @@ export const ConversationalBuilder = ({ developerMode = false }) => {
             What do you want to build?
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 font-medium max-w-xl mx-auto">
-            Describe your website or app idea in plain English. AI Ads™ will design, build, and run your real application automatically.
+            Describe your website or app idea in plain English. AI ADS™ will design, build, and run your real application automatically.
           </p>
         </div>
 

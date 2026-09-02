@@ -134,7 +134,7 @@ export const BuilderHomeView = ({
       <div className="text-center space-y-3 max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 font-extrabold text-xs">
           <Sparkles className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-          <span>AI Ads™ Application Studio</span>
+          <span>AI ADS™ Application Studio</span>
         </div>
 
         <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
@@ -142,7 +142,7 @@ export const BuilderHomeView = ({
         </h1>
 
         <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 font-medium">
-          Give AI Ads™ a simple description of what you want. It will understand your business, shape the experience, create the right visuals, and turn your idea into a live application.
+          Give AI ADS™ a simple description of what you want. It will understand your business, shape the experience, create the right visuals, and turn your idea into a live application.
         </p>
       </div>
 

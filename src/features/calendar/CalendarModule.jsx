@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 export const CalendarModule = () => {
-  const { activeWorkspace, setActiveModule, calendarEvents, setStudioTarget, setGeneratedContent, generatedStrategy, studioTarget, t } = useWorkspace();
+  const { activeWorkspace, setActiveModule, calendarEvents, setStudioTarget, setGeneratedContent, generatedStrategy, generatedPostsTracker, setSelectedAssetContext, t } = useWorkspace();
   const workspaceId = activeWorkspace?._id || activeWorkspace?.id || 'ws_001';
 
   // Read 30-day strategy plan from workspace or context
@@ -111,30 +111,6 @@ export const CalendarModule = () => {
   useEffect(() => {
     loadCampaignHistory();
   }, [loadCampaignHistory]);
-
-  // Re-fetch posts whenever CalendarModule mounts or gains focus
-  const refreshCampaignPosts = useCallback(async () => {
-    if (!currentCampaign?._id) return;
-    try {
-      const res = await campaignAPI.getPosts(currentCampaign._id);
-      if (res?.success && res?.posts) {
-        setCampaignPosts(res.posts);
-      }
-    } catch (err) {
-      console.warn('[Calendar] Posts refresh note:', err.message);
-    }
-  }, [currentCampaign?._id]);
-
-  useEffect(() => {
-    refreshCampaignPosts();
-  }, [refreshCampaignPosts]);
-
-  // Window focus listener — updates metrics in real-time when returning from another tab/module
-  useEffect(() => {
-    const onFocus = () => refreshCampaignPosts();
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
-  }, [refreshCampaignPosts]);
 
   // Load specific campaign details
   const handleSelectCampaign = async (campaign) => {
@@ -293,11 +269,14 @@ export const CalendarModule = () => {
   };
 
   // Derived counts for Stats
-  const totalCount = campaignPosts.length;
-  const generatedCount = campaignPosts.filter(p => ['Generated', 'Approved', 'Scheduled', 'Published'].includes(p.status)).length;
+  const wsTrackerMap = (generatedPostsTracker && generatedPostsTracker[workspaceId]) || {};
+  const trackerGeneratedKeys = Object.keys(wsTrackerMap);
+  const totalCount = campaignPosts.length > 0 ? campaignPosts.length : (strategyPlan.length || activeDaysCount || 10);
+  const dbGeneratedCount = campaignPosts.filter(p => ['Generated', 'Approved', 'Scheduled', 'Published'].includes(p.status)).length;
+  const generatedCount = Math.max(dbGeneratedCount, trackerGeneratedKeys.length);
   const scheduledCount = campaignPosts.filter(p => p.status === 'Scheduled').length;
-  const remainingCount = totalCount - generatedCount;
-  const progressPercent = totalCount > 0 ? Math.round((generatedCount / totalCount) * 100) : 0;
+  const remainingCount = Math.max(0, totalCount - generatedCount);
+  const progressPercent = totalCount > 0 ? Math.min(100, Math.round((generatedCount / totalCount) * 100)) : 0;
 
   // Date helper
   const isSameDay = (date1, date2) => {
@@ -641,6 +620,20 @@ export const CalendarModule = () => {
                 const hasPost = !!postOnDay;
                 const isSelected = isSameDay(cellDate, selectedDate);
 
+                // Check if this date has been generated/downloaded via generatedPostsTracker
+                const wsTrackerMapCell = (generatedPostsTracker && generatedPostsTracker[workspaceId]) || {};
+                const isDownloaded = postOnDay && (
+                  ['Generated', 'Approved', 'Scheduled', 'Published'].includes(postOnDay.status) ||
+                  Object.keys(wsTrackerMapCell).some(key => {
+                    const entry = wsTrackerMapCell[key];
+                    return (
+                      (entry?.calendarDate && isSameDay(entry.calendarDate, cellDate)) ||
+                      (entry?.calendarDay && postOnDay?.day && String(entry.calendarDay) === String(postOnDay.day)) ||
+                      (entry?.topic && postOnDay?.postObjective && entry.topic === postOnDay.postObjective)
+                    );
+                  })
+                );
+
                 // Platform-based icon for the indicator
                 const PlatformIcon = (() => {
                   if (!postOnDay) return null;
@@ -680,15 +673,23 @@ export const CalendarModule = () => {
                           isSelected
                             ? 'ring-2 ring-brand-500 ring-offset-1 dark:ring-offset-[#0d131f] scale-105'
                             : ''
+                        } ${
+                          isDownloaded ? 'ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-[#0d131f]' : ''
                         }`}
                       >
                         {cell.day}
                       </button>
-                      {hasPost && PlatformIcon && (
+
+                      {/* Downloaded checkmark badge — replaces platform icon when generated */}
+                      {isDownloaded ? (
+                        <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border border-white dark:border-slate-900 rounded-full flex items-center justify-center shadow-md z-10" title="Content downloaded">
+                          <CheckCircle2 className="w-2.5 h-2.5 text-white" />
+                        </span>
+                      ) : hasPost && PlatformIcon ? (
                         <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full flex items-center justify-center shadow-md z-10">
                           {PlatformIcon}
                         </span>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 );
@@ -870,7 +871,7 @@ export const CalendarModule = () => {
                         <button
                           onClick={handleSavePost}
                           disabled={isSavingPost}
-                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 transition-all"
+                          className="w-full py-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 transition-all"
                         >
                           {isSavingPost ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                           {isSavingPost ? 'Saving...' : 'Save Changes'}
@@ -951,99 +952,127 @@ export const CalendarModule = () => {
                 
 
 
-                <div className="flex flex-col gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-3">
-                  {/* Generated badge — shown when post is already generated */}
-                  {['Generated', 'Approved', 'Scheduled', 'Published'].includes(activePost.status) && (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400">
-                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">
-                        Content Generated · {activePost.status}
-                      </span>
+                {/* Downloaded Asset banner — shown only when date is already generated */}
+                {(() => {
+                  const wsMap = (generatedPostsTracker && generatedPostsTracker[workspaceId]) || {};
+                  const isDateDownloaded = activePost && (
+                    ['Generated', 'Approved', 'Scheduled', 'Published'].includes(activePost.status) ||
+                    Object.keys(wsMap).some(key => {
+                      const entry = wsMap[key];
+                      return (
+                        (entry?.calendarDate && isSameDay(entry.calendarDate, activePost.date)) ||
+                        (entry?.calendarDay && activePost?.day && String(entry.calendarDay) === String(activePost.day)) ||
+                        (entry?.topic && activePost?.postObjective && entry.topic === activePost.postObjective)
+                      );
+                    })
+                  );
+
+                  if (isDateDownloaded) {
+                    return (
+                      <>
+                        {/* Downloaded status banner */}
+                        <div className="mx-0 mt-3 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <div>
+                            <p className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Content Downloaded</p>
+                            <p className="text-[9px] text-emerald-600/70 dark:text-emerald-500/70">This date's asset is saved in your Asset Library</p>
+                          </div>
+                        </div>
+
+                        {/* View in Asset Library CTA */}
+                        <div className="flex gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-3">
+                          <button
+                            onClick={() => {
+                              // Deep-link: pass selected date/topic context so Asset Library auto-opens matching asset
+                              setSelectedAssetContext({
+                                calendarDate: activePost.date,
+                                calendarDay: activePost.day,
+                                topic: activePost.postObjective || activePost.title || activePost.postFor,
+                                platform: activePost.platform,
+                                dateLabel: new Date(activePost.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }),
+                              });
+                              setActiveModule('assets');
+                            }}
+                            className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+                          >
+                            <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
+                            VIEW IN ASSET LIBRARY
+                          </button>
+                        </div>
+                      </>
+                    );
+                  }
+
+                  return (
+                    <div className="flex gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-3">
+                      <button
+                        onClick={() => {
+                          const platform = (activePost.platform || 'instagram').toLowerCase();
+                          const topic = activePost.postObjective || activePost.title || activePost.postFor || 'Campaign Update';
+                          const postType = (activePost.postType || activePost.contentType || 'social').toLowerCase();
+
+                          const isEmail    = platform === 'email' || postType.includes('email') || postType.includes('newsletter');
+                          const isBlog     = platform === 'blog'  || platform === 'seo' || postType.includes('blog') || postType.includes('article');
+                          const isNewspaper= platform === 'newspaper' || postType.includes('press') || postType.includes('newspaper');
+                          const type       = isEmail ? 'EMAIL' : isBlog ? 'BLOG' : isNewspaper ? 'NEWSPAPER' : 'SOCIAL';
+
+                          const isReelsOrStory = platform.includes('reel') || platform.includes('tiktok') || platform.includes('story');
+                          const aspect = isReelsOrStory ? '9:16' : platform === 'instagram' ? '1:1' : '16:9';
+
+                          setGeneratedContent({
+                            platform,
+                            type,
+                            postType: activePost.postType || postType,
+                            topic,
+                            hook: activePost.caption ? (activePost.caption.slice(0, 90)) : topic,
+                            caption: activePost.caption || '',
+                            shortCaption: activePost.shortCaption || '',
+                            cta: activePost.cta || '',
+                            hashtags: activePost.hashtags || [],
+                            subject: isEmail ? topic : undefined,
+                            title: isBlog || isNewspaper ? topic : undefined,
+                            headline: isNewspaper ? topic : undefined,
+                            workspaceId: activeWorkspace?._id || activeWorkspace?.id,
+                            brandName: activeWorkspace?.brandName,
+                            brandColors: activeWorkspace?.brandColors,
+                            industry: activeWorkspace?.industryCategory || activeWorkspace?.niche,
+                            companyDescription: activeWorkspace?.companyDescription || activeWorkspace?.metaDescription,
+                            tagline: activeWorkspace?.tagline,
+                            imageAspect: aspect,
+                            imageStyle: 'Photorealistic Commercial',
+                            strategyPillar: activePost.postFor || activePost.strategyPillar || activePost.pillar || 'Brand Awareness',
+                            strategyDescription: activePost.postObjective || activePost.title || '',
+                            calendarDate: activePost.date,
+                            calendarDay: activePost.day,
+                            campaignStage: activePost.campaignStage || 'Awareness',
+                          });
+
+                          setStudioTarget({
+                            workspaceId: activeWorkspace?._id || activeWorkspace?.id,
+                            brandName: activeWorkspace?.brandName,
+                            brandColors: activeWorkspace?.brandColors,
+                            industry: activeWorkspace?.industryCategory || activeWorkspace?.niche,
+                            companyDescription: activeWorkspace?.companyDescription || activeWorkspace?.metaDescription,
+                            tagline: activeWorkspace?.tagline,
+                            platform,
+                            topic,
+                            postType,
+                            type,
+                            autoGenerate: true,
+                            imageAspect: aspect,
+                            strategyPillar: activePost.postFor || activePost.strategyPillar || 'Brand Awareness',
+                            campaignStage: activePost.campaignStage || 'Awareness'
+                          });
+                          setActiveModule('studio');
+                        }}
+                        className="w-full py-3 bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer"
+                      >
+                        <ArrowRight className="w-4 h-4 text-white" />
+                        CONTINUE TO CONTENT STUDIO
+                      </button>
                     </div>
-                  )}
-                  <button
-                    disabled={['Generated', 'Approved', 'Scheduled', 'Published'].includes(activePost.status)}
-                    onClick={() => {
-                      const platform = (activePost.platform || 'instagram').toLowerCase();
-                      const topic = activePost.postObjective || activePost.title || activePost.postFor || 'Campaign Update';
-                      const postType = (activePost.postType || activePost.contentType || 'social').toLowerCase();
-
-                      // Determine the content type (email, blog, newspaper, social etc.)
-                      const isEmail    = platform === 'email' || postType.includes('email') || postType.includes('newsletter');
-                      const isBlog     = platform === 'blog'  || platform === 'seo' || postType.includes('blog') || postType.includes('article');
-                      const isNewspaper= platform === 'newspaper' || postType.includes('press') || postType.includes('newspaper');
-                      const type       = isEmail ? 'EMAIL' : isBlog ? 'BLOG' : isNewspaper ? 'NEWSPAPER' : 'SOCIAL';
-
-                      // Determine aspect ratio based on platform & post type
-                      const isReelsOrStory = platform.includes('reel') || platform.includes('tiktok') || platform.includes('story');
-                      const aspect = isReelsOrStory ? '9:16' : platform === 'instagram' ? '1:1' : '16:9';
-
-                      // Pre-fill generatedContent with full strategy & calendar context
-                      setGeneratedContent({
-                        platform,
-                        type,
-                        postType: activePost.postType || postType,
-                        topic,
-                        hook: activePost.caption ? (activePost.caption.slice(0, 90)) : topic,
-                        caption: activePost.caption || '',
-                        shortCaption: activePost.shortCaption || '',
-                        cta: activePost.cta || '',
-                        hashtags: activePost.hashtags || [],
-                        subject: isEmail ? topic : undefined,
-                        title: isBlog || isNewspaper ? topic : undefined,
-                        headline: isNewspaper ? topic : undefined,
-                        // Full Brand DNA
-                        workspaceId: activeWorkspace?._id || activeWorkspace?.id,
-                        brandName: activeWorkspace?.brandName,
-                        brandColors: activeWorkspace?.brandColors,
-                        industry: activeWorkspace?.industryCategory || activeWorkspace?.niche,
-                        companyDescription: activeWorkspace?.companyDescription || activeWorkspace?.metaDescription,
-                        tagline: activeWorkspace?.tagline,
-                        imageAspect: aspect,
-                        imageStyle: 'Photorealistic Commercial',
-                        // Strategy and Calendar Context
-                        strategyPillar: activePost.postFor || activePost.strategyPillar || activePost.pillar || 'Brand Awareness',
-                        strategyDescription: activePost.postObjective || activePost.title || '',
-                        calendarDate: activePost.date,
-                        calendarDay: activePost.day,
-                        campaignStage: activePost.campaignStage || 'Awareness',
-                      });
-
-                      setStudioTarget({
-                        workspaceId: activeWorkspace?._id || activeWorkspace?.id,
-                        brandName: activeWorkspace?.brandName,
-                        brandColors: activeWorkspace?.brandColors,
-                        industry: activeWorkspace?.industryCategory || activeWorkspace?.niche,
-                        companyDescription: activeWorkspace?.companyDescription || activeWorkspace?.metaDescription,
-                        tagline: activeWorkspace?.tagline,
-                        platform,
-                        topic,
-                        postType,
-                        type,
-                        autoGenerate: true,
-                        imageAspect: aspect,
-                        strategyPillar: activePost.postFor || activePost.strategyPillar || 'Brand Awareness',
-                        campaignStage: activePost.campaignStage || 'Awareness',
-                        // Calendar post linking — used by Creative Studio to mark post Generated on success
-                        calendarPostId: activePost._id,
-                        campaignId: currentCampaign?._id,
-                      });
-                      // Route to Creative Studio to create the post
-                      setActiveModule('studio');
-                    }}
-                    className={`w-full py-3 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
-                      ['Generated', 'Approved', 'Scheduled', 'Published'].includes(activePost.status)
-                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-60'
-                        : 'bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white shadow-lg shadow-brand-500/20 active:scale-98 cursor-pointer'
-                    }`}
-                  >
-                    <ArrowRight className="w-4 h-4" />
-                    {['Generated', 'Approved', 'Scheduled', 'Published'].includes(activePost.status)
-                      ? 'Already Generated'
-                      : 'CONTINUE TO CREATIVE STUDIO'
-                    }
-                  </button>
-                </div>
+                  );
+                })()}
               </div>
             ) : (
               <div className="bg-white dark:bg-[#0d131f] border border-dashed border-slate-200 dark:border-slate-800 rounded-[24px] p-8 text-center flex flex-col items-center justify-center min-h-[380px] h-full flex-1">

@@ -177,40 +177,6 @@ export const BuilderSidebar = ({
               <Compass className={`w-4 h-4 flex-shrink-0 ${activeNav === 'templates' ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-brand-500'}`} />
               {!collapsed && <span>Templates</span>}
             </button>
-
-            {/* Connectors */}
-            <button
-              onClick={() => setActiveNav('connectors')}
-              title={collapsed ? 'Connectors' : undefined}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all group ${
-                activeNav === 'connectors'
-                  ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300 border border-brand-500/40 shadow-glow font-bold'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-white hover:bg-brand-500/10 dark:hover:bg-brand-500/10'
-              }`}
-            >
-              <PlugZap className={`w-4 h-4 flex-shrink-0 ${activeNav === 'connectors' ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-brand-500'}`} />
-              {!collapsed && <span>Connectors</span>}
-            </button>
-
-            {/* Live Telemetry Debug Panel */}
-            <button
-              onClick={() => onToggleTelemetry && onToggleTelemetry()}
-              title={collapsed ? 'Live Telemetry' : undefined}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 group"
-            >
-              <div className="flex items-center gap-3 truncate">
-                <div className="relative flex-shrink-0">
-                  <Activity className="w-4 h-4 text-amber-500 animate-pulse" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 absolute -top-0.5 -right-0.5 animate-ping" />
-                </div>
-                {!collapsed && <span className="truncate">Live Telemetry</span>}
-              </div>
-              {!collapsed && (
-                <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 text-[9px] font-extrabold tracking-wider uppercase border border-amber-500/30">
-                  LIVE
-                </span>
-              )}
-            </button>
           </div>
 
           {/* ── 3. PROJECTS SECTION ── */}
@@ -354,12 +320,12 @@ export const BuilderSidebar = ({
               className={`w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-slate-100/90 hover:bg-slate-200/90 dark:bg-slate-900/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 border border-slate-200/80 dark:border-slate-800 text-xs font-bold transition-all shadow-xs group active:scale-95 ${
                 collapsed ? 'px-0' : ''
               }`}
-              title="Return to Main AI Ads™ Platform"
+              title="Return to Main AI ADS™ Platform"
             >
               <div className="w-4 h-4 rounded-md bg-white dark:bg-slate-800 text-brand-600 dark:text-brand-400 flex items-center justify-center shadow-xs group-hover:-translate-x-0.5 transition-transform flex-shrink-0">
                 <ArrowLeft className="w-2.5 h-2.5" />
               </div>
-              {!collapsed && <span className="truncate">Back to AI Ads™</span>}
+              {!collapsed && <span className="truncate">Back to AI ADS™</span>}
             </button>
           </div>
         </div>

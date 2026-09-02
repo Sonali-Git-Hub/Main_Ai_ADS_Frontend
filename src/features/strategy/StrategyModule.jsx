@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useWorkspace } from '../../context/WorkspaceContext';
-import { strategyAPI, campaignAPI } from '../../services/api';
+import { strategyAPI } from '../../services/api';
 import { resolveBrandVisualAsset } from '../../services/brandVisualResolver';
 import {
   Target, Layers, Zap, CheckCircle2, ArrowRight, TrendingUp, Users, BarChart3,
@@ -331,7 +331,7 @@ export const StrategyModule = () => {
     setShowScheduleModal(true);
   };
 
-  const confirmGenerateCalendar = async (numDays) => {
+  const confirmGenerateCalendar = (numDays) => {
     const daysToGen = Math.min(Number(numDays) || 30, thirtyDayPlan.length);
     localStorage.setItem('aisa_selected_schedule_days', String(daysToGen));
     const today = new Date();
@@ -354,31 +354,6 @@ export const StrategyModule = () => {
     });
 
     bulkAddCalendarEvents(eventsToCreate);
-
-    // Auto-create Campaign & Posts in backend MongoDB
-    try {
-      const workspaceId = activeWorkspace?._id || activeWorkspace?.id || 'ws_001';
-      const endDate = new Date(today);
-      endDate.setDate(today.getDate() + (daysToGen - 1));
-
-      const campaignPayload = {
-        workspaceId,
-        campaignName: `${activeWorkspace?.brandName || 'Brand'} ${daysToGen}-Day Campaign`,
-        campaignGoal: activeWorkspace?.currentStrategy?.businessGoal || 'Automated AI Content Plan',
-        startDate: today.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
-        postingFrequency: 'Daily',
-        platforms: [...new Set(planToUse.map(p => p.platform || 'Instagram'))],
-      };
-
-      const cRes = await campaignAPI.create(campaignPayload);
-      if (cRes.success && cRes.campaign) {
-        await campaignAPI.generatePlan(cRes.campaign._id, { strategyPlan: planToUse });
-      }
-    } catch (err) {
-      console.warn('[Strategy] Backend campaign auto-creation note:', err.message);
-    }
-
     setShowScheduleModal(false);
     setActiveModule('calendar'); // Transition to calendar view
   };
@@ -1291,7 +1266,7 @@ export const StrategyModule = () => {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-in fade-in slide-in-from-bottom-4 duration-300 shrink-0">
           <button 
             onClick={handleGenerateCalendar}
-            className="flex items-center gap-2.5 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full font-extrabold text-xs sm:text-sm transition-all duration-200 shadow-2xl shadow-emerald-600/40 border border-emerald-400/30 hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md whitespace-nowrap"
+            className="flex items-center gap-2.5 px-6 py-3.5 bg-brand-600 hover:bg-brand-500 text-white rounded-full font-extrabold text-xs sm:text-sm transition-all duration-200 shadow-2xl shadow-brand-600/40 border border-brand-400/30 hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md whitespace-nowrap"
             title="Generate content calendar events from strategy"
           >
             <Calendar className="w-5 h-5 text-white shrink-0" />

@@ -117,10 +117,10 @@ export const Login = ({ onLoginSuccess }) => {
         {/* Brand Header */}
         <div className="text-center mb-7 flex flex-col items-center">
           <div className="w-16 h-16 rounded-2xl p-1 bg-white border border-slate-200/80 shadow-xl shadow-slate-200/60 mb-3.5 overflow-hidden flex items-center justify-center">
-            <img src="/logo.png" alt="AI Ads™ Logo" className="w-full h-full object-cover rounded-xl" />
+            <img src="/logo.png" alt="AI ADS™ Logo" className="w-full h-full object-cover rounded-xl" />
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-            AI Ads<span className="text-brand-600">™</span>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-baseline justify-center">
+            AI ADS<sup className="text-brand-600 text-sm font-black ml-0.5 select-none">TM</sup>
           </h1>
           <p className="text-slate-500 text-sm mt-1.5 font-medium">
             {mode === 'login' ? 'Sign in to your workspace' : 'Create your enterprise workspace account'}

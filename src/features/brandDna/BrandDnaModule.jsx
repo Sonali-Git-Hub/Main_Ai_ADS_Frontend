@@ -928,7 +928,7 @@ export const BrandDnaModule = () => {
                 if (setBrandDnaData) setBrandDnaData(effectiveProfile);
                 if (setActiveModule) setActiveModule('seo');
               }}
-              className="flex items-center gap-2.5 px-6 py-3 bg-emerald-600/80 dark:bg-emerald-600/70 backdrop-blur-xl border border-emerald-400/40 text-white rounded-full font-extrabold text-xs sm:text-sm transition-all duration-300 shadow-2xl shadow-emerald-600/35 hover:shadow-emerald-500/50 hover:bg-emerald-500/90 hover:border-emerald-300/60 hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap group"
+              className="flex items-center gap-2.5 px-6 py-3 bg-brand-600/90 dark:bg-brand-600/80 backdrop-blur-xl border border-brand-400/40 text-white rounded-full font-extrabold text-xs sm:text-sm transition-all duration-300 shadow-2xl shadow-brand-600/35 hover:shadow-brand-500/50 hover:bg-brand-500/90 hover:border-brand-300/60 hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap group"
               title="Continue to SEO Intelligence"
             >
               <Search className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />

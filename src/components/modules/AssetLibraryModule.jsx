@@ -36,15 +36,15 @@ export const AssetLibraryModule = () => {
         </div>
 
         <div className="flex gap-2">
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
+          <div className="relative flex items-center">
             <input 
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search assets..."
-              className="glass-input text-xs pl-8 py-1.5"
+              className="glass-input text-xs pl-4 pr-9 py-1.5"
             />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3 pointer-events-none" />
           </div>
 
           <select 

@@ -35,14 +35,10 @@ import { BuilderTemplatesView } from './BuilderTemplatesView';
 import { BuilderProjectsView } from './BuilderProjectsView';
 import { BuilderWorkspaceView } from './BuilderWorkspaceView';
 import { ClarificationCard } from './ClarificationCard';
-import { LiveTelemetryPanel } from './LiveTelemetryPanel';
 import { telemetry, initGlobalTelemetryListeners } from '../../services/telemetryClient';
 
 export const AIWebsiteBuilderModule = () => {
   const { activeWorkspace, setActiveModule, theme, toggleTheme, t } = useWorkspace();
-
-  // Telemetry & Activity Debug Panel State
-  const [isTelemetryOpen, setIsTelemetryOpen] = useState(false);
 
   // Initialize global click tracker
   useEffect(() => {
@@ -159,38 +155,7 @@ export const AIWebsiteBuilderModule = () => {
       workspaceId: activeWorkspace?._id || activeWorkspace?.id
     });
 
-    try {
-      // Step 1: Check clarification
-      const clarifyRes = await websiteBuilderAPI.clarifyRequirement({
-        prompt: inputPrompt.trim(),
-        brandContext: {
-          brandName: activeWorkspace?.brandName || '',
-          industryCategory: activeWorkspace?.industryCategory || ''
-        }
-      });
-
-      if (
-        clarifyRes &&
-        clarifyRes.success &&
-        clarifyRes.clarification?.needsClarification &&
-        clarifyRes.clarification.questions.length > 0
-      ) {
-        setClarificationData(clarifyRes.clarification);
-        setBuilderState('CLARIFYING');
-
-        telemetry.trackEvent({
-          component: 'AIWebsiteBuilder',
-          action: 'PROMPT_CLARIFICATION_TRIGGERED',
-          eventType: 'USER_ACTION',
-          metadata: { questionCount: clarifyRes.clarification.questions.length }
-        });
-        return;
-      }
-    } catch (err) {
-      console.warn('Clarification check note:', err.message);
-    }
-
-    // Direct build execution
+    // Direct build execution (bypassing clarification questions per user request)
     executeBuildPipeline(inputPrompt.trim(), {});
   };
 
@@ -630,12 +595,12 @@ export const AIWebsiteBuilderModule = () => {
                 <button
                   onClick={handleBackToAIAds}
                   className="group flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100/90 dark:bg-slate-900/90 hover:bg-slate-200/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow transition-all duration-200 active:scale-95"
-                  title="Return to Main AI Ads™ Platform"
+                  title="Return to Main AI ADS™ Platform"
                 >
                   <div className="w-5 h-5 rounded-full bg-white dark:bg-slate-800 text-brand-600 dark:text-brand-400 flex items-center justify-center shadow-xs border border-slate-200/50 dark:border-slate-700/50 group-hover:-translate-x-0.5 transition-transform">
                     <ArrowLeft className="w-3 h-3" />
                   </div>
-                  <span className="text-xs font-extrabold tracking-tight">Back to AI Ads™</span>
+                  <span className="text-xs font-extrabold tracking-tight">Back to AI ADS™</span>
                 </button>
               </div>
 
@@ -673,16 +638,6 @@ export const AIWebsiteBuilderModule = () => {
                     <span>Dark</span>
                   </button>
                 </div>
-
-                {/* Live Telemetry Debug Panel Button */}
-                <button
-                  onClick={() => setIsTelemetryOpen(!isTelemetryOpen)}
-                  className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs active:scale-95"
-                  title="Toggle Live Application Telemetry & Activity Debug Panel"
-                >
-                  <Activity className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-                  <span className="hidden md:inline">Telemetry</span>
-                </button>
 
                 {/* Brand DNA Indicator */}
                 {activeWorkspace?.brandName && (
@@ -785,57 +740,7 @@ export const AIWebsiteBuilderModule = () => {
                 </div>
               )}
 
-              {/* 6. CONNECTORS VIEW */}
-              {activeNav === 'connectors' && (
-                <div className="max-w-5xl mx-auto py-10 px-6 space-y-6">
-                  <div>
-                    <h1 className="text-2xl font-black text-slate-900 dark:text-white">Connectors &amp; Integrations</h1>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Connect backend services, APIs, databases, payment gateways, and custom endpoints.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-sm">
-                      <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-black">
-                        ⚡
-                      </div>
-                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Stripe / Razorpay</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Enable instant checkout and payment links on generated catalogs.
-                      </p>
-                      <span className="inline-block text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-500/20">
-                        Active Simulation
-                      </span>
-                    </div>
 
-                    <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-sm">
-                      <div className="w-10 h-10 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-black">
-                        🗄️
-                      </div>
-                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Supabase / REST APIs</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Seamlessly bind real databases to form submissions and user signups.
-                      </p>
-                      <span className="inline-block text-[10px] font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10 px-2 py-0.5 rounded-md border border-brand-200 dark:border-brand-500/20">
-                        Ready to Connect
-                      </span>
-                    </div>
-
-                    <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-sm">
-                      <div className="w-10 h-10 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-black">
-                        🐙
-                      </div>
-                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">GitHub Sync</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Automatically push emitted React/Vite repositories to your GitHub account.
-                      </p>
-                      <span className="inline-block text-[10px] font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10 px-2 py-0.5 rounded-md border border-brand-200 dark:border-brand-500/20">
-                        Export ZIP Available
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* 7. DEPLOYMENTS VIEW */}
               {activeNav === 'deployments' && (
@@ -990,11 +895,6 @@ export const AIWebsiteBuilderModule = () => {
         </div>
       )}
 
-      {/* ── REAL-TIME TELEMETRY & LIVE ACTIVITY DEBUG PANEL ── */}
-      <LiveTelemetryPanel
-        isOpen={isTelemetryOpen}
-        onClose={() => setIsTelemetryOpen(false)}
-      />
     </div>
   );
 };

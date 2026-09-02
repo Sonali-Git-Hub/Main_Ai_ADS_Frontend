@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import {
   Palette, Sparkles, ShieldAlert, Image as ImageIcon, CheckCircle2,
@@ -8,7 +8,6 @@ import {
   Share2, Bookmark, MoreHorizontal, Mail, FileText, Newspaper
 } from 'lucide-react';
 import { PlatformPostCanvas } from './PlatformPostCanvas';
-import { campaignAPI } from '../../services/api';
 
 // â”€â”€â”€ Utility: Format Date â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const formatDate = (iso) => {
@@ -702,7 +701,7 @@ const BrandKitStudio = ({ workspace }) => {
 // MAIN MODULE
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export const CreativeStudioModule = () => {
-  const { activeWorkspace, credits, deductVisualCredits, setIsCreditModalOpen, generatedContent, studioTarget, t } = useWorkspace();
+  const { activeWorkspace, credits, deductVisualCredits, setIsCreditModalOpen, generatedContent, studioTarget, markPostAsGenerated, t } = useWorkspace();
   const [selectedFormat, setSelectedFormat] = useState(null);
 
   // If redirected from Calendar or Content Studio, studioTarget carries the post's platform/type/topic.
@@ -713,9 +712,15 @@ export const CreativeStudioModule = () => {
       ? { platform: studioTarget.platform, type: studioTarget.type || 'SOCIAL', topic: studioTarget.topic, hook: studioTarget.topic, caption: '', hashtags: [] }
       : null;
 
-  // Auto-select the correct format card when content arrives from Content Studio or Calendar
+  // Auto-select the correct format card and mark post as generated in real-time
   useEffect(() => {
     if (!effectiveContent) return;
+
+    const key = effectiveContent.calendarDate || effectiveContent.calendarDay || effectiveContent.topic || effectiveContent.title || effectiveContent.subject;
+    if (key && markPostAsGenerated) {
+      markPostAsGenerated(key, effectiveContent);
+    }
+
     const type = (effectiveContent.type || effectiveContent.postType || '').toUpperCase();
     const plat = (effectiveContent.platform || '').toLowerCase();
 
@@ -728,42 +733,7 @@ export const CreativeStudioModule = () => {
     } else if (type === 'SOCIAL' || ['instagram', 'linkedin', 'twitter', 'facebook', 'youtube', 'tiktok'].includes(plat)) {
       setSelectedFormat('SOCIAL');
     }
-  }, [effectiveContent?.type, effectiveContent?.platform, effectiveContent?.postType]);
-
-  // ── Calendar Post Integration ──────────────────────────────────────────────
-  // When arriving from Calendar (studioTarget has calendarPostId), auto-mark the
-  // post as 'Generated' since the text content is already rendered on the canvas.
-  // This only runs once per calendar navigation, and never runs if there's no calendarPostId.
-  const calendarPostId = studioTarget?.calendarPostId;
-  const campaignId = studioTarget?.campaignId;
-
-  const handleCalendarPostGenerated = useCallback(async (generatedData = {}) => {
-    if (!calendarPostId) return;
-    try {
-      await campaignAPI.updatePost(calendarPostId, {
-        status: 'Generated',
-        caption: generatedData.caption || '',
-        imageUrl: generatedData.imageUrl || '',
-        hashtags: generatedData.hashtags || [],
-        cta: generatedData.cta || '',
-      });
-      // Also update the status field explicitly
-      await campaignAPI.updatePostStatus(calendarPostId, { status: 'Generated' });
-    } catch (err) {
-      // Silently fail — never block the creative workflow for a calendar sync error
-      console.warn('[Creative Studio] Calendar post sync failed (non-blocking):', err.message);
-    }
-  }, [calendarPostId]);
-
-  // Auto-mark as Generated when canvas first loads from a Calendar navigation
-  // The content text is already "generated" (AI copy from the strategy plan)
-  useEffect(() => {
-    if (calendarPostId && effectiveContent) {
-      handleCalendarPostGenerated({});
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [calendarPostId]);
-  // ── End Calendar Post Integration ─────────────────────────────────────────
+  }, [effectiveContent?.type, effectiveContent?.platform, effectiveContent?.postType, effectiveContent?.calendarDate, effectiveContent?.topic, markPostAsGenerated]);
 
   const FORMAT_SECTIONS = [
     {
@@ -922,7 +892,6 @@ export const CreativeStudioModule = () => {
             credits={credits}
             deductVisualCredits={deductVisualCredits}
             setIsCreditModalOpen={setIsCreditModalOpen}
-            onContentGenerated={calendarPostId ? handleCalendarPostGenerated : undefined}
           />
         ) : (
           <div className="p-10 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/40 dark:bg-slate-900/30 flex flex-col items-center justify-center text-center gap-3">

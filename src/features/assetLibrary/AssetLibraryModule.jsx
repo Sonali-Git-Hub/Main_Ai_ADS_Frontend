@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import {
   FolderKanban, Search, Download, ExternalLink, Image as ImageIcon,
   FileText, Layers, Check, ArrowUpRight, Sparkles, Film, BookOpen,
-  Copy, Eye, X, Calendar, Tag, Clock, Trash2, FolderOpen, LayoutGrid
+  Copy, Eye, X, Calendar, Tag, Clock, Trash2, FolderOpen, LayoutGrid,
+  CheckCircle2, ArrowLeft, Share2, Twitter, Linkedin, Mail, MessageCircle, Send, Link2
 } from 'lucide-react';
 
 // ━━━ Section Card Data ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -61,10 +62,59 @@ const formatDate = (iso) => {
   return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
+// ━━━ Direct Device Download Helper ━━━━━━━━━━━━━━━━━━━━━━━━━
+const triggerDirectDeviceDownload = async (asset) => {
+  if (!asset) return false;
+  const cleanName = (asset.name || 'asset').replace(/[^a-z0-9_\- ]/gi, '_').slice(0, 60);
+
+  // Case 1: Image or Remote URL -> Route through backend download proxy with Content-Disposition: attachment
+  if (asset.url) {
+    if (asset.url.startsWith('data:')) {
+      const a = document.createElement('a');
+      a.href = asset.url;
+      a.download = `${cleanName}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return true;
+    }
+
+    const apiBase = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
+    const proxyUrl = `${apiBase}/content/download-asset?url=${encodeURIComponent(asset.url)}&filename=${encodeURIComponent(cleanName)}`;
+
+    // Trigger attachment download via hidden iframe (never navigates page or opens new tab)
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = proxyUrl;
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+      if (document.body.contains(iframe)) document.body.removeChild(iframe);
+    }, 6000);
+    return true;
+  }
+
+  // Case 2: Pure Text Content (Document / Script without URL) -> Instant Client-Side Blob Download
+  if (asset.content) {
+    const blob = new Blob([asset.content], { type: 'text/plain;charset=utf-8' });
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = `${cleanName}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+    return true;
+  }
+
+  return false;
+};
+
 // ━━━ Asset Detail Drawer ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const AssetDetailDrawer = ({ asset, onClose, onDelete }) => {
   if (!asset) return null;
   const [copiedContent, setCopiedContent] = useState(false);
+  const [downloadedDrawer, setDownloadedDrawer] = useState(false);
 
   const typeColors = {
     IMAGE: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/30',
@@ -76,6 +126,12 @@ const AssetDetailDrawer = ({ asset, onClose, onDelete }) => {
     navigator.clipboard.writeText(asset.content || asset.url || '');
     setCopiedContent(true);
     setTimeout(() => setCopiedContent(false), 2000);
+  };
+
+  const handleDrawerDownload = async () => {
+    await triggerDirectDeviceDownload(asset);
+    setDownloadedDrawer(true);
+    setTimeout(() => setDownloadedDrawer(false), 2500);
   };
 
   return (
@@ -154,16 +210,13 @@ const AssetDetailDrawer = ({ asset, onClose, onDelete }) => {
             >
               <Copy className="w-3.5 h-3.5" /> {copiedContent ? 'Copied Text!' : 'Copy Asset Content'}
             </button>
-            {asset.url && asset.url.startsWith('http') && (
-              <a
-                href={asset.url}
-                target="_blank"
-                rel="noreferrer"
-                className="flex-1 btn-primary py-2.5 text-xs font-bold flex items-center justify-center gap-2"
-              >
-                <Download className="w-3.5 h-3.5" /> Download
-              </a>
-            )}
+            <button
+              onClick={handleDrawerDownload}
+              className="flex-1 btn-primary py-2.5 text-xs font-bold flex items-center justify-center gap-2"
+            >
+              {downloadedDrawer ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Download className="w-3.5 h-3.5" />}
+              {downloadedDrawer ? 'Downloaded!' : 'Download to Device'}
+            </button>
           </div>
         </div>
       </div>
@@ -173,11 +226,12 @@ const AssetDetailDrawer = ({ asset, onClose, onDelete }) => {
 
 // ━━━ Main Asset Library Module ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 export const AssetLibraryModule = () => {
-  const { activeWorkspace, t, globalAssets = [], removeGlobalAsset } = useWorkspace();
+  const { activeWorkspace, t, globalAssets = [], removeGlobalAsset, selectedAssetContext, setSelectedAssetContext } = useWorkspace();
   const [activeSection, setActiveSection] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedId, setCopiedId] = useState(null);
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const hasAutoOpenedRef = useRef(false);
 
   const initialAssets = [];
 
@@ -190,10 +244,61 @@ export const AssetLibraryModule = () => {
     return a.workspaceId === currentWsId || a.metadata?.brand === currentBrand;
   });
 
-  const filteredAssets = assets.filter(a =>
-    (activeSection === 'ALL' || a.type === activeSection) &&
-    a.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // ── Deep-link from Calendar: auto-filter + auto-open matching asset ──────
+  const isSameDayAsset = (assetDate, calDate) => {
+    if (!assetDate || !calDate) return false;
+    const a = new Date(assetDate);
+    const b = new Date(calDate);
+    return a.getFullYear() === b.getFullYear() &&
+           a.getMonth() === b.getMonth() &&
+           a.getDate() === b.getDate();
+  };
+
+  useEffect(() => {
+    if (!selectedAssetContext || hasAutoOpenedRef.current) return;
+    hasAutoOpenedRef.current = true;
+
+    // Find best matching asset: by date, then by topic keywords, then by platform
+    const match = assets.find(a => {
+      const dateMatch = isSameDayAsset(a.date, selectedAssetContext.calendarDate);
+      const nameMatch = selectedAssetContext.topic &&
+        a.name.toLowerCase().includes(
+          (selectedAssetContext.topic || '').toLowerCase().slice(0, 20)
+        );
+      const platMatch = selectedAssetContext.platform &&
+        a.name.toLowerCase().includes(
+          (selectedAssetContext.platform || '').toLowerCase()
+        );
+      return dateMatch || nameMatch || platMatch;
+    });
+
+    if (match) {
+      setSelectedAsset(match);
+    }
+  }, [selectedAssetContext, assets]);
+
+  // Reset auto-open ref when context changes
+  useEffect(() => {
+    hasAutoOpenedRef.current = false;
+  }, [selectedAssetContext?.calendarDate]);
+
+  const filteredAssets = assets.filter(a => {
+    const sectionMatch = activeSection === 'ALL' || a.type === activeSection;
+    const searchMatch = a.name.toLowerCase().includes(searchTerm.toLowerCase());
+    // If navigated from Calendar, also show context-date assets at the top (but don't hide others)
+    return sectionMatch && searchMatch;
+  });
+
+  // Sort: if calendar context active, bring matching assets to top
+  const sortedAssets = selectedAssetContext
+    ? [...filteredAssets].sort((a, b) => {
+        const aMatch = isSameDayAsset(a.date, selectedAssetContext?.calendarDate);
+        const bMatch = isSameDayAsset(b.date, selectedAssetContext?.calendarDate);
+        if (aMatch && !bMatch) return -1;
+        if (!aMatch && bMatch) return 1;
+        return 0;
+      })
+    : filteredAssets;
 
   const sectionCounts = {
     ALL: assets.length,
@@ -214,8 +319,95 @@ export const AssetLibraryModule = () => {
     DOCUMENT: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30',
   };
 
+  // ── Download helper ──────────────────────────────────────────────
+  const [downloadedId, setDownloadedId] = useState(null);
+  const downloadAsset = async (e, asset) => {
+    e.stopPropagation();
+    const success = await triggerDirectDeviceDownload(asset);
+    if (success) {
+      setDownloadedId(asset.id);
+      setTimeout(() => setDownloadedId(null), 2500);
+    }
+  };
+
+  // ── Share helpers ────────────────────────────────────────────────
+  const [sharePopoverId, setSharePopoverId] = useState(null);
+  const sharePopoverRef = useRef(null);
+
+  const getShareTargets = (asset) => [
+    {
+      label: 'WhatsApp',
+      icon: <MessageCircle className="w-4 h-4 text-green-500" />,
+      bg: 'hover:bg-green-500/10',
+      href: `https://wa.me/?text=${encodeURIComponent(`${asset.name}\n${asset.url || ''}`)}`,
+    },
+    {
+      label: 'Telegram',
+      icon: <Send className="w-4 h-4 text-sky-500" />,
+      bg: 'hover:bg-sky-500/10',
+      href: `https://t.me/share/url?url=${encodeURIComponent(asset.url || '')}&text=${encodeURIComponent(asset.name)}`,
+    },
+    {
+      label: 'X (Twitter)',
+      icon: <Twitter className="w-4 h-4 text-slate-800 dark:text-white" />,
+      bg: 'hover:bg-slate-100 dark:hover:bg-slate-800',
+      href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(asset.name)}&url=${encodeURIComponent(asset.url || '')}`,
+    },
+    {
+      label: 'LinkedIn',
+      icon: <Linkedin className="w-4 h-4 text-blue-600" />,
+      bg: 'hover:bg-blue-500/10',
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(asset.url || '')}`,
+    },
+    {
+      label: 'Email',
+      icon: <Mail className="w-4 h-4 text-amber-500" />,
+      bg: 'hover:bg-amber-500/10',
+      href: `mailto:?subject=${encodeURIComponent(asset.name)}&body=${encodeURIComponent(`${asset.name}\n${asset.url || ''}`)}`,
+    },
+    {
+      label: copiedId === asset.id ? 'Copied!' : 'Copy Link',
+      icon: copiedId === asset.id ? <Check className="w-4 h-4 text-emerald-500" /> : <Link2 className="w-4 h-4 text-brand-500" />,
+      bg: 'hover:bg-brand-500/10',
+      action: () => copyUrl(asset.id, asset.url),
+    },
+  ];
+
+  // Close share popover on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (sharePopoverRef.current && !sharePopoverRef.current.contains(e.target)) {
+        setSharePopoverId(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
   return (
     <div className="space-y-6 animate-in fade-in">
+
+      {/* ━━━ Calendar Deep-Link Banner ━━━ */}
+      {selectedAssetContext && (
+        <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+            <div>
+              <p className="text-[11px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Viewing assets for {selectedAssetContext.dateLabel}</p>
+              <p className="text-[10px] text-emerald-600/70 dark:text-emerald-500/70">
+                {selectedAssetContext.topic || selectedAssetContext.platform || 'Scheduled post'} · Assets from this date are highlighted below
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => { setSelectedAssetContext(null); hasAutoOpenedRef.current = false; }}
+            className="p-1 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+            title="Clear filter"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* ━━━ Header Bar ━━━ */}
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -229,15 +421,15 @@ export const AssetLibraryModule = () => {
           </p>
         </div>
 
-        <div className="relative">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
+        <div className="relative flex items-center">
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search assets..."
-            className="glass-input text-xs pl-8 py-2.5 pr-4 text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 font-medium w-64"
+            className="glass-input text-xs pl-4 pr-10 py-2.5 text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 font-medium w-64 rounded-xl"
           />
+          <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
       </div>
 
@@ -280,14 +472,29 @@ export const AssetLibraryModule = () => {
       </div>
 
       {/* ━━━ Assets Grid ━━━ */}
-      {filteredAssets.length > 0 ? (
+      {sortedAssets.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {filteredAssets.map(asset => (
+          {sortedAssets.map(asset => {
+            const isHighlighted = selectedAssetContext && isSameDayAsset(asset.date, selectedAssetContext?.calendarDate);
+            return (
             <div
               key={asset.id}
-              className="p-4 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 hover:border-brand-500/40 transition-all duration-300 space-y-3 group cursor-pointer hover:shadow-lg hover:shadow-brand-500/5"
+              className={`p-4 rounded-3xl glass-card border transition-all duration-300 space-y-3 group cursor-pointer hover:shadow-lg ${
+                isHighlighted
+                  ? 'border-emerald-500/60 ring-2 ring-emerald-500/30 shadow-lg shadow-emerald-500/10 hover:border-emerald-500'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-brand-500/40 hover:shadow-brand-500/5'
+              }`}
               onClick={() => setSelectedAsset(asset)}
             >
+              {/* Highlighted date badge */}
+              {isHighlighted && (
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="inline-flex items-center gap-1 text-[9px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    <CheckCircle2 className="w-2.5 h-2.5" />
+                    Downloaded · {selectedAssetContext.dateLabel}
+                  </span>
+                </div>
+              )}
               <div className="aspect-square rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 relative">
                 {asset.url && asset.url.startsWith('http') ? (
                   <img src={asset.url} alt={asset.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -315,17 +522,77 @@ export const AssetLibraryModule = () => {
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-1 border-t border-slate-200 dark:border-slate-800">
+              {/* ── Download + Share action bar ── */}
+              <div className="flex items-center gap-1.5 pt-1 border-t border-slate-200 dark:border-slate-800">
+
+                {/* Download button */}
                 <button
-                  onClick={(e) => { e.stopPropagation(); copyUrl(asset.id, asset.url); }}
-                  className="w-full btn-secondary py-1.5 text-[11px]"
+                  title="Download asset"
+                  onClick={(e) => downloadAsset(e, asset)}
+                  className={`flex items-center justify-center gap-1.5 flex-1 py-2 rounded-xl text-[11px] font-bold transition-all ${
+                    downloadedId === asset.id
+                      ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                      : 'bg-brand-500/10 hover:bg-brand-600/20 text-brand-600 dark:text-brand-400 border border-brand-500/20 hover:border-brand-500/40'
+                  }`}
                 >
-                  {copiedId === asset.id ? <Check className="w-3.5 h-3.5" /> : <ExternalLink className="w-3.5 h-3.5" />}
-                  {copiedId === asset.id ? 'Copied!' : 'Copy Link'}
+                  {downloadedId === asset.id
+                    ? <><Check className="w-3.5 h-3.5" />&nbsp;Saved!</>
+                    : <><Download className="w-3.5 h-3.5" />&nbsp;Download</>}
                 </button>
+
+                {/* Share button + popover */}
+                <div
+                  className="relative"
+                  ref={sharePopoverId === asset.id ? sharePopoverRef : null}
+                >
+                  <button
+                    title="Share this asset"
+                    onClick={(e) => { e.stopPropagation(); setSharePopoverId(prev => prev === asset.id ? null : asset.id); }}
+                    className="flex items-center justify-center w-8 h-8 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 hover:border-purple-500/40 transition-all"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* Share Popover */}
+                  {sharePopoverId === asset.id && (
+                    <div
+                      className="absolute bottom-full right-0 mb-2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl p-3 w-44 animate-in fade-in zoom-in-95 duration-150"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">Share via</p>
+                      <div className="space-y-0.5">
+                        {getShareTargets(asset).map((target) => (
+                          target.href ? (
+                            <a
+                              key={target.label}
+                              href={target.href}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={() => setSharePopoverId(null)}
+                              className={`flex items-center gap-2.5 px-2 py-2 rounded-xl text-[11px] font-semibold text-slate-700 dark:text-slate-300 ${target.bg} transition-colors cursor-pointer`}
+                            >
+                              {target.icon}
+                              {target.label}
+                            </a>
+                          ) : (
+                            <button
+                              key={target.label}
+                              onClick={() => { target.action(); }}
+                              className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-xl text-[11px] font-semibold text-slate-700 dark:text-slate-300 ${target.bg} transition-colors`}
+                            >
+                              {target.icon}
+                              {target.label}
+                            </button>
+                          )
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="p-10 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/40 dark:bg-slate-900/30 flex flex-col items-center justify-center text-center gap-3">

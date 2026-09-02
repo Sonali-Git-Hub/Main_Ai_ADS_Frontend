@@ -80,7 +80,7 @@ export const DashboardModule = () => {
             <span className="text-[10px] sm:text-xs uppercase font-extrabold tracking-widest text-brand-600 dark:text-brand-400 bg-brand-500/10 dark:bg-brand-500/20 px-2.5 py-0.5 rounded-full">{t('canonicalOps', 'Canonical Operations')}</span>
             <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{t('opsFlow', 'Brand → Strategy → SEO → Create → Approve → Publish')}</span>
           </div>
-          <h1 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">{t('opsHubTitle', 'AI Ads™ Operations Hub')}</h1>
+          <h1 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">{t('opsHubTitle', 'AI ADS™ Operations Hub')}</h1>
           <p className="text-xs text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
             {t('currentlyGoverning', 'Currently governing')} <strong className="text-slate-900 dark:text-white">{activeWorkspace?.brandName || 'your brand'}</strong> ({activeWorkspace?.domainUrl || 'website'}). {t('anchoredToDna', 'All output is anchored to immutable Brand DNA.')}
           </p>

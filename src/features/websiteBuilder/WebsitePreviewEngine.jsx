@@ -815,7 +815,7 @@ function RenderWebsiteSection({
     case 'BookingForm':
     case 'DemoRequestForm':
       return (
-        <div className="p-6 rounded-3xl border space-y-4 shadow-sm max-w-2xl mx-auto" style={{ backgroundColor: currentTheme.cardBg, borderColor: currentTheme.cardBorder, color: currentTheme.text }}>
+        <div className="p-6 rounded-3xl border space-y-4 shadow-sm w-full max-w-4xl mx-auto" style={{ backgroundColor: currentTheme.cardBg, borderColor: currentTheme.cardBorder, color: currentTheme.text }}>
           <div>
             <h3 className="text-sm font-extrabold">{title}</h3>
             <p className="text-xs mt-0.5" style={{ color: currentTheme.mutedText }}>Select your preferred schedule and complete your request</p>
@@ -1267,7 +1267,7 @@ function RenderWebsiteSection({
 
     case 'NewsletterSignup':
       return (
-        <div className="p-6 rounded-3xl border text-center space-y-3 max-w-xl mx-auto shadow-sm" style={{ backgroundColor: currentTheme.surface, borderColor: currentTheme.cardBorder, color: currentTheme.text }}>
+        <div className="p-6 rounded-3xl border text-center space-y-3 w-full max-w-4xl mx-auto shadow-sm" style={{ backgroundColor: currentTheme.surface, borderColor: currentTheme.cardBorder, color: currentTheme.text }}>
           <h3 className="text-sm font-extrabold">{section.headline || title}</h3>
           <p className="text-xs" style={{ color: currentTheme.mutedText }}>{section.subheadline || 'Stay informed with our latest news and updates.'}</p>
           <form onSubmit={(e) => { e.preventDefault(); triggerToast('Subscribed to newsletter!'); }} className="flex items-center gap-2 max-w-md mx-auto pt-1">

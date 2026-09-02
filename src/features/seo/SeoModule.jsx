@@ -793,7 +793,7 @@ export const SeoModule = () => {
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <button
               onClick={() => setActiveModule('strategy')}
-              className="flex items-center gap-2.5 px-6 py-3 bg-emerald-600/80 dark:bg-emerald-600/70 backdrop-blur-xl border border-emerald-400/40 text-white rounded-full font-extrabold text-xs sm:text-sm transition-all duration-300 shadow-2xl shadow-emerald-600/35 hover:shadow-emerald-500/50 hover:bg-emerald-500/90 hover:border-emerald-300/60 hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap group"
+              className="flex items-center gap-2.5 px-6 py-3 bg-brand-600/90 dark:bg-brand-600/80 backdrop-blur-xl border border-brand-400/40 text-white rounded-full font-extrabold text-xs sm:text-sm transition-all duration-300 shadow-2xl shadow-brand-600/35 hover:shadow-brand-500/50 hover:bg-brand-500/90 hover:border-brand-300/60 hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap group"
               title="Proceed to Strategy & Content Planning"
             >
               <span className="tracking-wide">Proceed to Strategy</span>

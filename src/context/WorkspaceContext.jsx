@@ -65,17 +65,16 @@ export const TRANSLATIONS = {
     "brands": "2. Brand DNA",
     "seo": "3. SEO Intelligence",
     "strategy": "4. Strategy",
-    "calendar": "5. Calendar",
-    "studio": "6. Content Studio",
-    "websiteBuilder": "7. AI Website Builder",
-    "campaigns": "8. Campaigns",
+    "campaigns": "5. Campaigns",
+    "calendar": "6. Calendar",
+    "studio": "7. Content Studio",
+    "approvals": "8. Approvals Desk",
     "creative": "9. Creative Studio",
-    "repurpose": "10. Repurpose",
-    "assets": "11. Asset Library",
-    "approvals": "12. Approvals Desk",
-    "analytics": "13. Analytics",
-    "team": "14. Team & RBAC",
-    "settings": "13. Settings & Billing",
+    "assets": "10. Asset Library",
+    "websiteBuilder": "11. AI Website Builder",
+    "analytics": "12. Analytics",
+    "team": "13. Team & RBAC",
+    "settings": "12. Settings & Billing",
     "settingsBtn": "Settings & Billing",
     "quickSocialPost": "Quick Social Post",
     "engineActive": "AISA™ Engine Active",
@@ -247,14 +246,14 @@ export const TRANSLATIONS = {
     "brands": "2. ब्रांड डीएनए (Brand DNA)",
     "seo": "3. एसईओ इंटेलिजेंस (SEO)",
     "strategy": "4. रणनीति (Strategy)",
-    "calendar": "5. कैलेंडर (Calendar)",
-    "studio": "6. कंटेंट स्टूडियो",
-    "websiteBuilder": "7. एआई वेबसाइट बिल्डर",
-    "campaigns": "8. अभियान (Campaigns)",
+    "campaigns": "5. अभियान (Campaigns)",
+    "calendar": "6. कैलेंडर (Calendar)",
+    "studio": "7. कंटेंट स्टूडियो",
+    "approvals": "8. स्वीकृति डेस्क",
     "creative": "9. क्रिएटिव स्टूडियो",
     "repurpose": "10. रीपर्पस (Repurpose)",
     "assets": "11. एसेट लाइब्रेरी",
-    "approvals": "12. स्वीकृति डेस्क",
+    "websiteBuilder": "12. एआई वेबसाइट बिल्डर",
     "analytics": "13. एनालिटिक्स",
     "team": "14. टीम और एक्सेस (Team)",
     "settings": "13. सेटिंग्स और बिलिंग",
@@ -429,14 +428,14 @@ export const TRANSLATIONS = {
     "brands": "2. ব্র্যান্ড ডিএনএ (Brand DNA)",
     "seo": "3.এসইও বুদ্ধিমত্তা (SEO)",
     "strategy": "4. কৌশল (Strategy)",
-    "calendar": "5. ক্যালেন্ডার (Calendar)",
-    "studio": "6. কনটেন্ট স্টুডিও",
-    "websiteBuilder": "7. এআই ওয়েবসাইট বিল্ডার",
-    "campaigns": "8. ক্যাম্পেইন (Campaigns)",
+    "campaigns": "5. ক্যাম্পেইন (Campaigns)",
+    "calendar": "6. ক্যালেন্ডার (Calendar)",
+    "studio": "7. কনটেন্ট স্টুডিও",
+    "approvals": "8. অনুমোদন ডেস্ক",
     "creative": "9. ক্রিয়েটিভ স্টুডিও",
     "repurpose": "10. পুনব্যবহার (Repurpose)",
     "assets": "11. সম্পদ লাইব্রেরি",
-    "approvals": "12. অনুমোদন ডেস্ক",
+    "websiteBuilder": "12. এআই ওয়েবসাইট বিল্ডার",
     "analytics": "13. অ্যানালিটিক্স",
     "team": "14. টিম ও অ্যাক্সেস",
     "settings": "13. সেটিংসে ও বিলিং",
@@ -592,14 +591,14 @@ export const TRANSLATIONS = {
     "brands": "2. ब्रँड डीएनए (Brand DNA)",
     "seo": "3. एसईओ इंटेलिजन्स",
     "strategy": "4. रणनीती (Strategy)",
-    "calendar": "5. कॅलेंडर (Calendar)",
-    "studio": "6. कंटेंट स्टुडिओ",
-    "websiteBuilder": "7. एआय वेबसाइट बिल्डर",
-    "campaigns": "8. मोहिमा (Campaigns)",
+    "campaigns": "5. मोहिमा (Campaigns)",
+    "calendar": "6. कॅलेंडर (Calendar)",
+    "studio": "7. कंटेंट स्टुडिओ",
+    "approvals": "8. संमती डेस्क",
     "creative": "9. क्रिएटिव्ह स्टुडिओ",
     "repurpose": "10. रीपर्पज (Repurpose)",
     "assets": "11. ॲसेट लायब्ररी",
-    "approvals": "12. संमती डेस्क",
+    "websiteBuilder": "12. एआय वेबसाइट बिल्डर",
     "analytics": "13. ॲनालिटिक्स",
     "team": "14. टीम आणि ॲक्सेस",
     "settings": "13. सेटिंग्ज आणि बिलिंग",
@@ -755,14 +754,14 @@ export const TRANSLATIONS = {
     "brands": "2. బ్రాండ్ DNA",
     "seo": "3. SEO ఇంటెలిజెన్స్",
     "strategy": "4. వ్యూహం (Strategy)",
-    "calendar": "5. క్యాలెండర్",
-    "studio": "6. కంటెంట్ స్టూడియో",
-    "websiteBuilder": "7. AI వెబ్‌సైట్ బిల్డర్",
-    "campaigns": "8. ప్రచారాలు (Campaigns)",
+    "campaigns": "5. ప్రచారాలు (Campaigns)",
+    "calendar": "6. క్యాలెండర్",
+    "studio": "7. కంటెంట్ స్టూడియో",
+    "approvals": "8. ఆమోదాల డెస్క్",
     "creative": "9. క్రియేటివ్ స్టూడియో",
     "repurpose": "10. రీపర్సస్",
     "assets": "11. అసెట్ లైబ్రరీ",
-    "approvals": "12. ఆమోదాల డెస్క్",
+    "websiteBuilder": "12. AI వెబ్‌సైట్ బిల్డర్",
     "analytics": "13. అనలిటిక్స్",
     "team": "14. టీమ్ & యాక్సెస్",
     "settings": "13. సెట్టింగ్‌లు & బిల్లింగ్",
@@ -951,14 +950,14 @@ export const TRANSLATIONS = {
     "brands": "2. ಬ್ರಾಂಡ್ DNA",
     "seo": "3. SEO ಇಂಟೆಲಿಜೆನ್ಸ್",
     "strategy": "4. ತಂತ್ರ (Strategy)",
-    "calendar": "5. ಕ್ಯಾಲೆಂಡರ್",
-    "studio": "6. ಕಂಟೆಂಟ್ ಸ್ಟುಡಿಯೋ",
-    "websiteBuilder": "7. AI ವೆಬ್‌ಸೈಟ್ ಬಿಲ್ಡರ್",
-    "campaigns": "8. ಪ್ರಚಾರಗಳು",
+    "campaigns": "5. ಪ್ರಚಾರಗಳು",
+    "calendar": "6. ಕ್ಯಾಲೆಂಡರ್",
+    "studio": "7. ಕಂಟೆಂಟ್ ಸ್ಟುಡಿಯೋ",
+    "approvals": "8. ಅನುಮೋದನೆ ಡೆಸ್ಕ್",
     "creative": "9. ಕ್ರಿಯೇಟಿವ್ ಸ್ಟುಡಿಯೋ",
     "repurpose": "10. ಮರುಬಳಕೆ",
     "assets": "11. ಅಸೆಟ್ ಲೈಬ್ರರಿ",
-    "approvals": "12. ಅನುಮೋದನೆ ಡೆಸ್ಕ್",
+    "websiteBuilder": "12. AI ವೆಬ್‌ಸೈಟ್ ಬಿಲ್ಡರ್",
     "analytics": "13. ಅನಾಲಿಟಿಕ್ಸ್",
     "team": "14. ತಂಡ & ಪ್ರವೇಶ",
     "settings": "13. ಸೆಟ್ಟಿಂಗ್‌ಗಳು & ಬಿಲ್ಲಿಂಗ್",
@@ -1145,14 +1144,14 @@ export const TRANSLATIONS = {
     "brands": "2. ADN de Marca",
     "seo": "3. Inteligencia SEO",
     "strategy": "4. Estrategia",
-    "calendar": "5. Calendario",
-    "studio": "6. Estudio Contenido",
-    "websiteBuilder": "7. Creador Web IA",
-    "campaigns": "8. Campañas",
+    "campaigns": "5. Campañas",
+    "calendar": "6. Calendario",
+    "studio": "7. Estudio Contenido",
+    "approvals": "8. Aprobaciones",
     "creative": "9. Estudio Creativo",
     "repurpose": "10. Reutilizar",
     "assets": "11. Biblioteca",
-    "approvals": "12. Aprobaciones",
+    "websiteBuilder": "12. Creador Web IA",
     "analytics": "13. Analítica",
     "team": "14. Equipo y Permisos",
     "settings": "13. Ajustes y Facturación",
@@ -1308,14 +1307,14 @@ export const TRANSLATIONS = {
     "brands": "2. ADN de Marque",
     "seo": "3. Intelligence SEO",
     "strategy": "4. Stratégie",
-    "calendar": "5. Calendrier",
-    "studio": "6. Studio de Contenu",
-    "websiteBuilder": "7. Créateur Web IA",
-    "campaigns": "8. Campagnes",
+    "campaigns": "5. Campagnes",
+    "calendar": "6. Calendrier",
+    "studio": "7. Studio de Contenu",
+    "approvals": "8. Validations",
     "creative": "9. Studio Créatif",
     "repurpose": "10. Reconditionner",
     "assets": "11. Médiathèque",
-    "approvals": "12. Validations",
+    "websiteBuilder": "12. Créateur Web IA",
     "analytics": "13. Analytique",
     "team": "14. Équipe et Rôles",
     "settings": "13. Paramètres & Facturation",
@@ -1406,14 +1405,14 @@ export const TRANSLATIONS = {
     "brands": "2. Marken-DNA",
     "seo": "3. SEO-Intelligenz",
     "strategy": "4. Strategie",
-    "calendar": "5. Kalender",
-    "studio": "6. Content-Studio",
-    "websiteBuilder": "7. KI-Website-Builder",
-    "campaigns": "8. Kampagnen",
+    "campaigns": "5. Kampagnen",
+    "calendar": "6. Kalender",
+    "studio": "7. Content-Studio",
+    "approvals": "8. Freigaben",
     "creative": "9. Kreativ-Studio",
     "repurpose": "10. Wiederverwenden",
     "assets": "11. Asset-Bibliothek",
-    "approvals": "12. Freigaben",
+    "websiteBuilder": "12. KI-Website-Builder",
     "analytics": "13. Analytik",
     "team": "14. Team & Rechte",
     "settings": "13. Einstellungen & Abrechnung",
@@ -2446,6 +2445,45 @@ export const WorkspaceProvider = ({ children }) => {
     });
   };
 
+  // Real-Time Generated Posts Tracker per Workspace
+  const [generatedPostsTracker, setGeneratedPostsTracker] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aisa_generated_posts_tracker');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+
+  const markPostAsGenerated = (key, details = {}) => {
+    if (!key) return;
+    const wsId = activeWorkspaceId || activeWorkspace?._id || activeWorkspace?.id || 'ws_default';
+    const cleanKey = String(key).trim();
+
+    setGeneratedPostsTracker(prev => {
+      const currentWsMap = prev[wsId] || {};
+      const updated = {
+        ...prev,
+        [wsId]: {
+          ...currentWsMap,
+          [cleanKey]: {
+            generatedAt: new Date().toISOString(),
+            platform: details.platform || 'social',
+            topic: details.topic || details.title || cleanKey,
+            ...details
+          }
+        }
+      };
+      try {
+        localStorage.setItem('aisa_generated_posts_tracker', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
+  // Asset Library Deep-Link Context: navigate to specific asset from calendar
+  const [selectedAssetContext, setSelectedAssetContext] = useState(null);
+
   return (
     <WorkspaceContext.Provider value={{
       activeModule, setActiveModule, goBack, canGoBack, navigationHistory,
@@ -2479,6 +2517,8 @@ export const WorkspaceProvider = ({ children }) => {
       dataControlPreferences, setDataControlPreferences,
       studioTarget, setStudioTarget,
       generatedContent, setGeneratedContent,
+      generatedPostsTracker, markPostAsGenerated,
+      selectedAssetContext, setSelectedAssetContext,
 
       // End-to-End Pipeline State & Actions
       brandDnaData, setBrandDnaData,
