@@ -32,6 +32,14 @@ import { AdminLayout } from './components/layout/AdminLayout';
 const MainContent = () => {
   const { activeModule, isAISAAssistantOpen, setIsAISAAssistantOpen, user, loginUser } = useWorkspace();
 
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.scrollTop = 0;
+    }
+  }, [activeModule]);
+
   if (!user) {
     return <Login onLoginSuccess={loginUser} />;
   }
@@ -124,7 +132,7 @@ const MainContent = () => {
           </NoBrandGate>
         );
       case 'team': return <TeamRbacModule />;
-      case 'settings': return <DashboardModule />;
+      case 'settings': return <SettingsBillingModule />;
       case 'adminDashboard': return <AdminDashboardModule />;
       default: return <DashboardModule />;
     }

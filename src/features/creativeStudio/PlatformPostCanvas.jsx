@@ -654,13 +654,6 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
               </div>
               <div className="bg-white dark:bg-slate-900 p-6 space-y-5">
                 <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-sans">{emailBody||caption}</div>
-                {contentData?.cta && (
-                  <div className="text-center py-3">
-                    <button className="py-3 px-8 rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 text-white font-bold text-xs shadow-lg hover:shadow-xl transition-all">
-                      {contentData.cta}
-                    </button>
-                  </div>
-                )}
                 <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 whitespace-pre-wrap">
                   <p className="font-medium">{"Warm regards,\n"+brand+" Team"}</p>
                 </div>

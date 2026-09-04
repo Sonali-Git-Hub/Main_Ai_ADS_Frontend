@@ -92,6 +92,7 @@ export const ContentStudioModule = () => {
   const updateEmailField = (field, value) => setEmailForm(prev => ({ ...prev, [field]: value }));
   const [draftingEmail, setDraftingEmail] = useState(false);
   const [emailResult, setEmailResult] = useState(null);
+  const [emailCanvasMode, setEmailCanvasMode] = useState('edit'); // 'edit' | 'preview'
 
   // Ad Copy Studio State
   const [adProduct, setAdProduct] = useState('Enterprise AI Ads Marketing Platform');
@@ -119,11 +120,11 @@ export const ContentStudioModule = () => {
       .replace(/\\"/g, '"')
       // Remove markdown headers: "# Title", "## Title", "### Title" -> "Title"
       .replace(/^#{1,6}\s+/gm, '')
-      // Remove bold and italic markers: "**text**" -> "text", "*text*" -> "text", "__text__" -> "text"
-      .replace(/\*\*([^*]+)\*\*/g, '$1')
-      .replace(/\*([^*]+)\*/g, '$1')
-      .replace(/__([^_]+)__/g, '$1')
-      .replace(/_([^_]+)_/g, '$1')
+      .replace(/#{1,6}/g, '')
+      // Remove all bold and italic markers: "**text**" -> "text", "*text*" -> "text", "__text__" -> "text"
+      .replace(/\*{1,3}/g, '')
+      .replace(/_{1,3}/g, '')
+      .replace(/`{1,3}/g, '')
       // Remove markdown links: "[text](url)" -> "text"
       .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
       // Remove horizontal rules
@@ -291,20 +292,23 @@ export const ContentStudioModule = () => {
 
         if (studioTarget.autoGenerate) {
           setDraftingSocial(true);
+          const fullStrategyContext = studioTarget.strategyDescription || studioTarget.actionItem || studioTarget.customPrompt || '';
           contentAPI.generateSocialPost({
             workspaceId,
             brandName: activeWorkspace?.brandName,
             platform: matchedPlatform,
             topic: topic,
+            customPrompt: fullStrategyContext,
             postType: postType.toLowerCase() === 'image' || postType.toLowerCase() === 'reel' ? 'engagement' : postType.toLowerCase(),
           })
             .then(res => {
               const brand = activeWorkspace?.brandName || 'Brand';
-              const imgPrompt = res?.data?.imagePrompt || studioTarget.imagePrompt || `${topic} — ${brand} commercial advertising photography, 8k`;
+              const fullPromptTopic = fullStrategyContext ? `${topic}: ${fullStrategyContext}` : topic;
+              const imgPrompt = res?.data?.imagePrompt || studioTarget.imagePrompt || `${fullPromptTopic} — ${brand} commercial advertising photography, 8k`;
               const imgUrl = res?.data?.imageUrl || studioTarget.imageUrl || resolveBrandVisualAsset({
                 prompt: imgPrompt,
                 brandName: brand,
-                topic: topic,
+                topic: fullPromptTopic,
                 style: 'Photorealistic Commercial',
                 aspect: initialAspect,
                 variationIndex: 0
@@ -534,13 +538,10 @@ export const ContentStudioModule = () => {
         variationIndex: visualVariationIndex
       });
 
-      const userWantsSymbols = /[*#_`]/.test(`${socialTopic || ''} ${socialPrompt || ''}`);
       const cleanData = { ...(res?.data || {}) };
-      if (!userWantsSymbols) {
-        ['caption', 'shortCaption', 'longCaption', 'hook', 'cta'].forEach((k) => {
-          if (cleanData[k]) cleanData[k] = cleanArticleText(cleanData[k]);
-        });
-      }
+      ['caption', 'shortCaption', 'longCaption', 'hook', 'cta'].forEach((k) => {
+        if (cleanData[k]) cleanData[k] = cleanArticleText(cleanData[k]);
+      });
 
       const payload = {
         ...cleanData,
@@ -729,18 +730,13 @@ export const ContentStudioModule = () => {
         customPrompt: emailPrompt || buildEmailPrompt(emailForm)
       });
       if (res.email) {
-        const userExplicitlyRequestedSymbols = /[*#_`]/.test(
-          `${emailForm.subject || ''} ${emailForm.context || ''} ${emailForm.keyPoints || ''} ${emailPrompt || ''}`
-        );
         const processedEmail = { ...res.email };
-        if (!userExplicitlyRequestedSymbols) {
-          if (processedEmail.body) processedEmail.body = cleanArticleText(processedEmail.body);
-          if (processedEmail.subject) processedEmail.subject = cleanArticleText(processedEmail.subject);
-          if (processedEmail.preheader) processedEmail.preheader = cleanArticleText(processedEmail.preheader);
-          if (processedEmail.headline) processedEmail.headline = cleanArticleText(processedEmail.headline);
-          if (processedEmail.closingLine) processedEmail.closingLine = cleanArticleText(processedEmail.closingLine);
-          if (processedEmail.ps) processedEmail.ps = cleanArticleText(processedEmail.ps);
-        }
+        if (processedEmail.body) processedEmail.body = cleanArticleText(processedEmail.body);
+        if (processedEmail.subject) processedEmail.subject = cleanArticleText(processedEmail.subject);
+        if (processedEmail.preheader) processedEmail.preheader = cleanArticleText(processedEmail.preheader);
+        if (processedEmail.headline) processedEmail.headline = cleanArticleText(processedEmail.headline);
+        if (processedEmail.closingLine) processedEmail.closingLine = cleanArticleText(processedEmail.closingLine);
+        if (processedEmail.ps) processedEmail.ps = cleanArticleText(processedEmail.ps);
 
         setEmailResult(processedEmail);
         if (setGeneratedContent) setGeneratedContent({
@@ -772,17 +768,14 @@ export const ContentStudioModule = () => {
         customPrompt: adCopyPrompt || buildAdPrompt(adProduct, adPlatform)
       });
       if (res.adCopy) {
-        const userWantsSymbols = /[*#_`]/.test(`${adProduct || ''} ${adCopyPrompt || ''}`);
         let processedAd = { ...res.adCopy };
-        if (!userWantsSymbols) {
-          if (processedAd.longFormAd) processedAd.longFormAd = cleanArticleText(processedAd.longFormAd);
-          if (processedAd.shortAd) processedAd.shortAd = cleanArticleText(processedAd.shortAd);
-          if (Array.isArray(processedAd.headlines)) {
-            processedAd.headlines = processedAd.headlines.map(cleanArticleText);
-          }
-          if (Array.isArray(processedAd.descriptions)) {
-            processedAd.descriptions = processedAd.descriptions.map(cleanArticleText);
-          }
+        if (processedAd.longFormAd) processedAd.longFormAd = cleanArticleText(processedAd.longFormAd);
+        if (processedAd.shortAd) processedAd.shortAd = cleanArticleText(processedAd.shortAd);
+        if (Array.isArray(processedAd.headlines)) {
+          processedAd.headlines = processedAd.headlines.map(cleanArticleText);
+        }
+        if (Array.isArray(processedAd.descriptions)) {
+          processedAd.descriptions = processedAd.descriptions.map(cleanArticleText);
         }
         setAdResult(processedAd);
       }
@@ -1552,36 +1545,50 @@ export const ContentStudioModule = () => {
                     </div>
                   </div>
                 ) : draftingSocial ? (
-                  <div className="p-8 sm:p-12 rounded-[28px] bg-slate-900/90 border border-slate-800 text-center space-y-6 animate-in fade-in duration-300">
-                    <div className="w-14 h-14 rounded-2xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center mx-auto text-brand-400">
-                      <Loader2 className="w-7 h-7 animate-spin" />
+                  <div className="p-8 sm:p-12 rounded-[28px] bg-slate-900/90 border border-slate-800/90 text-center space-y-6 animate-in fade-in duration-300 relative overflow-hidden shadow-2xl">
+                    {/* Glowing background aura */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-tr from-brand-500/20 via-purple-500/15 to-amber-500/20 rounded-full blur-3xl pointer-events-none animate-pulse" />
+                    
+                    {/* Animated Loader Ring */}
+                    <div className="relative mx-auto w-16 h-16 flex items-center justify-center">
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-brand-500 via-purple-500 to-amber-400 animate-spin blur-xs opacity-75" />
+                      <div className="relative w-15 h-15 rounded-[14px] bg-slate-950 flex items-center justify-center text-brand-400 shadow-inner">
+                        <Sparkles className="w-7 h-7 animate-pulse text-brand-400" />
+                      </div>
                     </div>
                     
-                    <div className="space-y-1.5">
-                      <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">
-                        Executing AI Content Prompt...
+                    <div className="space-y-2 relative z-10">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-[11px] font-bold uppercase tracking-widest mb-1">
+                        <span className="w-2 h-2 rounded-full bg-brand-400 animate-ping" />
+                        AI Generation Active
+                      </div>
+                      <h3 className="text-base font-extrabold text-white tracking-wide">
+                        Crafting High-Impact Social Post...
                       </h3>
-                      <p className="text-xs text-slate-400 max-w-md mx-auto">
-                        Synthesizing Brand DNA, copywriting frameworks, SEO hashtags, and 8K commercial visual creative for <strong>"{socialTopic}"</strong>.
+                      <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                        Synthesizing Brand DNA, copywriting frameworks, SEO hashtags, and commercial visual creative for <strong className="text-slate-200">"{socialTopic}"</strong>.
                       </p>
                     </div>
 
-                    <div className="max-w-md mx-auto space-y-2.5 text-left text-xs bg-slate-950/70 p-4 rounded-2xl border border-slate-800/80 font-mono">
-                      <div className="flex items-center gap-2 text-emerald-400">
-                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                        <span>1. Ingested Brand DNA & Audience Persona</span>
+                    {/* Sleek Progress Indicator & Badges (No raw technical log steps) */}
+                    <div className="max-w-md mx-auto space-y-4 relative z-10">
+                      <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800/80 shadow-inner">
+                        <div className="h-full bg-gradient-to-r from-brand-500 via-purple-500 to-amber-400 rounded-full animate-pulse w-full transition-all duration-700" />
                       </div>
-                      <div className="flex items-center gap-2 text-brand-400 animate-pulse">
-                        <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                        <span>2. Generating Pattern-Interrupt Hook & PAS Copy</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-purple-400 animate-pulse">
-                        <Hash className="w-3.5 h-3.5 shrink-0" />
-                        <span>3. Extracting High-Intent SEO Keywords & Hashtags</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-amber-400 animate-pulse">
-                        <Palette className="w-3.5 h-3.5 shrink-0" />
-                        <span>4. Synthesizing 8K Commercial Visual Studio Asset</span>
+
+                      <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] font-medium text-slate-300">
+                        <span className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800/90 flex items-center gap-1.5 shadow-sm">
+                          <Sparkles className="w-3.5 h-3.5 text-brand-400" /> Brand Identity
+                        </span>
+                        <span className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800/90 flex items-center gap-1.5 shadow-sm">
+                          <PenTool className="w-3.5 h-3.5 text-emerald-400" /> Dynamic Copy
+                        </span>
+                        <span className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800/90 flex items-center gap-1.5 shadow-sm">
+                          <Hash className="w-3.5 h-3.5 text-purple-400" /> Target SEO
+                        </span>
+                        <span className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800/90 flex items-center gap-1.5 shadow-sm">
+                          <Palette className="w-3.5 h-3.5 text-amber-400" /> Visual Asset
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1773,13 +1780,13 @@ export const ContentStudioModule = () => {
                 </div>
 
                 {/* ── LIVE & EDITABLE AI EMAIL PROMPT ── */}
-                <div className="p-3.5 rounded-2xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between">
+                <div className="p-4 rounded-2xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                      <Sparkles className="w-3 h-3 text-brand-500" /> AI Email Prompt
+                      <Sparkles className="w-3.5 h-3.5 text-brand-500" /> AI Email Prompt
                     </span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[9px] font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded-md">
+                      <span className="text-[9px] font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-md">
                         EDITABLE
                       </span>
                       <button
@@ -1793,11 +1800,11 @@ export const ContentStudioModule = () => {
                     </div>
                   </div>
                   <textarea
-                    rows={4}
+                    rows={Math.max(8, (emailPrompt || '').split('\n').length + 1)}
                     value={emailPrompt}
                     onChange={(e) => setEmailPrompt(e.target.value)}
                     placeholder="Custom email prompt directives..."
-                    className="w-full p-2.5 rounded-xl font-mono text-[11px] leading-relaxed text-slate-800 dark:text-slate-200 bg-white/80 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="w-full bg-transparent border-0 p-0 text-xs font-sans font-medium leading-relaxed text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-0 resize-none placeholder-slate-400"
                   />
                 </div>
 
@@ -1812,7 +1819,44 @@ export const ContentStudioModule = () => {
               </div>
 
               <div className="lg:col-span-6 xl:col-span-7 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Email Copy</h2>
+                <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5 gap-2">
+                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Email Copy</h2>
+                  {emailResult && (
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[10px] font-bold">
+                        <button
+                          type="button"
+                          onClick={() => setEmailCanvasMode('edit')}
+                          className={`px-2.5 py-0.5 rounded-lg transition-all ${emailCanvasMode === 'edit' ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm font-extrabold' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                        >
+                          Edit Text
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEmailCanvasMode('preview')}
+                          className={`px-2.5 py-0.5 rounded-lg transition-all ${emailCanvasMode === 'preview' ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm font-extrabold' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                        >
+                          Formatted Email
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const fullEmailText = `Subject: ${emailResult.subject}\nPreheader: ${emailResult.preheader}\n\n${emailResult.body}`;
+                          navigator.clipboard.writeText(fullEmailText);
+                          alert('Email copy copied to clipboard!');
+                        }}
+                        className="btn-secondary text-xs py-1 px-2.5 flex items-center gap-1 text-slate-600 dark:text-slate-300"
+                      >
+                        <Copy className="w-3.5 h-3.5" /> Copy Email
+                      </button>
+                      <button onClick={() => submitToApprovals(emailResult)} className="btn-primary text-xs py-1 px-3 flex items-center gap-1 shadow-sm">
+                        <Send className="w-3.5 h-3.5" /> Submit to Approvals
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 {emailResult ? (
                   <div className="space-y-4 text-xs">
                     <div>
@@ -1821,7 +1865,7 @@ export const ContentStudioModule = () => {
                         type="text"
                         value={emailResult.subject}
                         onChange={(e) => setEmailResult({ ...emailResult, subject: e.target.value })}
-                        className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white"
+                        className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500"
                       />
                     </div>
                     <div>
@@ -1830,21 +1874,41 @@ export const ContentStudioModule = () => {
                         type="text"
                         value={emailResult.preheader}
                         onChange={(e) => setEmailResult({ ...emailResult, preheader: e.target.value })}
-                        className="w-full p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400"
+                        className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
                       />
                     </div>
                     <div>
-                      <span className="font-bold text-slate-500 block mb-1">Email Body</span>
-                      <textarea
-                        rows={10}
-                        value={emailResult.body}
-                        onChange={(e) => setEmailResult({ ...emailResult, body: e.target.value })}
-                        className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-slate-100"
-                      />
+                      {emailCanvasMode === 'preview' ? (
+                        <div className="p-5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 leading-relaxed text-xs space-y-3 font-sans shadow-sm">
+                          {emailResult.body.split('\n\n').map((para, idx) => {
+                            const trimmed = cleanArticleText(para.trim());
+                            if (!trimmed) return null;
+                            if (trimmed.startsWith('• ') || trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                              const items = trimmed.split('\n').filter(Boolean);
+                              return (
+                                <ul key={idx} className="space-y-1.5 pl-2 text-slate-700 dark:text-slate-300">
+                                  {items.map((it, i) => (
+                                    <li key={i} className="flex items-start gap-2">
+                                      <span className="text-brand-500 font-bold">•</span>
+                                      <span>{it.replace(/^[•*-]\s*/, '')}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              );
+                            }
+                            return <p key={idx} className="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{trimmed}</p>;
+                          })}
+                        </div>
+                      ) : (
+                        <textarea
+                          rows={Math.max(14, (emailResult.body || '').split('\n').length + 3)}
+                          value={emailResult.body}
+                          onChange={(e) => setEmailResult({ ...emailResult, body: e.target.value })}
+                          className="w-full p-4 rounded-2xl font-sans text-xs leading-relaxed text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500 resize-y"
+                          placeholder="Email content..."
+                        />
+                      )}
                     </div>
-                    <button onClick={() => submitToApprovals(emailResult)} className="btn-primary text-xs flex items-center gap-1">
-                      <Send className="w-3.5 h-3.5" /> Submit to Approvals
-                    </button>
                   </div>
                 ) : (
                   <div className="p-12 text-center text-slate-500 space-y-2">
@@ -1887,13 +1951,13 @@ export const ContentStudioModule = () => {
                 </div>
 
                 {/* ── LIVE & EDITABLE AI AD COPY PROMPT ── */}
-                <div className="p-3.5 rounded-2xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between">
+                <div className="p-4 rounded-2xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                      <Sparkles className="w-3 h-3 text-brand-500" /> AI Ad Copy Prompt
+                      <Sparkles className="w-3.5 h-3.5 text-brand-500" /> AI Ad Copy Prompt
                     </span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[9px] font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded-md">
+                      <span className="text-[9px] font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-md">
                         EDITABLE
                       </span>
                       <button
@@ -1907,11 +1971,11 @@ export const ContentStudioModule = () => {
                     </div>
                   </div>
                   <textarea
-                    rows={3}
+                    rows={Math.max(7, (adCopyPrompt || '').split('\n').length + 1)}
                     value={adCopyPrompt}
                     onChange={(e) => setAdCopyPrompt(e.target.value)}
                     placeholder="Custom ad prompt directives..."
-                    className="w-full p-2.5 rounded-xl font-mono text-[11px] leading-relaxed text-slate-800 dark:text-slate-200 bg-white/80 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="w-full bg-transparent border-0 p-0 text-xs font-sans font-medium leading-relaxed text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-0 resize-none placeholder-slate-400"
                   />
                 </div>
 

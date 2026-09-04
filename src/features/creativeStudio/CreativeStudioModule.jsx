@@ -712,6 +712,13 @@ export const CreativeStudioModule = () => {
       ? { platform: studioTarget.platform, type: studioTarget.type || 'SOCIAL', topic: studioTarget.topic, hook: studioTarget.topic, caption: '', hashtags: [] }
       : null;
 
+  // Scroll to top ONCE on mount
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    const mainEl = document.querySelector('main');
+    if (mainEl) mainEl.scrollTop = 0;
+  }, []);
+
   // Auto-select the correct format card and mark post as generated in real-time
   useEffect(() => {
     if (!effectiveContent) return;

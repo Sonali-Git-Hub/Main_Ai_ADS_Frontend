@@ -53,6 +53,7 @@ export const brandAPI = {
 // ─── Strategy API ─────────────────────────────────────────────────────────────
 export const strategyAPI = {
   generate: (workspaceId, body = {}) => apiFetch(`/workspace/${workspaceId}/generate-strategy`, { method: 'POST', body }),
+  regenerateCard: (workspaceId, body = {}) => apiFetch(`/workspace/${workspaceId}/regenerate-strategy-card`, { method: 'POST', body }),
   save: (workspaceId, body) => apiFetch(`/workspace/${workspaceId}`, { method: 'PUT', body: { currentStrategy: body } }),
 };
 

@@ -149,6 +149,61 @@ export const StrategyModule = () => {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduleDays, setScheduleDays] = useState('30');
 
+  // Card Regeneration State
+  const [openRegenDays, setOpenRegenDays] = useState({});
+  const [regenInputs, setRegenInputs] = useState({});
+  const [loadingRegenDays, setLoadingRegenDays] = useState({});
+
+  const handleRegenerateCardItem = async (item, e) => {
+    if (e) e.stopPropagation();
+    const day = item.day;
+    const userDirective = (regenInputs[day] || '').trim();
+
+    setLoadingRegenDays(prev => ({ ...prev, [day]: true }));
+
+    try {
+      const wsId = activeWorkspace.id || activeWorkspace._id || 'default_ws';
+      const data = await strategyAPI.regenerateCard(wsId, {
+        day: item.day,
+        currentTopic: item.topic,
+        currentActionItem: item.actionItem,
+        platform: item.platform,
+        pillar: item.pillar,
+        userDirective
+      });
+
+      if (data && data.updatedCard) {
+        const updated = data.updatedCard;
+        setThirtyDayPlan(prevPlan => {
+          const newPlan = prevPlan.map(card => {
+            if (card.day === item.day) {
+              return {
+                ...card,
+                topic: updated.topic || card.topic,
+                actionItem: updated.actionItem || card.actionItem,
+                pillar: updated.pillar || card.pillar
+              };
+            }
+            return card;
+          });
+
+          const updatedStrategy = {
+            ...(activeWorkspace.currentStrategy || {}),
+            thirtyDayPlan: newPlan
+          };
+          updateWorkspace(activeWorkspace.id || activeWorkspace._id, { currentStrategy: updatedStrategy }).catch(() => {});
+
+          return newPlan;
+        });
+      }
+    } catch (err) {
+      console.error('Failed to regenerate strategy card:', err);
+    } finally {
+      setLoadingRegenDays(prev => ({ ...prev, [day]: false }));
+      setOpenRegenDays(prev => ({ ...prev, [day]: false }));
+    }
+  };
+
   const isLegacyStrategy = (strat) => {
     if (!strat || !strat.thirtyDayPlan || strat.thirtyDayPlan.length < 10) return true;
     if (strat.campaignIdeas && strat.campaignIdeas.some(c => c.title === 'The Authority Series' || c.title === 'DNA Lead Magnet Launch')) return true;
@@ -896,14 +951,14 @@ export const StrategyModule = () => {
                       const type = isEmail ? 'EMAIL' : isBlog ? 'BLOG' : 'SOCIAL';
                       const platform = isEmail ? 'email' : isBlog ? 'blog' : platformRaw.includes('linkedin') ? 'linkedin' : platformRaw.includes('twitter') ? 'twitter' : 'instagram';
 
-                      const brandName = activeWorkspace?.brandName || 'Redbus';
-                      const isReelsOrStory = platformRaw.includes('reel') || platformRaw.includes('tiktok') || platformRaw.includes('story');
-                      const aspect = isReelsOrStory ? '9:16' : platform === 'instagram' ? '1:1' : '16:9';
-                      const imagePrompt = isEmail ? null : `${item.topic} — ${brandName} commercial marketing campaign photography, professional studio lighting, 8k resolution`;
+                      const brandName = activeWorkspace?.brandName || 'Brand';
+                      const aspect = platform === 'instagram' ? '1:1' : '16:9';
+                      const fullStrategyPrompt = item.actionItem ? `${item.topic}: ${item.actionItem}` : item.topic;
+                      const imagePrompt = isEmail ? null : `${fullStrategyPrompt} — ${brandName} commercial marketing campaign photography, professional studio lighting, 8k resolution`;
                       const initialImageUrl = isEmail ? null : resolveBrandVisualAsset({
                         prompt: imagePrompt,
                         brandName: brandName,
-                        topic: item.topic,
+                        topic: fullStrategyPrompt,
                         style: 'Photorealistic Commercial',
                         aspect: aspect,
                         variationIndex: item.day || 0
@@ -912,10 +967,11 @@ export const StrategyModule = () => {
                       const payload = {
                         platform,
                         type,
-                        postType: isEmail ? 'email' : (isReelsOrStory ? 'reel' : 'image'),
+                        postType: isEmail ? 'email' : 'image',
                         topic: item.topic,
                         hook: item.topic,
                         caption: item.actionItem || '',
+                        customPrompt: item.actionItem || '',
                         strategyPillar: item.topic,
                         strategyDescription: item.actionItem || '',
                         calendarDay: item.day,
@@ -934,7 +990,9 @@ export const StrategyModule = () => {
                         setStudioTarget({
                           platform,
                           topic: item.topic,
-                          postType: isEmail ? 'email' : (isReelsOrStory ? 'reel' : 'image'),
+                          customPrompt: item.actionItem || '',
+                          actionItem: item.actionItem || '',
+                          postType: isEmail ? 'email' : 'image',
                           type,
                           autoGenerate: true,
                           generateVisual: !isEmail,
@@ -951,7 +1009,7 @@ export const StrategyModule = () => {
                     }}
                     className="group relative p-5 rounded-2xl glass-card border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 dark:hover:border-brand-500/50 hover:shadow-xl transition-all duration-300 space-y-3 cursor-pointer"
                   >
-                    {/* Day badge */}
+                    {/* Day badge & Action Buttons */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${weekColors[week-1]} flex items-center justify-center shadow-sm text-white text-xs font-extrabold shrink-0`}>
@@ -965,21 +1023,113 @@ export const StrategyModule = () => {
                           </span>
                         </div>
                       </div>
-                      <span className="text-[9px] font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                        Draft Post <ChevronRight className="w-3 h-3" />
-                      </span>
+                      
+                      {/* Action buttons: Regenerate & Draft Post */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenRegenDays(prev => ({ ...prev, [item.day]: !prev[item.day] }));
+                          }}
+                          className={`text-[9px] font-bold px-2 py-0.5 rounded-full transition-all flex items-center gap-1 border ${
+                            openRegenDays[item.day]
+                              ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
+                              : 'text-brand-600 dark:text-brand-400 bg-brand-500/10 hover:bg-brand-500/20 border-brand-500/20'
+                          }`}
+                          title="Regenerate strategy content for this card"
+                        >
+                          <Sparkles className="w-2.5 h-2.5" />
+                          <span>Regenerate</span>
+                        </button>
+                        <span className="text-[9px] font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                          Draft Post <ChevronRight className="w-3 h-3" />
+                        </span>
+                      </div>
                     </div>
 
                     {/* Topic */}
                     <div>
-                      <p className="text-[13px] font-bold text-slate-800 dark:text-white leading-snug group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{item.topic}</p>
+                      {loadingRegenDays[item.day] ? (
+                        <div className="flex items-center gap-2 py-1 text-brand-600 dark:text-brand-400">
+                          <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                          <span className="text-xs font-semibold animate-pulse">Regenerating strategy content...</span>
+                        </div>
+                      ) : (
+                        <p className="text-[13px] font-bold text-slate-800 dark:text-white leading-snug group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{item.topic}</p>
+                      )}
                     </div>
 
                     {/* Action item */}
-                    {item.actionItem && (
+                    {item.actionItem && !loadingRegenDays[item.day] && (
                       <div className="flex items-start gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                         <Play className="w-3 h-3 text-brand-500 shrink-0 mt-0.5" />
                         <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">{item.actionItem}</p>
+                      </div>
+                    )}
+
+                    {/* Inline Regenerate Input Box */}
+                    {openRegenDays[item.day] && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-3 p-3 rounded-2xl bg-white dark:bg-slate-900/95 border border-brand-500/30 shadow-lg space-y-2 animate-in fade-in zoom-in-95 duration-150"
+                      >
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] font-extrabold text-brand-600 dark:text-brand-400 uppercase tracking-wider flex items-center gap-1">
+                            <Sparkles className="w-3 h-3 text-brand-500" />
+                            Strategy Content Directives
+                          </label>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenRegenDays(prev => ({ ...prev, [item.day]: false }));
+                            }}
+                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-0.5"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            value={regenInputs[item.day] || ''}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              setRegenInputs(prev => ({ ...prev, [item.day]: e.target.value }));
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              e.stopPropagation();
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleRegenerateCardItem(item, e);
+                              }
+                            }}
+                            placeholder="Enter strategy content input (e.g. Focus on family recipe, vintage photo story)..."
+                            className="flex-1 min-w-0 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+                            autoFocus
+                          />
+                          <button
+                            type="button"
+                            disabled={loadingRegenDays[item.day]}
+                            onClick={(e) => handleRegenerateCardItem(item, e)}
+                            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-extrabold transition-all shadow-sm flex items-center gap-1 shrink-0 disabled:opacity-50"
+                          >
+                            {loadingRegenDays[item.day] ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <span>Generating...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Zap className="w-3 h-3 fill-white" />
+                                <span>Regenerate</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

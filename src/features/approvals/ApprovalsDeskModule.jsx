@@ -226,6 +226,9 @@ export const ApprovalsDeskModule = () => {
       if (setGeneratedContent) setGeneratedContent(approvedPayload);
       if (setStudioTarget) setStudioTarget(approvedPayload);
       if (setActiveModule) setActiveModule('creative');
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      const mainEl = document.querySelector('main');
+      if (mainEl) mainEl.scrollTop = 0;
     }
   };
 

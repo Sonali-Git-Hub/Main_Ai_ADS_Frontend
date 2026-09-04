@@ -55,11 +55,18 @@ const ASSET_SECTIONS = [
   }
 ];
 
-// ━━━ Format Date ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ━━━ Format Date & Generation Time ━━━━━━━━━━━━━━━━━━━━━━━━━
 const formatDate = (iso) => {
   if (!iso) return 'Recent';
   const d = new Date(iso);
-  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  if (isNaN(d.getTime())) return 'Recent';
+  const dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  const timeStr = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+  const str = String(iso);
+  if (str.length === 10 && str.indexOf(':') === -1 && str.indexOf('T') === -1) {
+    return dateStr;
+  }
+  return `${dateStr}, ${timeStr}`;
 };
 
 // ━━━ Direct Device Download Helper ━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -173,7 +180,7 @@ const AssetDetailDrawer = ({ asset, onClose, onDelete }) => {
             <div>
               <h2 className="text-base font-extrabold text-slate-900 dark:text-white leading-snug">{asset.name}</h2>
               <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
-                <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-brand-500" /> {formatDate(asset.date)}</span>
+                <span className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300"><Clock className="w-3 h-3 text-brand-500 shrink-0" /> {formatDate(asset.date)}</span>
                 <span>&bull;</span>
                 <span>Type: <strong className="text-slate-700 dark:text-slate-300">{asset.type}</strong></span>
               </div>
@@ -531,7 +538,10 @@ export const AssetLibraryModule = () => {
                 <div className="space-y-1">
                   <h3 className="font-extrabold text-slate-900 dark:text-white text-xs line-clamp-2 leading-snug">{asset.name}</h3>
                   <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-medium pt-1">
-                    <span>{formatDate(asset.date)}</span>
+                    <span className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300">
+                      <Clock className="w-3 h-3 text-brand-500 shrink-0" />
+                      {formatDate(asset.date)}
+                    </span>
                     <span className="text-brand-600 dark:text-brand-400 font-bold">{asset.metadata?.platform ? asset.metadata.platform.toUpperCase() : (asset.type || 'ASSET')}</span>
                   </div>
                   <button
