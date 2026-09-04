@@ -128,9 +128,17 @@ export const StrategyModule = () => {
   const [isGenerating,  setIsGenerating]  = useState(false);
   const [isSaving,      setIsSaving]      = useState(false);
   const [editingField,  setEditingField]  = useState(null);
-  const [activeTab,     setActiveTab]     = useState('overview'); // overview | plan | campaigns
+  const [activeTab,     setActiveTab]     = useState(() => sessionStorage.getItem('strategyActiveTab') || 'overview'); // overview | plan | campaigns
   const [showSaveToast, setShowSaveToast] = useState(false);
   const [isSavedState,  setIsSavedState]  = useState(false);
+
+  useEffect(() => {
+    const targetTab = sessionStorage.getItem('strategyActiveTab');
+    if (targetTab) {
+      setActiveTab(targetTab);
+      sessionStorage.removeItem('strategyActiveTab');
+    }
+  }, []);
 
   // Build Campaign Modal State
   const [buildCampaignModal, setBuildCampaignModal] = useState(false);
@@ -489,6 +497,18 @@ export const StrategyModule = () => {
                   AI-generated 30-day growth blueprint for{' '}
                   <span className="font-bold text-slate-800 dark:text-white">{activeWorkspace.brandName}</span>
                 </p>
+                {activeWorkspace.currentStrategy?.campaignName && (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold mt-1">
+                    <Target className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                    <span>Campaign Focus: <strong>{activeWorkspace.currentStrategy.campaignName}</strong></span>
+                    <button
+                      onClick={() => setActiveModule('campaigns')}
+                      className="ml-1 text-[10.5px] underline hover:text-emerald-900 dark:hover:text-emerald-100 font-semibold"
+                    >
+                      Back to Campaign →
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -879,8 +899,8 @@ export const StrategyModule = () => {
                       const brandName = activeWorkspace?.brandName || 'Redbus';
                       const isReelsOrStory = platformRaw.includes('reel') || platformRaw.includes('tiktok') || platformRaw.includes('story');
                       const aspect = isReelsOrStory ? '9:16' : platform === 'instagram' ? '1:1' : '16:9';
-                      const imagePrompt = `${item.topic} — ${brandName} commercial marketing campaign photography, professional studio lighting, 8k resolution`;
-                      const initialImageUrl = resolveBrandVisualAsset({
+                      const imagePrompt = isEmail ? null : `${item.topic} — ${brandName} commercial marketing campaign photography, professional studio lighting, 8k resolution`;
+                      const initialImageUrl = isEmail ? null : resolveBrandVisualAsset({
                         prompt: imagePrompt,
                         brandName: brandName,
                         topic: item.topic,
@@ -892,7 +912,7 @@ export const StrategyModule = () => {
                       const payload = {
                         platform,
                         type,
-                        postType: isReelsOrStory ? 'reel' : 'image',
+                        postType: isEmail ? 'email' : (isReelsOrStory ? 'reel' : 'image'),
                         topic: item.topic,
                         hook: item.topic,
                         caption: item.actionItem || '',
@@ -900,10 +920,10 @@ export const StrategyModule = () => {
                         strategyDescription: item.actionItem || '',
                         calendarDay: item.day,
                         campaignStage: week === 1 ? 'Awareness' : week === 2 ? 'Consideration' : week === 3 ? 'Engagement' : 'Conversion',
-                        imageUrl: initialImageUrl,
-                        imagePrompt: imagePrompt,
-                        imageStyle: 'Photorealistic Commercial',
-                        imageAspect: aspect,
+                        imageUrl: isEmail ? null : initialImageUrl,
+                        imagePrompt: isEmail ? null : imagePrompt,
+                        imageStyle: isEmail ? null : 'Photorealistic Commercial',
+                        imageAspect: isEmail ? null : aspect,
                       };
 
                       if (setGeneratedContent) {
@@ -914,16 +934,16 @@ export const StrategyModule = () => {
                         setStudioTarget({
                           platform,
                           topic: item.topic,
-                          postType: isReelsOrStory ? 'reel' : 'image',
+                          postType: isEmail ? 'email' : (isReelsOrStory ? 'reel' : 'image'),
                           type,
                           autoGenerate: true,
-                          generateVisual: true,
+                          generateVisual: !isEmail,
                           strategyPillar: item.topic,
                           strategyDescription: item.actionItem || '',
-                          imageUrl: initialImageUrl,
-                          imagePrompt: imagePrompt,
-                          imageStyle: 'Photorealistic Commercial',
-                          imageAspect: aspect,
+                          imageUrl: isEmail ? null : initialImageUrl,
+                          imagePrompt: isEmail ? null : imagePrompt,
+                          imageStyle: isEmail ? null : 'Photorealistic Commercial',
+                          imageAspect: isEmail ? null : aspect,
                         });
                       }
 

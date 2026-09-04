@@ -18,7 +18,6 @@ import { QuickPostModal } from './features/contentStudio/QuickPostModal';
 import { CampaignBuilderModule } from './features/campaigns/CampaignBuilderModule';
 import { CreativeStudioModule } from './features/creativeStudio/CreativeStudioModule';
 import { CreditTopupModal } from './features/creativeStudio/CreditTopupModal';
-import { RepurposeModule } from './features/repurpose/RepurposeModule';
 import { AssetLibraryModule } from './features/assetLibrary/AssetLibraryModule';
 import { ApprovalsDeskModule } from './features/approvals/ApprovalsDeskModule';
 import { AnalyticsModule } from './features/analytics/AnalyticsModule';
@@ -104,12 +103,6 @@ const MainContent = () => {
         return (
           <NoBrandGate moduleName="Creative Studio">
             <CreativeStudioModule />
-          </NoBrandGate>
-        );
-      case 'repurpose':
-        return (
-          <NoBrandGate moduleName="Content Repurposer">
-            <RepurposeModule />
           </NoBrandGate>
         );
       case 'assets':

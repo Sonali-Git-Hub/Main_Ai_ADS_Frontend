@@ -145,7 +145,7 @@ export const ContentStudioModule = () => {
 
   const buildSocialPrompt = useCallback((topic = socialTopic, plat = socialPlatform, type = socialPostType) => {
     const brand = activeWorkspace?.brandName || 'Brand';
-    return `Generate high-impact ${plat.toUpperCase()} ${type.replace('_', ' ')} copy for ${brand} on "${topic}". Focus on a pattern-interrupt hook, engaging storytelling, concise & narrative captions, curated hashtags, and a clear call-to-action.`;
+    return `Generate high-impact ${plat.toUpperCase()} ${type.replace('_', ' ')} copy for ${brand} on "${topic}". Focus on a pattern-interrupt hook, engaging storytelling, concise & narrative captions, curated hashtags, and a clear call-to-action.\nFormatting: Clean plain text without asterisks (**) or markdown formatting.`;
   }, [activeWorkspace, socialTopic, socialPlatform, socialPostType]);
 
   const buildSocialImagePrompt = useCallback((topic = socialTopic, style = visualStyle) => {
@@ -155,7 +155,7 @@ export const ContentStudioModule = () => {
 
   const buildEmailPrompt = useCallback((form = emailForm) => {
     const brand = activeWorkspace?.brandName || 'Brand';
-    return `Draft a high-converting ${form.purpose} email for ${brand}:\nSubject / Focus: "${form.subject || `${brand} — ${form.purpose}`}"\nRecipient Audience: ${form.recipient}\nTone: ${form.tone}\nContext: ${form.context || 'Strategic brand communication'}\nKey Highlights: ${form.keyPoints || 'Core product value & announcements'}\nCall to Action: ${form.cta || 'Explore now'}\nSender: ${form.senderName || brand} (${form.senderDesignation || 'Marketing Lead'})`;
+    return `Draft a high-converting ${form.purpose} email for ${brand}:\nSubject / Focus: "${form.subject || `${brand} — ${form.purpose}`}"\nRecipient Audience: ${form.recipient || 'Subscribers'}\nTone: ${form.tone || 'Professional'}\nContext: ${form.context || 'Strategic brand communication'}\nKey Highlights: ${form.keyPoints || 'Core product value & announcements'}\nCall to Action: ${form.cta || 'Explore now'}\nSender: ${form.senderName || brand} (${form.senderDesignation || 'Marketing Lead'})\nStructure Guidelines:\n1. Professional, courteous greeting.\n2. State the email purpose and primary value in the opening 2 lines.\n3. Structured paragraphs with logical flow and clean labels.\n4. Clear, compelling Call to Action (CTA).\n5. Polite sign-off and full sender credentials (Name, Role, Company).\n6. Plain text only without asterisks (**).`;
   }, [activeWorkspace, emailForm]);
 
   const buildNewspaperPrompt = useCallback((topic = newspaperTopic, format = newspaperFormat, tone = newspaperTone, dateline = newspaperDateline) => {
@@ -165,7 +165,7 @@ export const ContentStudioModule = () => {
 
   const buildAdPrompt = useCallback((prod = adProduct, plat = adPlatform) => {
     const brand = activeWorkspace?.brandName || 'Brand';
-    return `Create high-converting ${plat} ad copy variations for ${brand}:\nProduct / Service: "${prod}"\nDirectives: 3 High-CTR Hook Variations, Primary Text with PAS framework, Punchy Headline, Sub-headline, and Action CTA.`;
+    return `Create high-converting ${plat} ad copy variations for ${brand}:\nProduct / Service: "${prod}"\nDirectives: 3 High-CTR Hook Variations, Primary Text with PAS framework, Punchy Headline, Sub-headline, and Action CTA.\nFormatting: Clean plain text without asterisks (**) or markdown formatting.`;
   }, [activeWorkspace, adProduct, adPlatform]);
 
   // Prompt States (Editable by user)
@@ -225,8 +225,47 @@ export const ContentStudioModule = () => {
         }
       } else if (platformRaw === 'email') {
         openSubPage('EMAIL');
-        setEmailForm(prev => ({ ...prev, subject: topic }));
-        // Do not auto-generate email immediately if the user needs to fill out the form
+        const emailSubject = topic || `${activeWorkspace?.brandName || 'Brand'} Newsletter`;
+        setEmailForm(prev => ({ ...prev, subject: emailSubject, context: studioTarget.strategyDescription || '' }));
+
+        if (studioTarget.autoGenerate) {
+          setDraftingEmail(true);
+          contentAPI.generateEmailCopy({
+            workspaceId,
+            brandName: activeWorkspace?.brandName,
+            subject: emailSubject,
+            purpose: 'newsletter',
+            recipientType: 'Subscribers & Audience List',
+            context: studioTarget.strategyDescription || topic,
+            tone: 'professional',
+            senderName: activeWorkspace?.brandName || 'Marketing Team',
+            senderDesignation: 'Marketing Lead',
+            senderCompany: activeWorkspace?.brandName || 'Brand',
+            lengthFormat: 'detailed',
+          })
+            .then(res => {
+              if (res && res.email) {
+                const processedEmail = { ...res.email };
+                if (processedEmail.body) processedEmail.body = cleanArticleText(processedEmail.body);
+                if (processedEmail.subject) processedEmail.subject = cleanArticleText(processedEmail.subject);
+                if (processedEmail.preheader) processedEmail.preheader = cleanArticleText(processedEmail.preheader);
+                setEmailResult(processedEmail);
+                if (setGeneratedContent) setGeneratedContent({
+                  ...processedEmail,
+                  type: 'EMAIL',
+                  platform: 'email',
+                  imageUrl: null,
+                  imagePrompt: null,
+                  topic: emailSubject,
+                  hook: processedEmail.subject || emailSubject,
+                  caption: processedEmail.body || '',
+                  hashtags: []
+                });
+              }
+            })
+            .catch(err => console.error('Auto generate email error:', err))
+            .finally(() => setDraftingEmail(false));
+        }
       } else {
         // Social platforms: instagram, linkedin, twitter, facebook, youtube, tiktok
         const validPlatforms = ['instagram', 'linkedin', 'twitter', 'facebook', 'youtube', 'tiktok'];
@@ -495,8 +534,16 @@ export const ContentStudioModule = () => {
         variationIndex: visualVariationIndex
       });
 
+      const userWantsSymbols = /[*#_`]/.test(`${socialTopic || ''} ${socialPrompt || ''}`);
+      const cleanData = { ...(res?.data || {}) };
+      if (!userWantsSymbols) {
+        ['caption', 'shortCaption', 'longCaption', 'hook', 'cta'].forEach((k) => {
+          if (cleanData[k]) cleanData[k] = cleanArticleText(cleanData[k]);
+        });
+      }
+
       const payload = {
-        ...(res?.data || {}),
+        ...cleanData,
         type: 'SOCIAL',
         platform: socialPlatform,
         topic: socialTopic,
@@ -682,14 +729,27 @@ export const ContentStudioModule = () => {
         customPrompt: emailPrompt || buildEmailPrompt(emailForm)
       });
       if (res.email) {
-        setEmailResult(res.email);
+        const userExplicitlyRequestedSymbols = /[*#_`]/.test(
+          `${emailForm.subject || ''} ${emailForm.context || ''} ${emailForm.keyPoints || ''} ${emailPrompt || ''}`
+        );
+        const processedEmail = { ...res.email };
+        if (!userExplicitlyRequestedSymbols) {
+          if (processedEmail.body) processedEmail.body = cleanArticleText(processedEmail.body);
+          if (processedEmail.subject) processedEmail.subject = cleanArticleText(processedEmail.subject);
+          if (processedEmail.preheader) processedEmail.preheader = cleanArticleText(processedEmail.preheader);
+          if (processedEmail.headline) processedEmail.headline = cleanArticleText(processedEmail.headline);
+          if (processedEmail.closingLine) processedEmail.closingLine = cleanArticleText(processedEmail.closingLine);
+          if (processedEmail.ps) processedEmail.ps = cleanArticleText(processedEmail.ps);
+        }
+
+        setEmailResult(processedEmail);
         if (setGeneratedContent) setGeneratedContent({
-          ...res.email,
+          ...processedEmail,
           type: 'EMAIL',
           platform: 'email',
           topic: emailForm.subject || emailForm.purpose || 'Newsletter',
-          hook: res.email.subject || res.email.headline || 'Email Update',
-          caption: res.email.body || '',
+          hook: processedEmail.subject || processedEmail.headline || 'Email Update',
+          caption: processedEmail.body || '',
           hashtags: []
         });
       }
@@ -711,7 +771,21 @@ export const ContentStudioModule = () => {
         adPlatform,
         customPrompt: adCopyPrompt || buildAdPrompt(adProduct, adPlatform)
       });
-      if (res.adCopy) setAdResult(res.adCopy);
+      if (res.adCopy) {
+        const userWantsSymbols = /[*#_`]/.test(`${adProduct || ''} ${adCopyPrompt || ''}`);
+        let processedAd = { ...res.adCopy };
+        if (!userWantsSymbols) {
+          if (processedAd.longFormAd) processedAd.longFormAd = cleanArticleText(processedAd.longFormAd);
+          if (processedAd.shortAd) processedAd.shortAd = cleanArticleText(processedAd.shortAd);
+          if (Array.isArray(processedAd.headlines)) {
+            processedAd.headlines = processedAd.headlines.map(cleanArticleText);
+          }
+          if (Array.isArray(processedAd.descriptions)) {
+            processedAd.descriptions = processedAd.descriptions.map(cleanArticleText);
+          }
+        }
+        setAdResult(processedAd);
+      }
     } catch (err) {
       console.error('Ad copy error:', err.message);
     } finally {

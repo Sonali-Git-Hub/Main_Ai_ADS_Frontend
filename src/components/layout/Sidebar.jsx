@@ -1,7 +1,7 @@
 import React from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { 
-  LayoutDashboard, 
+  LayoutGrid, 
   Dna, 
   Search, 
   Target, 
@@ -13,33 +13,14 @@ import {
   FolderKanban, 
   Globe, 
   Settings, 
-  X,
-  User as UserIcon,
-  PanelLeftClose,
-  PanelLeftOpen
+  X
 } from 'lucide-react';
 
 export const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
-  const { activeModule, setActiveModule, activeWorkspace, setIsSettingsModalOpen, collapsed, setCollapsed, user, t } = useWorkspace();
-
-  const userAvatar = user?.avatarUrl || user?.photoURL || user?.avatar || '';
-  const userName = (() => {
-    if (user?.name && user.name.trim()) return user.name;
-    if (user?.displayName && user.displayName.trim()) return user.displayName;
-    if (user?.fullName && user.fullName.trim()) return user.fullName;
-    if (user?.username && user.username.trim()) return user.username;
-    if (user?.email) {
-      const prefix = user.email.split('@')[0];
-      return prefix
-        .replace(/[._-]+/g, ' ')
-        .replace(/\b\w/g, (c) => c.toUpperCase())
-        .trim();
-    }
-    return activeWorkspace?.brandName || 'Agency Administrator';
-  })();
+  const { activeModule, setActiveModule, setIsSettingsModalOpen, t } = useWorkspace();
 
   const modules = [
-    { id: 'dashboard', label: t('dashboard', '1. Dashboard'), icon: LayoutDashboard },
+    { id: 'dashboard', label: t('dashboard', '1. Dashboard'), icon: LayoutGrid },
     { id: 'brands', label: t('brands', '2. Brand DNA'), icon: Dna },
     { id: 'seo', label: t('seo', '3. SEO Intelligence'), icon: Search },
     { id: 'strategy', label: t('strategy', '4. Strategy'), icon: Target },
@@ -63,67 +44,38 @@ export const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
         />
       )}
 
-      <aside className={`h-screen bg-white dark:bg-[#090d16] border-r border-slate-200 dark:border-slate-800/80 flex flex-col justify-between transition-all duration-300 z-50 fixed lg:sticky top-0 left-0 ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl w-64' : '-translate-x-full lg:translate-x-0'} ${collapsed ? 'lg:w-20' : 'lg:w-64'}`}>
+      <aside className={`h-screen bg-white dark:bg-[#0b0f19] border-r border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between transition-all duration-300 z-50 fixed lg:sticky top-0 left-0 w-64 ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="flex flex-col h-full overflow-hidden">
-          {/* Logo Header */}
-          <div className="h-16 flex items-center justify-between px-3.5 border-b border-slate-200 dark:border-slate-800/80 shrink-0">
-            <button 
-              onClick={() => {
-                if (isMobileMenuOpen) {
-                  setIsMobileMenuOpen(false);
-                } else {
-                  setCollapsed(!collapsed);
-                }
-              }}
-              className="flex items-center gap-3 overflow-visible group relative w-full focus:outline-none text-left cursor-pointer py-1"
-              title={collapsed ? "Open Sidebar" : "Collapse Sidebar"}
-            >
-              <div className="relative flex-shrink-0">
-                <img 
-                  src="/logo.png" 
-                  alt="AI ADS™ Logo" 
-                  className="w-10 h-10 rounded-xl object-cover shadow-md border border-slate-200/50 dark:border-slate-800/80 bg-white group-hover:scale-105 group-hover:shadow-brand-500/20 transition-all duration-200" 
-                />
+          {/* Top Header / Logo */}
+          <div className="h-16 flex items-center justify-between px-4 border-b border-slate-100 dark:border-slate-800/60 shrink-0">
+            <div className="flex items-center gap-3">
+              <img 
+                src="/logo.png" 
+                alt="AI ADS™ Logo" 
+                className="w-9 h-9 rounded-xl object-cover shadow-xs border border-slate-200/60 dark:border-slate-700/60 bg-white" 
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-extrabold text-slate-900 dark:text-white text-[15px] tracking-tight">AI ADS</span>
+                  <span className="text-[9px] bg-brand-500/10 text-brand-600 dark:text-brand-400 font-bold px-1.5 py-0.2 rounded border border-brand-500/20">v1.0</span>
+                </div>
+                <p className="text-[9.5px] text-slate-500 dark:text-slate-400 font-medium tracking-wide">Enterprise Suite</p>
               </div>
-              {(!collapsed || isMobileMenuOpen) && (
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1">
-                    <span className="font-extrabold text-slate-800 dark:text-white text-base tracking-wide truncate flex items-baseline">AI ADS<sup className="text-[10px] font-black text-brand-500 ml-0.5 select-none">TM</sup></span>
-                    <span className="text-[10px] bg-brand-500/20 text-brand-400 font-bold px-1 rounded border border-brand-500/30 shrink-0">v1.0</span>
-                  </div>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold truncate">UWO Ecosystem</p>
-                </div>
-              )}
+            </div>
 
-              {/* Hover Tooltip when Collapsed */}
-              {collapsed && !isMobileMenuOpen && (
-                <div className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 dark:bg-slate-800 text-white text-[11px] font-extrabold rounded-xl shadow-2xl border border-slate-700/80 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-50 flex items-center gap-2 -translate-x-2 group-hover:translate-x-0">
-                  <PanelLeftOpen className="w-4 h-4 text-brand-400" />
-                  <span>Open Sidebar</span>
-                </div>
-              )}
-
-              {/* Hover Collapse Icon Indicator when Expanded */}
-              {!collapsed && !isMobileMenuOpen && (
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-400 group-hover:text-brand-500 shrink-0">
-                  <PanelLeftClose className="w-4 h-4" />
-                </div>
-              )}
-            </button>
-
-            {/* Mobile drawer close button */}
+            {/* Mobile close button */}
             {isMobileMenuOpen && (
               <button 
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="lg:hidden p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                className="lg:hidden p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
               >
                 <X className="w-4 h-4 text-brand-500" />
               </button>
             )}
           </div>
 
-          {/* Navigation List (12 Modules) */}
-          <nav className="px-2 pt-5 pb-2 space-y-1 flex-1 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          {/* Navigation List (Exact 12 Items Matching Design) */}
+          <nav className="px-3 py-3 space-y-1 flex-1 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {modules.map((m) => {
               const Icon = m.icon;
               const isActive = activeModule === m.id;
@@ -137,44 +89,22 @@ export const Sidebar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
                       setIsSettingsModalOpen(true);
                     }
                   }}
-                  className={`flex items-center gap-3 rounded-xl text-xs font-medium transition-all group relative ${
-                    collapsed && !isMobileMenuOpen 
-                      ? 'w-10 h-10 justify-center mx-auto p-0' 
-                      : 'w-full px-3 py-2.5 justify-start'
-                  } ${
+                  className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-[13px] transition-all text-left group ${
                     isActive 
-                      ? 'bg-brand-500/15 text-brand-600 border border-brand-500/40 dark:bg-gradient-to-r dark:from-brand-600/30 dark:to-brand-500/10 dark:text-brand-300 dark:border-brand-500/50 shadow-glow font-bold' 
-                      : 'text-slate-600 hover:text-brand-600 hover:bg-brand-500/10 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-brand-500/10'
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/90 font-semibold dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60 shadow-xs' 
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 font-medium'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-110 ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-brand-500'}`} />
-                  {(!collapsed || isMobileMenuOpen) && <span className="truncate">{m.label}</span>}
+                  <Icon className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                    isActive 
+                      ? 'text-emerald-600 dark:text-emerald-400' 
+                      : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200'
+                  }`} />
+                  <span className="truncate">{m.label}</span>
                 </button>
               );
             })}
           </nav>
-
-          {/* User Profile Container (Moved to Sidebar Bottom) */}
-          <div className="px-3.5 py-3 flex items-center justify-start gap-3 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40 shrink-0">
-            <div className="relative shrink-0" title={`Logged in as ${userName}`}>
-              {userAvatar ? (
-                <img 
-                  src={userAvatar} 
-                  alt={userName} 
-                  className="w-8 h-8 rounded-full object-cover shadow-sm border border-slate-200 dark:border-slate-700/80" 
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-brand-500/15 text-brand-600 dark:text-brand-400 border border-brand-500/30 flex items-center justify-center font-bold text-xs shadow-sm">
-                  <UserIcon className="w-4 h-4" />
-                </div>
-              )}
-            </div>
-            {(!collapsed || isMobileMenuOpen) && (
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">{userName}</p>
-              </div>
-            )}
-          </div>
         </div>
       </aside>
     </>

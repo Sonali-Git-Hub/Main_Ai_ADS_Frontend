@@ -529,7 +529,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
       assetType = 'EMAIL';
       assetName = `Email: ${generatedContent?.subject || hook || topic}`;
       assetContent = `Subject: ${generatedContent?.subject || hook}\nPreheader: ${generatedContent?.preheader || shortCap}\n\n${generatedContent?.body || longCap || caption}`;
-      assetUrl = visualUrl;
+      assetUrl = '';
     } else if (isCarousel) {
       assetType = 'CAROUSEL';
       assetName = `Carousel Deck: ${topic || 'Brand Carousel'}`;

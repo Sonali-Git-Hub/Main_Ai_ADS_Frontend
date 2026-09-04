@@ -52,7 +52,7 @@ export const brandAPI = {
 
 // ─── Strategy API ─────────────────────────────────────────────────────────────
 export const strategyAPI = {
-  generate: (workspaceId) => apiFetch(`/workspace/${workspaceId}/generate-strategy`, { method: 'POST' }),
+  generate: (workspaceId, body = {}) => apiFetch(`/workspace/${workspaceId}/generate-strategy`, { method: 'POST', body }),
   save: (workspaceId, body) => apiFetch(`/workspace/${workspaceId}`, { method: 'PUT', body: { currentStrategy: body } }),
 };
 
@@ -71,6 +71,7 @@ export const campaignAPI = {
     return apiFetch(`/campaigns/${id}/posts${qs ? `?${qs}` : ''}`);
   },
   generatePlan: (id, body = {}) => apiFetch(`/campaigns/${id}/generate-plan`, { method: 'POST', body }),
+  generateStrategy: (id, body = {}) => apiFetch(`/campaigns/${id}/generate-strategy`, { method: 'POST', body }),
   generatePostContent: (postId, body = {}) => apiFetch(`/campaigns/posts/${postId}/generate-content`, { method: 'POST', body }),
   updatePost: (postId, body) => apiFetch(`/campaigns/posts/${postId}`, { method: 'PUT', body }),
   updatePostStatus: (postId, body) => apiFetch(`/campaigns/posts/${postId}/status`, { method: 'PATCH', body }),
@@ -83,7 +84,6 @@ export const contentAPI = {
   generateBlogDraft: (body) => apiFetch('/content/blog/draft', { method: 'POST', body }),
   generateEmailCopy: (body) => apiFetch('/content/email/generate', { method: 'POST', body }),
   generateAdCopy: (body) => apiFetch('/content/ad-copy/generate', { method: 'POST', body }),
-  repurposeContent: (body) => apiFetch('/content/repurpose', { method: 'POST', body }),
   factCheck: (body) => apiFetch('/content/fact-check', { method: 'POST', body }),
 };
 

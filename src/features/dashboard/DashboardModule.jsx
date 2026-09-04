@@ -1,34 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
-import { analyticsAPI, approvalsAPI } from '../../services/api';
+import { analyticsAPI, campaignAPI } from '../../services/api';
 
 import {
-  Search, PenTool, CheckCircle2, ArrowUpRight, TrendingUp, Clock,
-  Layers, Zap, Repeat, Loader2, RefreshCw, AlertCircle, Rocket, Dna, ShieldCheck
+  Search, PenTool, CheckCircle2, ArrowUpRight, TrendingUp,
+  Layers, Zap, Repeat, Loader2, RefreshCw, AlertCircle, Rocket, Dna, FolderKanban
 } from 'lucide-react';
 
 export const DashboardModule = () => {
-  const { activeWorkspace, setActiveModule, setIsQuickPostOpen, setIsScraperOpen, openScraperModal, t } = useWorkspace();
+  const { activeWorkspace, setActiveModule, setIsQuickPostOpen, setIsScraperOpen, openScraperModal, workspaces = [], globalAssets = [], user, t } = useWorkspace();
   const [analytics, setAnalytics] = useState(null);
-  const [approvalsQueue, setApprovalsQueue] = useState([]);
+  const [campaignsList, setCampaignsList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-
   const workspaceId = activeWorkspace?._id || activeWorkspace?.id;
+
+  const userEmail = user?.email || localStorage.getItem('aisa_user_email') || activeWorkspace?.userEmail || '';
 
   useEffect(() => {
     let isMounted = true;
     const loadDashboardData = async () => {
       setLoading(true);
       try {
-        const [analyticsRes, queueRes] = await Promise.all([
-          analyticsAPI.getSummary(workspaceId ? { workspaceId } : {}),
-          approvalsAPI.getQueue(),
+        const [analyticsRes, campaignsRes] = await Promise.all([
+          analyticsAPI.getSummary({
+            workspaceId: workspaceId || undefined,
+            brandName: activeWorkspace?.brandName || undefined,
+            userEmail: userEmail || undefined
+          }),
+          campaignAPI.list(workspaceId ? { workspaceId } : {}).catch(() => ({ campaigns: [], total: 0 })),
         ]);
 
         if (isMounted) {
           if (analyticsRes.analytics) setAnalytics(analyticsRes.analytics);
-          if (queueRes.queue) setApprovalsQueue(queueRes.queue);
+          if (campaignsRes?.campaigns) setCampaignsList(campaignsRes.campaigns);
         }
       } catch (err) {
         console.log('Dashboard fetch fallback:', err.message);
@@ -39,35 +44,61 @@ export const DashboardModule = () => {
 
     loadDashboardData();
     return () => { isMounted = false; };
-  }, [workspaceId]);
+  }, [workspaceId, activeWorkspace?.brandName, userEmail]);
 
-  const filteredQueue = approvalsQueue.filter(item => item.workspaceId === workspaceId);
+  // Total Brands strictly for this single logged-in user (not global count)
+  const totalBrandsCount = (workspaces && workspaces.length > 0)
+    ? workspaces.length 
+    : (analytics?.brands?.total || 1);
 
+  // Real generated content count saved in DB & Asset Library (excludes planned calendar slots)
+  const totalGeneratedAssetsCount = analytics?.posts?.total !== undefined 
+    ? analytics.posts.total 
+    : (globalAssets?.length || 0);
+
+  // Total Campaigns strictly for this active brand
+  const brandRegex = activeWorkspace?.brandName ? new RegExp(activeWorkspace.brandName.trim(), 'i') : null;
+  const brandCampaigns = campaignsList.filter(c => {
+    if (workspaceId && (c.workspaceId === workspaceId || c.workspaceId?._id === workspaceId)) return true;
+    if (brandRegex && (brandRegex.test(c.campaignName || '') || brandRegex.test(c.brandName || ''))) return true;
+    return false;
+  });
+
+  const totalCampaignsCount = brandCampaigns.length > 0 
+    ? brandCampaigns.length 
+    : (analytics?.campaigns?.total || 0);
+
+  const activeCampaignsCount = brandCampaigns.length > 0
+    ? brandCampaigns.filter(c => ['Active', 'ACTIVE', 'running'].includes(c.status)).length
+    : (analytics?.campaigns?.active || 0);
 
   const stats = [
     {
+      label: 'Total Brands',
+      value: totalBrandsCount,
+      sub: `${totalBrandsCount} brand profile${totalBrandsCount === 1 ? '' : 's'} in your account`,
+      icon: Dna,
+      color: 'text-brand-600 dark:text-brand-400',
+      bg: 'bg-brand-500/5 dark:bg-brand-500/10 border-brand-500/20 dark:border-brand-500/30 hover:border-brand-500/50',
+      moduleId: 'brands'
+    },
+    {
+      label: 'Total Generated Content',
+      value: totalGeneratedAssetsCount,
+      sub: `Saved in Asset Library & DB (excl. calendar)`,
+      icon: FolderKanban,
+      color: 'text-indigo-600 dark:text-indigo-400',
+      bg: 'bg-indigo-500/5 dark:bg-indigo-500/10 border-indigo-500/20 dark:border-indigo-500/30 hover:border-indigo-500/50',
+      moduleId: 'assets'
+    },
+    {
       label: 'Total Campaigns',
-      value: analytics?.campaigns?.total || 0,
-      sub: `${analytics?.campaigns?.active || 0} currently active`,
+      value: totalCampaignsCount,
+      sub: `${activeCampaignsCount} currently active`,
       icon: Layers,
-      color: 'text-brand-600 dark:text-brand-400',
-      bg: 'bg-purple-500/5 dark:bg-brand-500/10 border-brand-500/20 dark:border-purple-500/30'
-    },
-    {
-      label: 'Generated Content',
-      value: analytics?.posts?.total || 0,
-      sub: `${analytics?.posts?.generated || 0} generated posts`,
-      icon: PenTool,
-      color: 'text-brand-600 dark:text-brand-400',
-      bg: 'bg-brand-500/5 dark:bg-brand-500/10 border-brand-500/20 dark:border-brand-500/30'
-    },
-    {
-      label: 'Approved Posts',
-      value: analytics?.posts?.approved || 0,
-      sub: `${analytics?.approvalRate || 0}% approval rate`,
-      icon: CheckCircle2,
-      color: 'text-emerald-600 dark:text-emerald-400',
-      bg: 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20 dark:border-emerald-500/30'
+      color: 'text-purple-600 dark:text-purple-400',
+      bg: 'bg-purple-500/5 dark:bg-purple-500/10 border-purple-500/20 dark:border-purple-500/30 hover:border-purple-500/50',
+      moduleId: 'campaigns'
     }
   ];
 
@@ -109,13 +140,17 @@ export const DashboardModule = () => {
         {stats.map((s, idx) => {
           const Icon = s.icon;
           return (
-            <div key={idx} className={`p-4 sm:p-5 rounded-2xl glass-card border ${s.bg} flex items-center justify-between`}>
+            <div
+              key={idx}
+              onClick={() => s.moduleId && setActiveModule(s.moduleId)}
+              className={`p-4 sm:p-5 rounded-2xl glass-card border ${s.bg} flex items-center justify-between cursor-pointer transition-all hover:scale-[1.01] shadow-xs group`}
+            >
               <div>
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">{s.label}</span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{s.label}</span>
                 <div className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white my-0.5">{s.value}</div>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{s.sub}</span>
               </div>
-              <div className={`p-2.5 sm:p-3 rounded-2xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 ${s.color}`}>
+              <div className={`p-2.5 sm:p-3 rounded-2xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 ${s.color} group-hover:scale-110 transition-transform`}>
                 <Icon className="w-5 h-5" />
               </div>
             </div>
@@ -129,13 +164,11 @@ export const DashboardModule = () => {
           <Layers className="w-4 h-4 text-brand-500" /> {t('endToEndPipeline', 'End-to-End Content Pipeline')}
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {[
             { id: 'brands', label: t('dnaStepTitle', '1. Brand DNA'), sub: t('dnaStepSub', 'Positioning & Claims'), icon: Dna, color: 'text-brand-600 dark:text-brand-400', bg: 'bg-brand-500/10' },
             { id: 'seo', label: t('seoStepTitle', '2. SEO Briefs'), sub: t('seoStepSub', 'Topic Clusters & Intent'), icon: Search, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-500/10' },
             { id: 'studio', label: t('studioStepTitle', '3. Editorial Studio'), sub: t('studioStepSub', 'Multi-Channel Generation'), icon: PenTool, color: 'text-brand-600 dark:text-brand-400', bg: 'bg-brand-500/10' },
-            { id: 'approvals', label: t('approvalsStepTitle', '4. Approvals Desk'), sub: t('approvalsStepSub', 'Governance & Verification'), icon: CheckCircle2, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10' },
-            { id: 'repurpose', label: t('repurposeStepTitle', '5. Repurposing'), sub: t('repurposeStepSub', '1 Asset to 5 Formats'), icon: Repeat, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10' },
           ].map((step) => {
             const Icon = step.icon;
             return (
@@ -155,89 +188,6 @@ export const DashboardModule = () => {
             );
           })}
         </div>
-      </div>
-
-      {/* Production Items Queue */}
-      <div className="p-4 sm:p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-            <Clock className="w-4 h-4 text-brand-500" /> {t('recentProductionItems', 'Recent Production Items & Governance Status')}
-          </h2>
-          <button
-            onClick={() => setActiveModule('approvals')}
-            className="text-xs text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 font-semibold"
-          >
-            {t('viewApprovalsQueue', 'View Approvals Queue')} <ArrowUpRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-        {loading ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 className="w-6 h-6 animate-spin text-brand-500" />
-          </div>
-        ) : filteredQueue.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 text-center space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400">
-              <Clock className="w-6 h-6" />
-            </div>
-            <div className="space-y-1 max-w-sm">
-              <h3 className="text-slate-900 dark:text-slate-200 font-extrabold text-sm">{t('noProductionItemsYet', 'No production items yet')}</h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('noProductionDesc', "You haven't generated any drafts or campaigns for this brand yet. Get started by scraping the Brand DNA or writing a new post.")}</p>
-            </div>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">
-                  <th className="pb-3 px-3">{t('tableContent', 'Content')}</th>
-                  <th className="pb-3 px-3">{t('tableType', 'Type')}</th>
-                  <th className="pb-3 px-3">{t('tableVerified', 'Verified')}</th>
-                  <th className="pb-3 px-3">{t('tableStatus', 'Status')}</th>
-                  <th className="pb-3 px-3 text-right">{t('tableView', 'View')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
-                {filteredQueue.slice(0, 5).map((item) => (
-                  <tr key={item.id || item._id} className="hover:bg-slate-100/40 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3 px-3">
-                      <span className="font-bold text-slate-800 dark:text-slate-200 block">{item.title}</span>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">{item.type} {item.platform ? `(${item.platform})` : ''}</span>
-                    </td>
-                    <td className="py-3 px-3">
-                      {item.factCheck?.passed ? (
-                        <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 dark:border-emerald-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold">
-                          <ShieldCheck className="w-3 h-3" /> VERIFIED ({item.factCheck.score}%)
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 dark:border-rose-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold">
-                          Citation Needed
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${item.status === 'APPROVED' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30' :
-                        item.status === 'RED_FLAG_CITATION_NEEDED' ? 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 dark:border-rose-500/30' :
-                          'bg-amber-500/10 dark:bg-amber-500/20 text-amber-650 dark:text-amber-300 border border-amber-500/20 dark:border-amber-500/30'
-                        }`}>
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-right">
-                      <button
-                        onClick={() => setActiveModule('approvals')}
-                        className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 underline"
-                      >
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
     </div>
   );

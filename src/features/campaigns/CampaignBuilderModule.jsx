@@ -4,7 +4,7 @@ import { campaignAPI } from '../../services/api';
 import {
   Layers, Sparkles, Calendar, CheckCircle2, ArrowRight, Plus, Trash2,
   ChevronDown, ChevronUp, Loader2, AlertCircle, RefreshCw, Target,
-  Clock, Users, BarChart3, Eye, ThumbsUp, Edit3, X
+  Clock, Users, BarChart3, Eye, ThumbsUp, Edit3, X, ExternalLink
 } from 'lucide-react';
 
 const PLATFORMS = ['Instagram', 'Facebook', 'LinkedIn', 'X/Twitter', 'YouTube', 'Threads'];
@@ -37,6 +37,7 @@ const CreateCampaignModal = ({ workspaceId, onClose, onCreated }) => {
     budget: '',
     targetAudience: '',
   });
+  const [autoGenerateStrategy, setAutoGenerateStrategy] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -57,7 +58,16 @@ const CreateCampaignModal = ({ workspaceId, onClose, onCreated }) => {
     setError('');
     try {
       const result = await campaignAPI.create({ ...form, workspaceId });
-      onCreated(result.campaign);
+      let finalCampaign = result.campaign;
+      if (autoGenerateStrategy && finalCampaign?._id) {
+        try {
+          const stratRes = await campaignAPI.generateStrategy(finalCampaign._id);
+          if (stratRes.campaign) finalCampaign = stratRes.campaign;
+        } catch (stratErr) {
+          console.log('Auto strategy note:', stratErr.message);
+        }
+      }
+      onCreated(finalCampaign);
       onClose();
     } catch (err) {
       setError(err.message);
@@ -177,6 +187,24 @@ const CreateCampaignModal = ({ workspaceId, onClose, onCreated }) => {
             />
           </div>
 
+          <label className="flex items-start gap-2.5 p-3 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={autoGenerateStrategy}
+              onChange={(e) => setAutoGenerateStrategy(e.target.checked)}
+              className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+            />
+            <div className="text-xs">
+              <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Target className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                Generate AI Strategy Roadmap immediately
+              </span>
+              <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">
+                Builds a 30-day strategy plan tailored specifically to this campaign's target goal.
+              </p>
+            </div>
+          </label>
+
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
               Cancel
@@ -225,21 +253,44 @@ const CampaignCard = ({ campaign, onSelect, onDelete }) => (
           <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs">+{campaign.platforms.length - 3}</span>
         )}
       </div>
-      <button
-        onClick={(e) => { e.stopPropagation(); onDelete(campaign._id); }}
-        className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors"
-      >
-        <Trash2 className="w-3.5 h-3.5" />
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(campaign);
+          }}
+          className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-1 transition-colors"
+        >
+          <Target className="w-3 h-3" />
+          {campaign.aiGeneratedStrategy ? 'View Strategy' : 'Generate Strategy'}
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(campaign._id); }}
+          className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
     </div>
   </div>
 );
 
 // ─── Campaign Detail View ──────────────────────────────────────────────────────
 const CampaignDetail = ({ campaign, onBack }) => {
+  const { setActiveModule, updateWorkspace, activeWorkspace, setGeneratedStrategy } = useWorkspace();
+  const workspaceId = activeWorkspace?._id || activeWorkspace?.id || campaign.workspaceId;
+
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [generatingPlan, setGeneratingPlan] = useState(false);
+  const [generatingStrategy, setGeneratingStrategy] = useState(false);
+  const [campaignStrategy, setCampaignStrategy] = useState(
+    campaign.aiGeneratedStrategy ||
+    (activeWorkspace?.currentStrategy?.campaignId === campaign._id ? activeWorkspace.currentStrategy : null)
+  );
+  const [showStrategyModal, setShowStrategyModal] = useState(false);
+  const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
+  const [successToast, setSuccessToast] = useState('');
   const [generatingPost, setGeneratingPost] = useState(null);
   const [error, setError] = useState('');
 
@@ -257,12 +308,43 @@ const CampaignDetail = ({ campaign, onBack }) => {
 
   useEffect(() => { loadPosts(); }, [loadPosts]);
 
-  const handleGeneratePlan = async () => {
+  const handleGenerateStrategyAndGoToPlan = async () => {
+    sessionStorage.setItem('strategyActiveTab', 'plan');
+    if (campaignStrategy) {
+      setActiveModule('strategy');
+      return;
+    }
+    setGeneratingStrategy(true);
+    setError('');
+    try {
+      const result = await campaignAPI.generateStrategy(campaign._id);
+      if (result.strategy) {
+        setCampaignStrategy(result.strategy);
+        if (setGeneratedStrategy) setGeneratedStrategy(result.strategy);
+        if (workspaceId && updateWorkspace) {
+          await updateWorkspace(workspaceId, { currentStrategy: result.strategy });
+        }
+      }
+      sessionStorage.setItem('strategyActiveTab', 'plan');
+      setActiveModule('strategy');
+    } catch (err) {
+      setError(err.message || 'Failed to generate campaign strategy');
+      setGeneratingStrategy(false);
+    }
+  };
+
+  const handleGeneratePlan = async (customPlan) => {
     setGeneratingPlan(true);
     setError('');
     try {
-      const result = await campaignAPI.generatePlan(campaign._id);
+      const planToUse = customPlan || campaignStrategy?.thirtyDayPlan;
+      const result = await campaignAPI.generatePlan(
+        campaign._id,
+        planToUse && planToUse.length > 0 ? { strategyPlan: planToUse } : {}
+      );
       setPosts(result.posts || []);
+      setSuccessToast(`Plan ready: ${result.posts?.length || 0} scheduled posts created!`);
+      setTimeout(() => setSuccessToast(''), 4000);
     } catch (err) {
       setError(err.message || 'Failed to generate campaign plan');
     } finally {
@@ -301,27 +383,134 @@ const CampaignDetail = ({ campaign, onBack }) => {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <button onClick={onBack} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
-          <ArrowRight className="w-4 h-4 rotate-180" />
-        </button>
-        <div className="flex-1">
-          <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">{campaign.campaignName}</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">{campaign.campaignGoal}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <button onClick={onBack} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
+            <ArrowRight className="w-4 h-4 rotate-180" />
+          </button>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-lg font-extrabold text-slate-900 dark:text-white truncate">{campaign.campaignName}</h2>
+              {campaignStrategy && (
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10.5px] font-bold border border-emerald-500/30 flex items-center gap-1">
+                  <Target className="w-3 h-3" /> Strategy Active
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{campaign.campaignGoal}</p>
+          </div>
         </div>
-        <button
-          onClick={handleGeneratePlan}
-          disabled={generatingPlan}
-          className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold flex items-center gap-2 transition-colors disabled:opacity-60"
-        >
-          {generatingPlan ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-          {generatingPlan ? 'Generating Plan...' : posts.length > 0 ? 'Regenerate Plan' : 'Generate AI Plan'}
-        </button>
+
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={handleGenerateStrategyAndGoToPlan}
+            disabled={generatingStrategy}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-sm disabled:opacity-60"
+          >
+            {generatingStrategy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Target className="w-3.5 h-3.5" />}
+            {generatingStrategy ? 'Generating Strategy...' : 'Generate Strategy'}
+          </button>
+
+          <button
+            onClick={() => handleGeneratePlan()}
+            disabled={generatingPlan}
+            className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold flex items-center gap-2 transition-colors disabled:opacity-60"
+          >
+            {generatingPlan ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+            {generatingPlan ? 'Generating Plan...' : posts.length > 0 ? 'Regenerate Plan' : 'Generate AI Plan'}
+          </button>
+        </div>
       </div>
+
+      {successToast && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold animate-in fade-in">
+          <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-500" />
+          {successToast}
+        </div>
+      )}
 
       {error && (
         <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />{error}
+        </div>
+      )}
+
+
+
+      {/* ─── Strategy Completion Modal ─── */}
+      {showStrategyModal && campaignStrategy && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in zoom-in-95">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-transparent">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                  <Target className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Campaign Strategy Ready!</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Synthesized specifically for "{campaign.campaignName}"</p>
+                </div>
+              </div>
+              <button onClick={() => setShowStrategyModal(false)} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Target Goal</span>
+                <p className="text-xs font-bold text-slate-900 dark:text-white">{campaignStrategy.businessGoal || campaign.campaignGoal}</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">🎁 Lead Magnet</span>
+                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">{campaignStrategy.leadMagnet}</p>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">📢 Primary CTA</span>
+                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">{campaignStrategy.primaryCta}</p>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">⚡ 30-Day Tactical Plan</span>
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  30 structured daily action items across {(campaignStrategy.bestPlatforms || campaign.platforms || []).join(', ')} are linked to this campaign.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <button
+                onClick={() => {
+                  setShowStrategyModal(false);
+                  setActiveModule('strategy');
+                }}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-sm"
+              >
+                <Target className="w-3.5 h-3.5" /> Open Strategy Module <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button
+                  onClick={() => {
+                    setShowStrategyModal(false);
+                    handleGeneratePlan(campaignStrategy.thirtyDayPlan);
+                  }}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-sm"
+                >
+                  <Sparkles className="w-3.5 h-3.5" /> Generate Posts Now
+                </button>
+                <button
+                  onClick={() => setShowStrategyModal(false)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -381,34 +570,11 @@ const CampaignDetail = ({ campaign, onBack }) => {
                         {post.status}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {post.status === 'Draft' && (
-                        <button
-                          onClick={() => handleGeneratePostContent(post._id)}
-                          disabled={generatingPost === post._id}
-                          className="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-60"
-                        >
-                          {generatingPost === post._id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                          {generatingPost === post._id ? 'Generating...' : 'Generate Content'}
-                        </button>
-                      )}
-                      {post.status === 'Generated' && (
-                        <button
-                          onClick={() => handleUpdateStatus(post._id, 'Approved')}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
-                        >
-                          <ThumbsUp className="w-3 h-3" /> Approve
-                        </button>
-                      )}
-                      {(post.status === 'Generated' || post.status === 'Approved') && (
-                        <button
-                          onClick={() => handleUpdateStatus(post._id, 'Scheduled')}
-                          className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
-                        >
-                          <Calendar className="w-3 h-3" /> Schedule
-                        </button>
-                      )}
-                      <span className="text-xs text-slate-400 dark:text-slate-500">{post.postType} · {post.bestPostingTime}</span>
+                    <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 pt-0.5">
+                      <span className="font-medium">
+                        {(post.platform || '').toLowerCase().includes('email') ? 'Email Copy' : (post.postType || 'Image')}
+                      </span>
+                      {post.bestPostingTime && <span>· {post.bestPostingTime}</span>}
                     </div>
                   </div>
                 ))}
@@ -417,6 +583,25 @@ const CampaignDetail = ({ campaign, onBack }) => {
           ))}
         </div>
       )}
+
+      {/* ══════════ STICKY FLOATING GENERATE STRATEGY BUTTON ══════════ */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-in fade-in slide-in-from-bottom-4 duration-300 shrink-0">
+        <button
+          onClick={handleGenerateStrategyAndGoToPlan}
+          disabled={generatingStrategy}
+          className="flex items-center gap-2.5 px-6 py-3.5 bg-[#0077b6] hover:bg-[#0096c7] text-white rounded-full font-extrabold text-xs sm:text-sm transition-all duration-200 shadow-2xl shadow-[#0077b6]/40 border border-white/20 hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md whitespace-nowrap disabled:opacity-60"
+          title="Generate strategy and open 30-day plan directly"
+        >
+          {generatingStrategy ? (
+            <Loader2 className="w-5 h-5 text-white animate-spin shrink-0" />
+          ) : (
+            <Target className="w-5 h-5 text-white shrink-0" />
+          )}
+          <span className="tracking-wide">
+            {generatingStrategy ? 'Generating Strategy...' : 'Generate Strategy'}
+          </span>
+        </button>
+      </div>
     </div>
   );
 };
