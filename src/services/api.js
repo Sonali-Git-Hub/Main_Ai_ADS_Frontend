@@ -57,6 +57,12 @@ export const strategyAPI = {
   save: (workspaceId, body) => apiFetch(`/workspace/${workspaceId}`, { method: 'PUT', body: { currentStrategy: body } }),
 };
 
+// ─── Plans & Pricing API ──────────────────────────────────────────────────────
+export const plansAPI = {
+  getPlans: () => apiFetch('/plans'),
+  subscribe: (body) => apiFetch('/plans/subscribe', { method: 'POST', body }),
+};
+
 // ─── Campaign API ──────────────────────────────────────────────────────────────
 export const campaignAPI = {
   list: (params = {}) => {
@@ -99,7 +105,6 @@ export const seoAPI = {
 export const creativeAPI = {
   getCredits: () => apiFetch('/creative/credits'),
   generateVisual: (body) => apiFetch('/creative/visual/generate', { method: 'POST', body }),
-  topUpCredits: (body) => apiFetch('/creative/credits/topup', { method: 'POST', body }),
   setTier: (body) => apiFetch('/creative/credits/tier', { method: 'POST', body }),
 };
 

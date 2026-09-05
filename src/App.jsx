@@ -17,7 +17,6 @@ import { AIWebsiteBuilderModule } from './features/websiteBuilder/AIWebsiteBuild
 import { QuickPostModal } from './features/contentStudio/QuickPostModal';
 import { CampaignBuilderModule } from './features/campaigns/CampaignBuilderModule';
 import { CreativeStudioModule } from './features/creativeStudio/CreativeStudioModule';
-import { CreditTopupModal } from './features/creativeStudio/CreditTopupModal';
 import { AssetLibraryModule } from './features/assetLibrary/AssetLibraryModule';
 import { ApprovalsDeskModule } from './features/approvals/ApprovalsDeskModule';
 import { AnalyticsModule } from './features/analytics/AnalyticsModule';
@@ -132,6 +131,7 @@ const MainContent = () => {
           </NoBrandGate>
         );
       case 'team': return <TeamRbacModule />;
+      case 'pricing':
       case 'settings': return <SettingsBillingModule />;
       case 'adminDashboard': return <AdminDashboardModule />;
       default: return <DashboardModule />;
@@ -139,19 +139,20 @@ const MainContent = () => {
   };
 
   return (
-    <div className="flex h-screen bg-[#F8F9FD] dark:bg-[#090d16] text-slate-900 dark:text-slate-100 overflow-hidden">
+    <div className="flex h-screen aisa-dashboard-bg text-slate-900 dark:text-slate-100 overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <Header />
-        <main className="p-3 sm:p-4 lg:p-5 flex-1 overflow-y-auto w-full max-w-[1600px] mx-auto">
-          {renderModule()}
+        <main className="p-3 sm:p-4 lg:p-6 flex-1 overflow-y-auto w-full max-w-[1600px] mx-auto">
+          <div key={activeModule} className="animate-in fade-in duration-200">
+            {renderModule()}
+          </div>
         </main>
       </div>
 
       {/* Feature Modals & Overlay Drawers */}
       <QuickPostModal />
       <ScraperOverlayModal />
-      <CreditTopupModal />
       <AISAAssistantDrawer />
       <SettingsModal />
 

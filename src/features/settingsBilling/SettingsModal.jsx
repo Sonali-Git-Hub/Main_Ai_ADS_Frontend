@@ -1164,12 +1164,6 @@ export const SettingsModal = () => {
                 </div>
                 <div className="text-left sm:text-right">
                   <div className="text-xl font-extrabold text-brand-400">{credits?.balance || 120} Visual Credits</div>
-                  <button
-                    onClick={() => { setIsSettingsModalOpen(false); setIsCreditModalOpen(true); }}
-                    className="btn-primary text-xs mt-2"
-                  >
-                    Top Up Credits
-                  </button>
                 </div>
               </div>
             </div>
@@ -1201,12 +1195,12 @@ export const SettingsModal = () => {
                       <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{t.desc}</p>
                     </div>
                     <button
-                      onClick={() => { setIsSettingsModalOpen(false); setIsCreditModalOpen(true); }}
+                      disabled={t.current}
                       className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${
-                        t.current ? 'bg-brand-500 text-white shadow-glow' : 'bg-slate-200 dark:bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        t.current ? 'bg-brand-500 text-white shadow-glow opacity-90 cursor-default' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700'
                       }`}
                     >
-                      {t.current ? 'Active Plan' : 'Switch Tier'}
+                      {t.current ? 'Active Plan' : 'Select Tier'}
                     </button>
                   </div>
                 ))}
@@ -1925,7 +1919,7 @@ export const SettingsModal = () => {
               {/* Sidebar Header */}
               <div className="p-5 flex items-center justify-between shrink-0 border-b border-slate-200/60 dark:border-slate-800/60">
                 <div className="flex items-center gap-3">
-                  <img src="/logo.png" alt="AI Ads™ Logo" className="w-10 h-10 rounded-2xl object-cover shadow-glow border border-brand-500/20 bg-white" />
+                  <img src="/logo.png" alt="AI Ads™ Logo" className="w-10 h-10 object-contain shrink-0" />
                   <div>
                     <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">AI Ads Preferences</h2>
                     <span className="text-[10px] font-bold text-brand-400 uppercase tracking-widest block">Platform Settings</span>

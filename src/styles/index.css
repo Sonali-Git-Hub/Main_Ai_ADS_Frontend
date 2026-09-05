@@ -21,34 +21,40 @@
 
 @layer base {
   body {
-    @apply transition-colors duration-200;
+    @apply transition-colors duration-200 antialiased selection:bg-brand-500 selection:text-white font-sans;
   }
 }
 
 /* Glassmorphism & Modern AISA UI Components */
 .glass-card {
-  background: rgba(17, 23, 38, 0.75);
+  background: rgba(15, 21, 35, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.25);
 }
 
 .light .glass-card {
   background: #FFFFFF;
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 2px 8px -2px rgba(0, 0, 0, 0.02);
 }
 
 .glass-input {
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  @apply transition-all duration-200 text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl px-4 py-2.5;
+  @apply transition-all duration-200 text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-4 py-2.5;
 }
 
 .light .glass-input {
   background: #F8F9FD;
   border: 1px solid rgba(203, 213, 225, 0.8);
-  @apply text-slate-900 placeholder-slate-500;
+  @apply text-slate-900 placeholder-slate-500 focus:bg-white;
+}
+
+.card-interactive {
+  @apply transition-all duration-200 hover:border-brand-500/40 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer;
 }
 
 .btn-primary {
@@ -89,9 +95,9 @@
 .light .btn-secondary {
   background: #ffffff;
   color: #334155;
-  border: 1px solid rgba(203, 213, 225, 0.8);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  @apply hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  @apply hover:bg-slate-50 hover:text-slate-900 hover:shadow transition-all;
 }
 
 /* Custom Scrollbar */
@@ -112,3 +118,27 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.4);
 }
+
+/* AISA Cinematic Neural Radial Background */
+.aisa-dashboard-bg {
+  background: radial-gradient(ellipse at 15% 20%, rgba(123,97,255,0.12) 0%, transparent 55%),
+              radial-gradient(ellipse at 85% 80%, rgba(59,130,246,0.10) 0%, transparent 55%),
+              radial-gradient(ellipse at 50% 50%, rgba(245,158,11,0.03) 0%, transparent 70%),
+              linear-gradient(160deg, #060913 0%, #090e24 50%, #060a1b 100%);
+}
+
+.light .aisa-dashboard-bg {
+  background: radial-gradient(ellipse at 15% 20%, rgba(123,97,255,0.06) 0%, transparent 55%),
+              radial-gradient(ellipse at 85% 80%, rgba(59,130,246,0.05) 0%, transparent 55%),
+              linear-gradient(160deg, #F8F9FD 0%, #F1F5F9 50%, #E2E8F0 100%);
+}
+
+/* Sidebar Dark AISA Gradient */
+.dark aside {
+  background: linear-gradient(180deg, rgba(8, 11, 26, 0.98) 0%, rgba(11, 15, 35, 0.98) 100%) !important;
+  border-right: none !important;
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+

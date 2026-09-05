@@ -79,7 +79,8 @@ export const DashboardModule = () => {
       sub: `${totalBrandsCount} brand profile${totalBrandsCount === 1 ? '' : 's'} in your account`,
       icon: Dna,
       color: 'text-brand-600 dark:text-brand-400',
-      bg: 'bg-brand-500/5 dark:bg-brand-500/10 border-brand-500/20 dark:border-brand-500/30 hover:border-brand-500/50',
+      bg: 'bg-white dark:bg-slate-900/80 shadow-xs hover:shadow-md',
+      iconBg: 'bg-brand-500/10 dark:bg-brand-500/20',
       moduleId: 'brands'
     },
     {
@@ -88,7 +89,8 @@ export const DashboardModule = () => {
       sub: `Saved in Asset Library & DB (excl. calendar)`,
       icon: FolderKanban,
       color: 'text-indigo-600 dark:text-indigo-400',
-      bg: 'bg-indigo-500/5 dark:bg-indigo-500/10 border-indigo-500/20 dark:border-indigo-500/30 hover:border-indigo-500/50',
+      bg: 'bg-white dark:bg-slate-900/80 shadow-xs hover:shadow-md',
+      iconBg: 'bg-indigo-500/10 dark:bg-indigo-500/20',
       moduleId: 'assets'
     },
     {
@@ -97,7 +99,8 @@ export const DashboardModule = () => {
       sub: `${activeCampaignsCount} currently active`,
       icon: Layers,
       color: 'text-purple-600 dark:text-purple-400',
-      bg: 'bg-purple-500/5 dark:bg-purple-500/10 border-purple-500/20 dark:border-purple-500/30 hover:border-purple-500/50',
+      bg: 'bg-white dark:bg-slate-900/80 shadow-xs hover:shadow-md',
+      iconBg: 'bg-purple-500/10 dark:bg-purple-500/20',
       moduleId: 'campaigns'
     }
   ];
@@ -105,7 +108,7 @@ export const DashboardModule = () => {
   return (
     <div className="space-y-4 animate-in fade-in w-full max-w-[1600px] mx-auto px-1 sm:px-4 pt-1 pb-6">
       {/* Banner */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-brand-50 via-white to-purple-50 dark:from-brand-900/60 dark:via-slate-900 dark:to-purple-950/60 border border-brand-200 dark:border-brand-500/30 shadow-lg relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-brand-50/80 via-white to-purple-50/80 dark:from-brand-900/50 dark:via-slate-900 dark:to-purple-950/50 shadow-[0_10px_30px_-5px_rgba(0,0,0,0.03)] dark:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.3)] relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div className="relative z-10 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[10px] sm:text-xs uppercase font-extrabold tracking-widest text-brand-600 dark:text-brand-400 bg-brand-500/10 dark:bg-brand-500/20 px-2.5 py-0.5 rounded-full">{t('canonicalOps', 'Canonical Operations')}</span>
@@ -143,14 +146,14 @@ export const DashboardModule = () => {
             <div
               key={idx}
               onClick={() => s.moduleId && setActiveModule(s.moduleId)}
-              className={`p-4 sm:p-5 rounded-2xl glass-card border ${s.bg} flex items-center justify-between cursor-pointer transition-all hover:scale-[1.01] shadow-xs group`}
+              className={`p-4 sm:p-5 rounded-2xl ${s.bg} flex items-center justify-between cursor-pointer transition-all hover:-translate-y-0.5 group`}
             >
               <div>
                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{s.label}</span>
                 <div className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white my-0.5">{s.value}</div>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{s.sub}</span>
               </div>
-              <div className={`p-2.5 sm:p-3 rounded-2xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 ${s.color} group-hover:scale-110 transition-transform`}>
+              <div className={`p-2.5 sm:p-3 rounded-2xl ${s.iconBg} ${s.color} group-hover:scale-110 transition-transform shadow-2xs`}>
                 <Icon className="w-5 h-5" />
               </div>
             </div>
@@ -159,7 +162,7 @@ export const DashboardModule = () => {
       </div>
 
       {/* Pipeline Shortcuts */}
-      <div className="p-4 sm:p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
+      <div className="p-4 sm:p-6 rounded-3xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-xs space-y-4">
         <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
           <Layers className="w-4 h-4 text-brand-500" /> {t('endToEndPipeline', 'End-to-End Content Pipeline')}
         </h2>
@@ -175,7 +178,7 @@ export const DashboardModule = () => {
               <button
                 key={step.id}
                 onClick={() => setActiveModule(step.id)}
-                className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 transition-all text-left group flex flex-col justify-between"
+                className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 shadow-2xs hover:shadow-md transition-all text-left group flex flex-col justify-between"
               >
                 <div>
                   <div className={`w-8 h-8 rounded-xl ${step.bg} ${step.color} flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
