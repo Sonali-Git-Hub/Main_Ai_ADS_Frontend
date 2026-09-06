@@ -60,6 +60,7 @@ export const strategyAPI = {
 // ─── Plans & Pricing API ──────────────────────────────────────────────────────
 export const plansAPI = {
   getPlans: () => apiFetch('/plans'),
+  getTopups: () => Promise.resolve({ success: true, topups: [] }),
   subscribe: (body) => apiFetch('/plans/subscribe', { method: 'POST', body }),
 };
 

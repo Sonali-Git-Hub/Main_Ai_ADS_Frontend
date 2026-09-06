@@ -28,6 +28,8 @@ import { Login } from './features/auth/Login';
 import { AdminDashboardModule } from './features/admin/AdminDashboard';
 import { AdminLayout } from './components/layout/AdminLayout';
 
+import { PlanGate } from './components/layout/PlanGate';
+
 const MainContent = () => {
   const { activeModule, isAISAAssistantOpen, setIsAISAAssistantOpen, user, loginUser } = useWorkspace();
 
@@ -48,10 +50,11 @@ const MainContent = () => {
     return <AdminLayout />;
   }
 
-
   const isWebsiteBuilder = ['websiteBuilder', 'websitebuilder', 'builder'].includes(activeModule);
+  const userPlanNorm = (user?.plan || 'starter').toLowerCase();
+  const isStarterUser = userPlanNorm === 'starter' || userPlanNorm === 'base' || userPlanNorm === 'free';
 
-  if (isWebsiteBuilder) {
+  if (isWebsiteBuilder && !isStarterUser) {
     return (
       <div className="h-screen w-screen overflow-hidden bg-[#070A11] text-slate-100">
         <AIWebsiteBuilderModule />
@@ -96,15 +99,19 @@ const MainContent = () => {
       case 'websitebuilder':
       case 'builder':
         return (
-          <NoBrandGate moduleName="AI Website Builder">
-            <AIWebsiteBuilderModule />
-          </NoBrandGate>
+          <PlanGate moduleName="AI Website Builder" moduleId="websiteBuilder">
+            <NoBrandGate moduleName="AI Website Builder">
+              <AIWebsiteBuilderModule />
+            </NoBrandGate>
+          </PlanGate>
         );
       case 'campaigns':
         return (
-          <NoBrandGate moduleName="Campaign Builder">
-            <CampaignBuilderModule />
-          </NoBrandGate>
+          <PlanGate moduleName="Campaign Builder" moduleId="campaigns">
+            <NoBrandGate moduleName="Campaign Builder">
+              <CampaignBuilderModule />
+            </NoBrandGate>
+          </PlanGate>
         );
       case 'creative':
         return (
@@ -120,9 +127,11 @@ const MainContent = () => {
         );
       case 'approvals':
         return (
-          <NoBrandGate moduleName="Approvals Desk">
-            <ApprovalsDeskModule />
-          </NoBrandGate>
+          <PlanGate moduleName="Approvals Desk" moduleId="approvals">
+            <NoBrandGate moduleName="Approvals Desk">
+              <ApprovalsDeskModule />
+            </NoBrandGate>
+          </PlanGate>
         );
       case 'analytics':
         return (

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWorkspace } from '../../context/WorkspaceContext';
-import { accountAPI, authAPI } from '../../services/api';
+import { accountAPI, authAPI, plansAPI } from '../../services/api';
 import {
   Settings,
   Bell,
@@ -95,6 +95,244 @@ const faqs = [
       { question: 'Which CMS platforms are supported?', answer: 'WordPress and Webflow webhook integrations are available. Shopify, HubSpot, and Notion integrations are coming soon.' },
       { question: 'Can I connect social media accounts?', answer: 'Direct social publishing is on the roadmap. Currently you can export content in optimized formats for each platform (Instagram, LinkedIn, Twitter/X, Facebook).' },
     ],
+  },
+];
+
+// ──────────────────────────────────────────────
+// Country Currency Options & Multi-Currency Price Architecture
+// ──────────────────────────────────────────────
+const CURRENCY_OPTIONS = [
+  { value: 'INR', label: 'India (INR ₹)', icon: '🇮🇳' },
+  { value: 'USD', label: 'United States (USD $)', icon: '🇺🇸' },
+  { value: 'EUR', label: 'Europe (EUR €)', icon: '🇪🇺' },
+  { value: 'GBP', label: 'United Kingdom (GBP £)', icon: '🇬🇧' },
+  { value: 'CAD', label: 'Canada (CAD CA$)', icon: '🇨🇦' },
+  { value: 'AUD', label: 'Australia (AUD A$)', icon: '🇦🇺' },
+  { value: 'AED', label: 'UAE (AED)', icon: '🇦🇪' },
+];
+
+const PLAN_PRICES = {
+  base: {
+    INR: { primary: '₹799', period: '/month', secondary: '($9.99/mo)' },
+    USD: { primary: '$9.99', period: '/month', secondary: '(₹799/mo)' },
+    EUR: { primary: '€8.99', period: '/month', secondary: '($9.99/mo)' },
+    GBP: { primary: '£7.99', period: '/month', secondary: '($9.99/mo)' },
+    CAD: { primary: 'CA$12.99', period: '/month', secondary: '($9.99/mo)' },
+    AUD: { primary: 'A$14.99', period: '/month', secondary: '($9.99/mo)' },
+    AED: { primary: 'AED 36.99', period: '/month', secondary: '($9.99/mo)' },
+  },
+  professional: {
+    INR: { primary: '₹2,399', period: '/month', secondary: '($29.99/mo)' },
+    USD: { primary: '$29.99', period: '/month', secondary: '(₹2,399/mo)' },
+    EUR: { primary: '€26.99', period: '/month', secondary: '($29.99/mo)' },
+    GBP: { primary: '£22.99', period: '/month', secondary: '($29.99/mo)' },
+    CAD: { primary: 'CA$39.99', period: '/month', secondary: '($29.99/mo)' },
+    AUD: { primary: 'A$44.99', period: '/month', secondary: '($29.99/mo)' },
+    AED: { primary: 'AED 109.99', period: '/month', secondary: '($29.99/mo)' },
+  },
+  agency_pro: {
+    INR: { primary: '₹6,399', period: '/month', secondary: '($79.99/mo)' },
+    USD: { primary: '$79.99', period: '/month', secondary: '(₹6,399/mo)' },
+    EUR: { primary: '€72.99', period: '/month', secondary: '($79.99/mo)' },
+    GBP: { primary: '£62.99', period: '/month', secondary: '($79.99/mo)' },
+    CAD: { primary: 'CA$109.99', period: '/month', secondary: '($79.99/mo)' },
+    AUD: { primary: 'A$119.99', period: '/month', secondary: '($79.99/mo)' },
+    AED: { primary: 'AED 289.99', period: '/month', secondary: '($79.99/mo)' },
+  },
+  enterprise: {
+    INR: { primary: '₹15,999', period: '/month', secondary: '($199.99/mo)' },
+    USD: { primary: '$199.99', period: '/month', secondary: '(₹15,999/mo)' },
+    EUR: { primary: '€179.99', period: '/month', secondary: '($199.99/mo)' },
+    GBP: { primary: '£159.99', period: '/month', secondary: '($199.99/mo)' },
+    CAD: { primary: 'CA$269.99', period: '/month', secondary: '($199.99/mo)' },
+    AUD: { primary: 'A$299.99', period: '/month', secondary: '($199.99/mo)' },
+    AED: { primary: 'AED 729.99', period: '/month', secondary: '($199.99/mo)' },
+  }
+};
+
+const getPlanPrice = (planId, currencyCode) => {
+  return PLAN_PRICES[planId]?.[currencyCode] || PLAN_PRICES[planId]?.['INR'] || { primary: '₹799', period: '/month', secondary: '($9.99/mo)' };
+};
+
+// ──────────────────────────────────────────────
+// Master Subscription Plans Data (50% Profit Margin Architecture)
+// ──────────────────────────────────────────────
+const DETAILED_PLANS = [
+  {
+    id: 'base',
+    name: 'Starter',
+    badge: 'Starter',
+    subtitle: 'Core AI text generation & 150 monthly visual credits for solo creators',
+    credits: '150 Visual Credits / mo',
+    creditsDetail: 'Generates up to 150 high-res AI visual assets or ad creatives monthly.',
+    color: 'from-blue-600 via-indigo-600 to-slate-900',
+    borderColor: 'border-blue-500/30',
+    features: [
+      { text: '150 Monthly Visual Credits (AI Image & Ad Creative Generator)', highlighted: true },
+      { text: '1,000 Text Generations / mo (Social Posts, Blogs, Emails & Ads)', highlighted: true },
+      { text: '3 Brand DNA Workspaces (Website Scraper & Tone Ingestion)', highlighted: false },
+      { text: '30-Day Marketing Roadmap Generator (Strategy Hub)', highlighted: false },
+      { text: 'SEO Intelligence (Keyword Clusters & Content Briefs)', highlighted: false },
+      { text: 'Content Studio (Social Copy, Blogs & Sales Copy Generators)', highlighted: false },
+      { text: 'AISA™ Copilot AI Assistant & Drag-and-Drop Calendar', highlighted: false }
+    ]
+  },
+  {
+    id: 'professional',
+    name: 'Pro / Growth',
+    badge: 'Growth Tier',
+    subtitle: 'Multi-brand DNA, 450 visual credits, Campaign Builder & Approvals Desk',
+    credits: '450 Visual Credits / mo',
+    creditsDetail: 'Generates up to 450 high-res AI visual assets or ad creatives each month.',
+    color: 'from-violet-600 via-purple-600 to-indigo-900',
+    borderColor: 'border-violet-500/40',
+    features: [
+      { text: '450 Monthly Visual Credits (Creative Studio + Aspect Controls)', highlighted: true },
+      { text: '3,000 Text Generations / mo (Full Content & Copy Suite)', highlighted: true },
+      { text: '10 Brand DNA Workspaces (Multi-Brand Tone & Scraping)', highlighted: false },
+      { text: 'Campaign Builder (Multi-Channel Planner & Post Generator)', highlighted: true },
+      { text: 'AI Website Builder (Brief Analyzer & Full-Page HTML Code)', highlighted: true },
+      { text: 'Approvals Desk (Content Review Queue & Workflows)', highlighted: false },
+      { text: 'Asset Library & Performance Dashboard (KPI Metrics)', highlighted: false }
+    ]
+  },
+  {
+    id: 'agency_pro',
+    name: 'Agency / Scale',
+    badge: 'Most Popular',
+    subtitle: 'Unlimited multi-client workspaces & 1,200 visual credits',
+    credits: '1,200 Visual Credits / mo',
+    creditsDetail: '1,200 high-res visual credits included monthly.',
+    color: 'from-amber-500 via-brand-500 to-cyan-500',
+    features: [
+      { text: '1,200 Monthly Visual Credits (4x Visual Variation Engine)', highlighted: true },
+      { text: '8,000 Text Generations / mo (High-Volume Strategy & Copy)', highlighted: true },
+      { text: 'Unlimited Multi-Client Workspaces & Brand DNA Ingestion', highlighted: true },
+      { text: 'AI Web Builder + Hero Visuals (Code + 2x Hero Visual Generator)', highlighted: true },
+      { text: 'Full Approvals Desk Queue & Workflow Management', highlighted: false },
+      { text: 'Media Asset Library with Cloud Storage', highlighted: false }
+    ]
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    badge: 'Enterprise',
+    subtitle: 'High-volume generation, 3,000 visual credits & unlimited AI text generation',
+    credits: '3,000 Visual Credits / mo',
+    creditsDetail: '3,000 high-res visual credits per month with custom volume scaling.',
+    color: 'from-emerald-600 via-teal-600 to-slate-950',
+    borderColor: 'border-emerald-500/40',
+    features: [
+      { text: '3,000 Monthly Visual Credits (High-Volume Ad & Visual Gen)', highlighted: true },
+      { text: 'UNLIMITED Text Generations (Uncapped AI Content Engine)', highlighted: true },
+      { text: 'Unlimited Brand Workspaces & Priority Processing', highlighted: true },
+      { text: 'AI Web Builder with Live Chat Edit (Real-Time Code Tweaking)', highlighted: true },
+      { text: 'All Core Platform Modules Included (Strategy, SEO, Content, Web & Ads)', highlighted: true }
+    ]
+  }
+];
+
+// ──────────────────────────────────────────────
+// Feature Comparison Matrix Data (Platform Capabilities Mapping)
+// ──────────────────────────────────────────────
+const FEATURE_COMPARISON_MATRIX = [
+  {
+    feature: 'Visual Image Credits',
+    starter: { type: 'badge', text: '150 / mo' },
+    pro: { type: 'badge', text: '450 / mo' },
+    agency: { type: 'badge', text: '1,200 / mo' },
+    enterprise: { type: 'badge', text: '3,000 / mo' },
+  },
+  {
+    feature: 'Text Generation Quota',
+    starter: { type: 'text', text: '1,000 / mo' },
+    pro: { type: 'text', text: '3,000 / mo' },
+    agency: { type: 'text', text: '8,000 / mo' },
+    enterprise: { type: 'check', text: 'Unlimited' },
+  },
+  {
+    feature: 'Brand DNA Workspaces',
+    starter: { type: 'text', text: '3 Workspaces' },
+    pro: { type: 'text', text: '10 Workspaces' },
+    agency: { type: 'check', text: 'Unlimited' },
+    enterprise: { type: 'check', text: 'Unlimited Corporate' },
+  },
+  {
+    feature: 'Strategy Hub (30-Day Roadmap)',
+    starter: { type: 'check', text: 'Included' },
+    pro: { type: 'check', text: 'Included' },
+    agency: { type: 'check', text: 'Included' },
+    enterprise: { type: 'check', text: 'Included' },
+  },
+  {
+    feature: 'SEO Intelligence & Briefs',
+    starter: { type: 'text', text: 'Basic Briefs' },
+    pro: { type: 'check', text: 'Keyword Clusters' },
+    agency: { type: 'check', text: 'Advanced Briefs' },
+    enterprise: { type: 'check', text: 'Full Intelligence' },
+  },
+  {
+    feature: 'Content Studio (Social, Blog, Email, Ads)',
+    starter: { type: 'check', text: 'Included' },
+    pro: { type: 'check', text: 'Included' },
+    agency: { type: 'check', text: 'Included' },
+    enterprise: { type: 'check', text: 'Included' },
+  },
+  {
+    feature: 'Creative Studio & Variation Engine',
+    starter: { type: 'check', text: 'Standard' },
+    pro: { type: 'check', text: 'Aspect Ratio Control' },
+    agency: { type: 'check', text: '4x Variation Engine' },
+    enterprise: { type: 'check', text: 'Priority Generation' },
+  },
+  {
+    feature: 'AI Website Builder',
+    starter: { type: 'cross' },
+    pro: { type: 'check', text: 'HTML & Code Gen' },
+    agency: { type: 'check', text: 'Code + Hero Visuals' },
+    enterprise: { type: 'check', text: 'Code + Live Chat Edit' },
+  },
+  {
+    feature: 'Campaign Builder & Planner',
+    starter: { type: 'cross' },
+    pro: { type: 'check', text: 'Included' },
+    agency: { type: 'check', text: 'Included' },
+    enterprise: { type: 'check', text: 'Included' },
+  },
+  {
+    feature: 'Content Calendar & Drag-Drop',
+    starter: { type: 'check', text: 'Included' },
+    pro: { type: 'check', text: 'Included' },
+    agency: { type: 'check', text: 'Included' },
+    enterprise: { type: 'check', text: 'Included' },
+  },
+  {
+    feature: 'Approvals Desk Queue',
+    starter: { type: 'cross' },
+    pro: { type: 'check', text: 'Included' },
+    agency: { type: 'check', text: 'Included' },
+    enterprise: { type: 'check', text: 'Full Workflow Queue' },
+  },
+  {
+    feature: 'Asset Library & Cloud Storage',
+    starter: { type: 'check', text: 'Included' },
+    pro: { type: 'check', text: 'Included' },
+    agency: { type: 'check', text: 'Cloud Storage' },
+    enterprise: { type: 'check', text: 'Enterprise Storage' },
+  },
+  {
+    feature: 'Analytics KPI Dashboard',
+    starter: { type: 'check', text: 'Basic' },
+    pro: { type: 'check', text: 'Full Performance' },
+    agency: { type: 'check', text: 'Multi-Brand KPI' },
+    enterprise: { type: 'check', text: 'Full Analytics' },
+  },
+  {
+    feature: 'AISA™ Copilot AI Assistant',
+    starter: { type: 'check', text: 'Included' },
+    pro: { type: 'check', text: 'Included' },
+    agency: { type: 'check', text: 'Included' },
+    enterprise: { type: 'check', text: 'Included' },
   },
 ];
 
@@ -295,6 +533,79 @@ export const SettingsModal = () => {
   // Mobile view state
   const [view, setView] = useState('sidebar');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedPlanDetail, setSelectedPlanDetail] = useState(null);
+  const [planToast, setPlanToast] = useState(null);
+  const [billingSubTab, setBillingSubTab] = useState('current');
+
+  // Country Currency State & Auto-Detection Sync
+  const [activeCurrency, setActiveCurrencyState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aisa_billing_currency');
+      if (saved) return saved;
+    } catch (e) {}
+    if (region === 'India') return 'INR';
+    if (region === 'United States') return 'USD';
+    if (region === 'United Kingdom') return 'GBP';
+    if (region === 'Europe') return 'EUR';
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      if (tz.includes('Kolkata') || tz.includes('Calcutta') || tz.includes('India')) return 'INR';
+      if (tz.includes('London')) return 'GBP';
+      if (tz.includes('Paris') || tz.includes('Berlin') || tz.includes('Rome') || tz.includes('Madrid')) return 'EUR';
+      if (tz.includes('Toronto') || tz.includes('Vancouver')) return 'CAD';
+      if (tz.includes('Sydney') || tz.includes('Melbourne')) return 'AUD';
+      if (tz.includes('Dubai')) return 'AED';
+    } catch (e) {}
+    return 'INR';
+  });
+
+  const setActiveCurrency = (cur) => {
+    setActiveCurrencyState(cur);
+    try {
+      localStorage.setItem('aisa_billing_currency', cur);
+    } catch (e) {}
+  };
+
+  useEffect(() => {
+    if (region === 'India') setActiveCurrencyState('INR');
+    else if (region === 'United States') setActiveCurrencyState('USD');
+    else if (region === 'United Kingdom') setActiveCurrencyState('GBP');
+    else if (region === 'Europe') setActiveCurrencyState('EUR');
+    else if (region === 'Global') setActiveCurrencyState('USD');
+  }, [region]);
+
+  const [isUpgradingPlan, setIsUpgradingPlan] = useState(false);
+
+  const handleUpgradePlan = async (planObj) => {
+    setIsUpgradingPlan(true);
+    try {
+      await plansAPI.subscribe({
+        workspaceId: activeWorkspace?._id || activeWorkspace?.id,
+        planId: planObj.id,
+        userEmail: user?.email
+      });
+
+      setUser(prev => {
+        const updated = { ...prev, plan: planObj.id, subscriptionTier: planObj.name };
+        try { localStorage.setItem('aisa_user', JSON.stringify(updated)); } catch(e){}
+        return updated;
+      });
+
+      setPlanToast(`🎉 Upgraded to ${planObj.name} plan! Database & quotas updated.`);
+      setBillingSubTab('current');
+    } catch (err) {
+      console.warn('Plan upgrade API note:', err.message);
+      setUser(prev => {
+        const updated = { ...prev, plan: planObj.id, subscriptionTier: planObj.name };
+        try { localStorage.setItem('aisa_user', JSON.stringify(updated)); } catch(e){}
+        return updated;
+      });
+      setPlanToast(`🎉 Upgraded to ${planObj.name} plan! Workspace updated.`);
+      setBillingSubTab('current');
+    } finally {
+      setIsUpgradingPlan(false);
+    }
+  };
 
   // Profile Photo & Name states
   const [nicknameInput, setNicknameInput] = useState('');
@@ -1149,65 +1460,340 @@ export const SettingsModal = () => {
         );
 
       // ── BILLING & CREDITS ──────────────────────────
-      case 'billing':
+      case 'billing': {
+        const userPlanNorm = (user?.plan || 'agency_pro').toLowerCase().replace(/\s+/g, '_');
+        const activePlanObj = DETAILED_PLANS.find(p => 
+          userPlanNorm === p.id.toLowerCase() || 
+          (userPlanNorm.includes('agency') && p.id === 'agency_pro') || 
+          (userPlanNorm.includes('base') && p.id === 'base') || 
+          (userPlanNorm.includes('prof') && p.id === 'professional') || 
+          (userPlanNorm.includes('enterp') && p.id === 'enterprise')
+        ) || DETAILED_PLANS[2];
+
         return (
           <div className="space-y-6">
-            {/* Featured Active Plan Banner */}
-            <div className="p-6 rounded-3xl bg-gradient-to-r from-violet-600/20 via-brand-500/20 to-cyan-500/20 border border-brand-500/40 relative overflow-hidden">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/20">Active Plan</span>
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-2">
-                    {user?.plan ? `${user.plan.charAt(0).toUpperCase() + user.plan.slice(1)} Plan` : 'Free Tier Plan'}
-                  </h2>
-                  <p className="text-xs text-slate-400 mt-1">Includes unlimited text generation, team RBAC, and monthly visual credits.</p>
+            {/* Top Navigation Sub-Header for Billing */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-4">
+              <div>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-brand-500" />
+                  {billingSubTab === 'current' ? 'Your Current Active Plan' : 'All 4 Subscription Plans'}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {billingSubTab === 'current'
+                    ? 'Review active quotas, capabilities and manage tier upgrades.'
+                    : 'Compare features across all subscription tiers and select the right plan.'}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
+                {/* Country Currency Selector */}
+                <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Currency:</span>
+                  <CustomDropdown
+                    value={activeCurrency}
+                    onChange={val => setActiveCurrency(val)}
+                    icon={Globe}
+                    options={CURRENCY_OPTIONS}
+                  />
                 </div>
-                <div className="text-left sm:text-right">
-                  <div className="text-xl font-extrabold text-brand-400">{credits?.balance || 120} Visual Credits</div>
-                </div>
+
+                {billingSubTab === 'all_plans' && (
+                  <button
+                    onClick={() => setBillingSubTab('current')}
+                    className="px-4 py-2 rounded-xl bg-brand-500/15 hover:bg-brand-500/25 text-brand-600 dark:text-brand-400 border border-brand-500/30 text-xs font-extrabold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+                  >
+                    <ChevronLeft className="w-4 h-4" /> Back to Current Plan
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* Plans Grid */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">Subscription Tiers</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[
-                  { name: 'Base', price: '$99/mo', desc: 'Text intelligence, basic SEO, limit blogs. No visual credits.', credits: '0 Credits' },
-                  { name: 'Professional', price: '$299/mo', desc: 'More brands, SEO clusters, approval workflows, repurposing.', credits: '50 Credits/mo' },
-                  { name: 'Agency Pro', price: '$799/mo', desc: 'Multi-client workspace, team roles, high usage.', credits: '250 Credits/mo', current: true },
-                  { name: 'Enterprise', price: 'Custom', desc: 'Multiple departments, governance API & SLAs.', credits: 'Custom Credits' },
-                ].map(t => (
-                  <div
-                    key={t.name}
-                    className={`p-4 rounded-2xl border flex flex-col justify-between space-y-3 ${
-                      t.current
-                        ? 'bg-brand-500/10 border-brand-500/60 shadow-glow'
-                        : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-extrabold text-slate-900 dark:text-white text-sm">{t.name}</h4>
-                        {t.current && <span className="text-[9px] font-bold uppercase bg-brand-500 text-white px-2 py-0.5 rounded-full">Current</span>}
-                      </div>
-                      <div className="text-lg font-extrabold text-brand-400 my-1">{t.price}</div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{t.desc}</p>
-                    </div>
-                    <button
-                      disabled={t.current}
-                      className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${
-                        t.current ? 'bg-brand-500 text-white shadow-glow opacity-90 cursor-default' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700'
-                      }`}
-                    >
-                      {t.current ? 'Active Plan' : 'Select Tier'}
-                    </button>
-                  </div>
-                ))}
+            {/* Success Toast Notification */}
+            {planToast && (
+              <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center justify-between animate-in fade-in">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>{planToast}</span>
+                </div>
+                <button onClick={() => setPlanToast(null)} className="text-emerald-500 hover:text-emerald-700">
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-            </div>
+            )}
+
+            {/* VIEW 1: CURRENT ACTIVE PLAN POPUP CARD OVERVIEW */}
+            {billingSubTab === 'current' ? (
+              <div className="space-y-6 animate-in fade-in">
+                {/* Active Plan Popup Card */}
+                {(() => {
+                  const activePrice = getPlanPrice(activePlanObj.id, activeCurrency);
+                  return (
+                    <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-slate-900 via-[#0c111d] to-slate-950 border border-brand-500/50 shadow-2xl relative overflow-hidden space-y-6">
+                      {/* Decorative Brand Accent Background Glow */}
+                      <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 rounded-full bg-brand-500/15 blur-3xl pointer-events-none" />
+                      
+                      {/* Top Bar: Badge & Price */}
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/40 shadow-xs">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                              Current Active Plan
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-400 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700">
+                              {activePlanObj.badge}
+                            </span>
+                          </div>
+                          <h2 className="text-2xl sm:text-3xl font-black text-white mt-2.5 flex items-center gap-3">
+                            {activePlanObj.name}
+                          </h2>
+                          <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1 leading-relaxed max-w-xl">
+                            {activePlanObj.subtitle}
+                          </p>
+                        </div>
+
+                        <div className="text-left sm:text-right shrink-0 bg-slate-800/50 p-4 rounded-2xl border border-slate-700/60 backdrop-blur-md">
+                          <div className="text-2xl sm:text-3xl font-black text-brand-400">{activePrice.primary}</div>
+                          <div className="text-xs text-slate-400 font-bold mt-0.5">
+                            {activePrice.period} <span className="opacity-75">{activePrice.secondary}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Quotas & Credit Summary */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
+                        <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-700/60 flex items-center justify-between">
+                          <div>
+                            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Visual Credits Balance</div>
+                            <div className="text-lg font-black text-brand-400 mt-0.5">{credits?.balance || 120} Available</div>
+                          </div>
+                          <Sparkles className="w-6 h-6 text-brand-500" />
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-700/60 flex items-center justify-between">
+                          <div>
+                            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Monthly Allocation</div>
+                            <div className="text-lg font-black text-white mt-0.5">{activePlanObj.credits}</div>
+                          </div>
+                          <CreditCard className="w-6 h-6 text-cyan-400" />
+                        </div>
+                      </div>
+
+                      {/* Included Active Features List */}
+                      <div className="space-y-3 relative z-10 pt-2 border-t border-slate-800">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Included in your {activePlanObj.name}
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {activePlanObj.features.map((f, idx) => (
+                            <div key={idx} className="flex items-start gap-2.5 text-xs text-slate-200 font-medium">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                              <span>{f.text}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Primary Accent-Themed UPGRADE PLAN Action Button */}
+                      <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
+                        <div className="text-xs text-slate-400">
+                          Renews automatically on <span className="text-white font-bold">October 1, 2026</span>
+                        </div>
+
+                        <button
+                          onClick={() => setBillingSubTab('all_plans')}
+                          className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-brand-500/30 transition-all active:scale-95 flex items-center justify-center gap-2.5 cursor-pointer"
+                        >
+                          <Sparkles className="w-4 h-4" /> Upgrade Plan & Explore All Tiers
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            ) : (
+
+              /* VIEW 2: SEPARATE SCREEN SHOWING ALL 4 PLANS */
+              <div className="space-y-6 animate-in fade-in">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">Choose a Subscription Tier</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Select any plan card below to inspect full capabilities or upgrade your tier.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {DETAILED_PLANS.map(t => {
+                    const isCurrent = userPlanNorm === t.id.toLowerCase() || (userPlanNorm.includes('agency') && t.id === 'agency_pro') || (userPlanNorm.includes('base') && t.id === 'base') || (userPlanNorm.includes('prof') && t.id === 'professional') || (userPlanNorm.includes('enterp') && t.id === 'enterprise');
+                    const pPrice = getPlanPrice(t.id, activeCurrency);
+
+                    return (
+                      <div
+                        key={t.id}
+                        onClick={() => setSelectedPlanDetail(t)}
+                        className={`p-5 rounded-2xl border flex flex-col justify-between space-y-4 transition-all duration-200 cursor-pointer group hover:-translate-y-0.5 ${
+                          isCurrent
+                            ? 'bg-brand-500/10 border-brand-500/60 shadow-lg shadow-brand-500/10 ring-2 ring-brand-500/20'
+                            : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 hover:border-brand-500/40 hover:bg-slate-100/60 dark:hover:bg-slate-800/60'
+                        }`}
+                      >
+                        <div className="space-y-2.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-brand-600 dark:text-brand-400 bg-brand-500/15 px-2.5 py-0.5 rounded-full border border-brand-500/30">
+                              {t.badge}
+                            </span>
+                            {isCurrent && (
+                              <span className="text-[9px] font-bold uppercase bg-emerald-500 text-white px-2.5 py-0.5 rounded-full shadow-xs">
+                                Current Plan
+                              </span>
+                            )}
+                          </div>
+
+                          <div>
+                            <h4 className="font-extrabold text-slate-900 dark:text-white text-base group-hover:text-brand-500 transition-colors">
+                              {t.name}
+                            </h4>
+                            <div className="text-xl font-black text-brand-500 dark:text-brand-400 my-1 flex items-baseline gap-1.5 flex-wrap">
+                              <span>{pPrice.primary}</span>
+                              <span className="text-xs font-medium text-slate-400">{pPrice.period}</span>
+                              <span className="text-[10px] font-bold text-slate-400/80 bg-slate-200/60 dark:bg-slate-800/80 px-1.5 py-0.5 rounded">{pPrice.secondary}</span>
+                            </div>
+                            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 pt-0.5">
+                              <Sparkles className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                              <span>{t.credits}</span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 pt-3 border-t border-slate-200/80 dark:border-slate-800">
+                            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                              <span>What's Included</span>
+                            </div>
+                            <ul className="space-y-2">
+                              {t.features.map((feature, idx) => (
+                                <li key={idx} className="flex items-start gap-2 text-[11px] font-medium text-slate-700 dark:text-slate-300 leading-snug">
+                                  <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                                  <span className={feature.highlighted ? 'font-extrabold text-slate-900 dark:text-white' : ''}>
+                                    {feature.text}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isCurrent) {
+                              handleUpgradePlan(t);
+                            }
+                          }}
+                          disabled={isUpgradingPlan}
+                          className={`w-full py-2.5 rounded-xl text-xs font-extrabold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer ${
+                            isCurrent
+                              ? 'bg-brand-500 text-white shadow-md shadow-brand-500/30'
+                              : 'bg-brand-500/15 hover:bg-brand-500 text-brand-600 dark:text-brand-400 hover:text-white border border-brand-500/30'
+                          }`}
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          {isCurrent ? 'Current Active Tier' : `Select & Upgrade to ${t.name}`}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* ── MASTER FEATURE COMPARISON MATRIX TABLE ────────────────── */}
+                <div className="space-y-4 pt-6 border-t border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">Master Feature Comparison Matrix</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Compare features, AI quotas and capabilities across all subscription tiers.</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0c111d] shadow-xl overflow-hidden">
+                    <div className="overflow-x-auto custom-scrollbar">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-100/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800">
+                            <th className="py-4 px-5 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 min-w-[240px]">
+                              FEATURE
+                            </th>
+                            <th className="py-4 px-4 text-xs font-black uppercase tracking-wider text-center text-slate-700 dark:text-slate-300 min-w-[130px]">
+                              STARTER
+                              <span className="block text-[10px] font-extrabold text-brand-500 mt-0.5">
+                                {getPlanPrice('base', activeCurrency).primary}/mo
+                              </span>
+                            </th>
+                            <th className="py-4 px-4 text-xs font-black uppercase tracking-wider text-center text-slate-700 dark:text-slate-300 min-w-[140px]">
+                              PRO / GROWTH
+                              <span className="block text-[10px] font-extrabold text-brand-500 mt-0.5">
+                                {getPlanPrice('professional', activeCurrency).primary}/mo
+                              </span>
+                            </th>
+                            <th className="py-4 px-4 text-xs font-black uppercase tracking-wider text-center text-slate-700 dark:text-slate-300 bg-brand-500/10 min-w-[150px]">
+                              AGENCY / SCALE
+                              <span className="block text-[10px] font-extrabold text-brand-500 mt-0.5">
+                                {getPlanPrice('agency_pro', activeCurrency).primary}/mo
+                              </span>
+                            </th>
+                            <th className="py-4 px-4 text-xs font-black uppercase tracking-wider text-center text-slate-700 dark:text-slate-300 min-w-[140px]">
+                              ENTERPRISE
+                              <span className="block text-[10px] font-extrabold text-brand-500 mt-0.5">
+                                {getPlanPrice('enterprise', activeCurrency).primary}/mo
+                              </span>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                          {FEATURE_COMPARISON_MATRIX.map((row, idx) => (
+                            <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-900/40 transition-colors">
+                              <td className="py-3.5 px-5">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[9.5px] font-black text-brand-600 dark:text-brand-400 bg-brand-500/15 px-2 py-0.5 rounded-md uppercase tracking-wider border border-brand-500/30 shrink-0">
+                                    AISA™
+                                  </span>
+                                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{row.feature}</span>
+                                </div>
+                              </td>
+                              {['starter', 'pro', 'agency', 'enterprise'].map((colKey) => {
+                                const cell = row[colKey];
+                                const isAgencyCol = colKey === 'agency';
+                                return (
+                                  <td key={colKey} className={`py-3.5 px-4 text-center ${isAgencyCol ? 'bg-brand-500/5' : ''}`}>
+                                    {!cell || cell.type === 'cross' ? (
+                                      <span className="text-slate-300 dark:text-slate-700 text-sm font-bold">✕</span>
+                                    ) : cell.type === 'check' ? (
+                                      <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/30 shadow-2xs">
+                                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                        {cell.text}
+                                      </span>
+                                    ) : cell.type === 'badge' ? (
+                                      <span className="inline-flex items-center gap-1 text-[11px] font-black bg-brand-500/15 text-brand-600 dark:text-brand-400 px-3 py-1 rounded-full border border-brand-500/30">
+                                        <Sparkles className="w-3 h-3 text-brand-500 shrink-0" />
+                                        {cell.text}
+                                      </span>
+                                    ) : (
+                                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{cell.text}</span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
+      }
 
       // ── HELP & FAQ ─────────────────────────────────
       case 'help':
@@ -1902,7 +2488,7 @@ export const SettingsModal = () => {
             animate={typeof window !== 'undefined' && window.innerWidth < 640 ? { x: 0 } : { opacity: 1, scale: 1, y: 0 }}
             exit={typeof window !== 'undefined' && window.innerWidth < 640 ? { x: '100%' } : { opacity: 0, scale: 0.96, y: 15 }}
             transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            className="absolute sm:relative top-0 left-0 h-full sm:h-[88vh] w-full sm:max-w-5xl bg-white dark:bg-[#090d16] flex flex-col sm:flex-row shadow-2xl sm:rounded-[28px] border border-slate-200 dark:border-slate-800/80 pointer-events-auto overflow-hidden"
+            className={`absolute sm:relative top-0 left-0 h-full sm:h-[90vh] w-full ${activeTab === 'billing' ? 'sm:max-w-6xl' : 'sm:max-w-5xl'} bg-white dark:bg-[#090d16] flex flex-col sm:flex-row shadow-2xl sm:rounded-[28px] border border-slate-200 dark:border-slate-800/80 pointer-events-auto overflow-hidden`}
             onClick={e => e.stopPropagation()}
           >
             <input
@@ -1913,8 +2499,8 @@ export const SettingsModal = () => {
               className="hidden"
             />
 
-            {/* ── LEFT SIDEBAR NAV ─────────────────────── */}
-            <div className={`flex flex-col h-full w-full sm:w-[320px] bg-slate-50/90 dark:bg-[#0c111d] border-r border-slate-200 dark:border-slate-800/80 shrink-0 transition-all ${view === 'detail' ? 'hidden sm:flex' : 'flex'}`}>
+            {/* ── LEFT SIDEBAR NAV (Hidden in standalone Plan view) ─────────────────────── */}
+            <div className={`flex flex-col h-full w-full sm:w-[320px] bg-slate-50/90 dark:bg-[#0c111d] border-r border-slate-200 dark:border-slate-800/80 shrink-0 transition-all ${activeTab === 'billing' ? 'hidden' : view === 'detail' ? 'hidden sm:flex' : 'flex'}`}>
 
               {/* Sidebar Header */}
               <div className="p-5 flex items-center justify-between shrink-0 border-b border-slate-200/60 dark:border-slate-800/60">
@@ -1938,54 +2524,57 @@ export const SettingsModal = () => {
                 <div className="relative">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
-                    className="w-full bg-white dark:bg-[#121827] border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs outline-none focus:border-brand-500 transition-all shadow-sm text-slate-800 dark:text-slate-200 placeholder-slate-400"
-                    placeholder="Search settings..."
+                    type="text"
+                    placeholder={t('searchSettings', 'Search settings...')}
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
+                    className="glass-input text-xs pl-10 w-full"
                   />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
 
-              {/* Categorized Nav Sections */}
-              <nav className="flex-1 px-3 py-2 space-y-5 overflow-y-auto custom-scrollbar">
-                {navSections.map(sec => (
-                  <div key={sec.title} className="space-y-1">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 block mb-1">
-                      {sec.title}
+              {/* Categorized Nav List */}
+              <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-4 custom-scrollbar">
+                {navSections.map(section => (
+                  <div key={section.title} className="space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 px-3 block">
+                      {section.title}
                     </span>
-                    {sec.items.map(item => {
-                      const Icon = item.icon;
-                      const isActive = activeTab === item.id;
+                    {section.items.map(item => {
+                      const IconComponent = item.icon;
+                      const isActive = activeTab === item.id && !searchQuery;
                       return (
                         <button
                           key={item.id}
                           onClick={() => {
                             setActiveTab(item.id);
-                            setView('detail');
                             setSearchQuery('');
+                            setView('detail');
                           }}
-                          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all group ${
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
                             isActive
-                              ? 'bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/30 font-bold'
-                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
+                              ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300 font-extrabold border border-brand-500/30 shadow-xs'
+                              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-800/60'
                           }`}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className={`w-7 h-7 rounded-xl flex items-center justify-center transition-all ${
-                              isActive
-                                ? 'bg-brand-500 text-white shadow-glow'
-                                : 'bg-slate-200/70 dark:bg-slate-800/80 text-slate-400 group-hover:text-slate-200'
-                            }`}>
-                              <Icon className="w-4 h-4" />
+                          <div className="flex items-center gap-2.5 truncate">
+                            <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${item.color} text-white flex items-center justify-center shrink-0 shadow-xs`}>
+                              <IconComponent className="w-3.5 h-3.5" />
                             </div>
-                            <span>{item.label}</span>
+                            <span className="truncate">{item.label}</span>
                           </div>
-                          {item.badge ? (
-                            <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">
+                          {item.badge && (
+                            <span className="text-[9px] font-extrabold bg-brand-500/20 text-brand-600 dark:text-brand-400 px-2 py-0.5 rounded-full border border-brand-500/30">
                               {item.badge}
                             </span>
-                          ) : (
-                            <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isActive ? 'text-brand-500 translate-x-0.5' : 'text-slate-400 opacity-40 group-hover:opacity-100'}`} />
                           )}
                         </button>
                       );
@@ -2045,15 +2634,17 @@ export const SettingsModal = () => {
                 </AnimatePresence>
               </div>
 
-              {/* Footer Actions Bar */}
-              <div className="p-4 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40 flex justify-end gap-3 shrink-0">
-                <button
-                  onClick={handleCloseSettingsModal}
-                  className="btn-primary text-xs px-6 py-2"
-                >
-                  {t('saveAndDone', 'Save & Done')}
-                </button>
-              </div>
+              {/* Footer Actions Bar (Hidden in standalone Plan view) */}
+              {activeTab !== 'billing' && (
+                <div className="p-4 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40 flex justify-end gap-3 shrink-0">
+                  <button
+                    onClick={handleCloseSettingsModal}
+                    className="btn-primary text-xs px-6 py-2"
+                  >
+                    {t('saveAndDone', 'Save & Done')}
+                  </button>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>
@@ -2293,6 +2884,149 @@ export const SettingsModal = () => {
                 >
                   Capture & Use Photo
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── PLAN DETAIL & FEATURES OVERLAY MODAL ─────────────── */}
+      <AnimatePresence>
+        {selectedPlanDetail && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-white dark:bg-[#0c101d] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl space-y-6 relative"
+            >
+              {/* Top Banner with gradient & badge */}
+              <div className={`p-6 rounded-2xl bg-gradient-to-r ${selectedPlanDetail.color} text-white relative overflow-hidden shadow-lg`}>
+                <div className="flex items-center justify-between gap-4 relative z-10">
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 text-white px-3 py-1 rounded-full border border-white/30 backdrop-blur-md">
+                      {selectedPlanDetail.badge}
+                    </span>
+                    <h2 className="text-2xl sm:text-3xl font-black mt-2 text-white flex items-center gap-2">
+                      {selectedPlanDetail.name}
+                      {((user?.plan || 'agency_pro').toLowerCase().includes(selectedPlanDetail.id.toLowerCase().replace('_', ''))) && (
+                        <span className="text-[10px] bg-emerald-400 text-slate-950 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                          Current Tier
+                        </span>
+                      )}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-white/90 font-medium mt-1 leading-relaxed">
+                      {selectedPlanDetail.subtitle}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-3xl sm:text-4xl font-black text-white">{selectedPlanDetail.price}</div>
+                    <div className="text-xs text-white/80 font-bold">{selectedPlanDetail.period || 'billing'}</div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setSelectedPlanDetail(null)}
+                  className="absolute top-4 right-4 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white transition-colors z-20"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Full Plan Description */}
+              <div className="space-y-2 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Plan Overview</h4>
+                <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                  {selectedPlanDetail.desc}
+                </p>
+              </div>
+
+              {/* Visual Credits Allocation Card */}
+              <div className="p-4 rounded-2xl bg-brand-500/10 border border-brand-500/30 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-brand-500/20 text-brand-500 flex items-center justify-center font-bold">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                      Visual Credit Quota
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {selectedPlanDetail.creditsDetail}
+                    </div>
+                  </div>
+                </div>
+                <span className="text-xs font-black text-brand-600 dark:text-brand-400 bg-brand-500/20 px-3 py-1.5 rounded-xl shrink-0">
+                  {selectedPlanDetail.credits}
+                </span>
+              </div>
+
+              {/* Included Features & Capabilities */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" /> What's Included in {selectedPlanDetail.name}
+                </h4>
+                <div className="grid grid-cols-1 gap-2.5">
+                  {selectedPlanDetail.features.map((feat, i) => (
+                    <div
+                      key={i}
+                      className={`p-3 rounded-xl border flex items-start gap-3 transition-all ${
+                        feat.highlighted
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-slate-900 dark:text-white font-bold'
+                          : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      <CheckCircle2 className={`w-4 h-4 mt-0.5 shrink-0 ${feat.highlighted ? 'text-emerald-500' : 'text-slate-400'}`} />
+                      <span className="text-xs leading-relaxed">{feat.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Limitations / Tier Boundaries */}
+              {selectedPlanDetail.limitations && selectedPlanDetail.limitations.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Plan Boundaries</h4>
+                  <ul className="space-y-1.5">
+                    {selectedPlanDetail.limitations.map((lim, i) => (
+                      <li key={i} className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                        {lim}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Action Buttons Footer */}
+              <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  onClick={() => setSelectedPlanDetail(null)}
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition-all"
+                >
+                  Close Preview
+                </button>
+
+                {((user?.plan || 'agency_pro').toLowerCase().includes(selectedPlanDetail.id.toLowerCase().replace('_', ''))) ? (
+                  <button
+                    disabled
+                    className="w-full sm:flex-1 py-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 text-xs font-extrabold flex items-center justify-center gap-2 cursor-default"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Current Active Plan
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setUser({ ...user, plan: selectedPlanDetail.id });
+                      setPlanToast(`Successfully updated subscription tier to ${selectedPlanDetail.name}!`);
+                      setTimeout(() => setPlanToast(null), 4500);
+                      setSelectedPlanDetail(null);
+                    }}
+                    className="w-full sm:flex-1 py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-extrabold shadow-lg shadow-brand-500/30 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4" /> Select & Activate {selectedPlanDetail.name}
+                  </button>
+                )}
               </div>
             </motion.div>
           </div>

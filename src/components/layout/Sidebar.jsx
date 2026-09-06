@@ -13,12 +13,16 @@ import {
   FolderKanban, 
   Globe, 
   Settings, 
+  Crown,
+  CreditCard,
+  Sliders,
   X,
   Sun,
   Moon,
   LogOut,
   User,
-  ChevronUp
+  ChevronUp,
+  Lock
 } from 'lucide-react';
 
 export const Sidebar = ({ isMobileMenuOpen: propIsMobile, setIsMobileMenuOpen: propSetIsMobile }) => {
@@ -26,6 +30,8 @@ export const Sidebar = ({ isMobileMenuOpen: propIsMobile, setIsMobileMenuOpen: p
     activeModule, 
     setActiveModule, 
     setIsSettingsModalOpen, 
+    activeSettingsTab,
+    setActiveSettingsTab,
     isMobileMenuOpen: contextIsMobile,
     setIsMobileMenuOpen: contextSetIsMobile,
     user,
@@ -69,14 +75,24 @@ export const Sidebar = ({ isMobileMenuOpen: propIsMobile, setIsMobileMenuOpen: p
     { id: 'creative', label: t('creative', '9. Creative Studio'), icon: Palette },
     { id: 'assets', label: t('assets', '10. Asset Library'), icon: FolderKanban },
     { id: 'websiteBuilder', label: t('websiteBuilder', '11. AI Website Builder'), icon: Globe },
-    { id: 'settings', label: t('settings', '12. Settings & Billing'), icon: Settings },
   ];
 
   const handleNavClick = (id) => {
-    setActiveModule(id);
     if (setIsMobileMenuOpen) setIsMobileMenuOpen(false);
     if (id === 'settings') {
+      setActiveModule('settings');
+      if (setActiveSettingsTab) setActiveSettingsTab('account');
       setIsSettingsModalOpen(true);
+    } else if (id === 'plan') {
+      setActiveModule('settings');
+      if (setActiveSettingsTab) setActiveSettingsTab('billing');
+      setIsSettingsModalOpen(true);
+    } else if (id === 'connectors') {
+      setActiveModule('settings');
+      if (setActiveSettingsTab) setActiveSettingsTab('personalization');
+      setIsSettingsModalOpen(true);
+    } else {
+      setActiveModule(id);
     }
   };
 
@@ -125,28 +141,82 @@ export const Sidebar = ({ isMobileMenuOpen: propIsMobile, setIsMobileMenuOpen: p
             {modules.map((m) => {
               const Icon = m.icon;
               const isActive = activeModule === m.id;
+              const userPlanNorm = (user?.plan || 'starter').toLowerCase();
+              const isStarterUser = userPlanNorm === 'starter' || userPlanNorm === 'base' || userPlanNorm === 'free';
+              const isModuleLocked = isStarterUser && ['campaigns', 'approvals', 'websiteBuilder', 'websitebuilder', 'builder'].includes(m.id);
+
               return (
                 <button
                   key={m.id}
                   onClick={() => handleNavClick(m.id)}
-                  className={`w-full relative flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[13px] transition-all duration-200 text-left group ${
+                  className={`w-full relative flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] transition-all duration-200 text-left group ${
                     isActive 
                       ? 'bg-gradient-to-r from-brand-500/15 via-brand-500/10 to-blue-500/10 text-brand-600 dark:text-brand-400 font-semibold shadow-[0_4px_16px_rgba(123,97,255,0.12)] border-0' 
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-brand-500/10 hover:pl-4 font-medium'
                   }`}
                 >
-                  {isActive && (
-                    <span className="absolute left-1 top-2 bottom-2 w-1 rounded-full bg-gradient-to-b from-cyan-400 via-brand-500 to-indigo-600 shadow-[0_0_10px_var(--brand-glow,#7B61FF)]" />
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    {isActive && (
+                      <span className="absolute left-1 top-2 bottom-2 w-1 rounded-full bg-gradient-to-b from-cyan-400 via-brand-500 to-indigo-600 shadow-[0_0_10px_var(--brand-glow,#7B61FF)]" />
+                    )}
+                    <Icon className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                      isActive 
+                        ? 'text-brand-600 dark:text-brand-400' 
+                        : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200'
+                    }`} />
+                    <span className="truncate">{m.label}</span>
+                  </div>
+
+                  {isModuleLocked && (
+                    <span className="flex items-center gap-1 text-[9.5px] font-black text-amber-500 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded-md shrink-0 ml-1">
+                      <Lock className="w-2.5 h-2.5 text-amber-500 dark:text-amber-400" />
+                      <span>PRO</span>
+                    </span>
                   )}
-                  <Icon className={`w-4 h-4 flex-shrink-0 transition-colors ${
-                    isActive 
-                      ? 'text-brand-600 dark:text-brand-400' 
-                      : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200'
-                  }`} />
-                  <span className="truncate">{m.label}</span>
                 </button>
               );
             })}
+
+            {/* Horizontal Theme-Accent Squircle Quick Buttons: PLAN, SETTINGS */}
+            <div className="pt-3 pb-2 px-6 flex items-center justify-around gap-4">
+              {/* PLAN */}
+              <button
+                key="plan_btn"
+                onClick={() => handleNavClick('plan')}
+                className="flex flex-col items-center group cursor-pointer flex-1"
+                title={t('plan', 'Subscription & Billing Plan')}
+              >
+                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200 shadow-2xs ${
+                  activeModule === 'settings' && activeSettingsTab === 'billing'
+                    ? 'bg-brand-500 text-white shadow-md shadow-brand-500/30'
+                    : 'bg-brand-500/15 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 group-hover:bg-brand-500/30 group-hover:scale-105'
+                }`}>
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <span className="text-[9.5px] font-black uppercase tracking-wider text-brand-600 dark:text-brand-400 mt-1.5 group-hover:text-brand-500 transition-colors">
+                  PLAN
+                </span>
+              </button>
+
+              {/* SETTINGS */}
+              <button
+                key="settings_btn"
+                onClick={() => handleNavClick('settings')}
+                className="flex flex-col items-center group cursor-pointer flex-1"
+                title={t('settings', 'Account Settings')}
+              >
+                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200 shadow-2xs ${
+                  activeModule === 'settings' && activeSettingsTab === 'account'
+                    ? 'bg-brand-500 text-white shadow-md shadow-brand-500/30'
+                    : 'bg-brand-500/15 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 group-hover:bg-brand-500/30 group-hover:scale-105'
+                }`}>
+                  <Sliders className="w-5 h-5" />
+                </div>
+                <span className="text-[9.5px] font-black uppercase tracking-wider text-brand-600 dark:text-brand-400 mt-1.5 group-hover:text-brand-500 transition-colors">
+                  SETTINGS
+                </span>
+              </button>
+            </div>
           </nav>
 
           {/* Bottom Sidebar Container: User Profile Card */}

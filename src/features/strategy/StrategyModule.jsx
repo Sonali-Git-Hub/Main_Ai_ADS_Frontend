@@ -9,7 +9,7 @@ import {
   MousePointerClick, Edit3, Sparkles, PieChart, Calendar, DollarSign,
   Megaphone, BookOpen, Clock, ChevronRight, Star, Lightbulb, Rocket,
   Hash, Video, FileText, MessageSquare, Filter, Play, Award, BarChart2,
-  ArrowUpRight, Flame, X
+  ArrowUpRight, Flame, X, RefreshCw
 } from 'lucide-react';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -130,6 +130,7 @@ export const StrategyModule = () => {
   const [editingField,  setEditingField]  = useState(null);
   const [activeTab,     setActiveTab]     = useState(() => sessionStorage.getItem('strategyActiveTab') || 'overview'); // overview | plan | campaigns
   const [showSaveToast, setShowSaveToast] = useState(false);
+  const [showRegenToast, setShowRegenToast] = useState(false);
   const [isSavedState,  setIsSavedState]  = useState(false);
 
   useEffect(() => {
@@ -339,7 +340,8 @@ export const StrategyModule = () => {
       }
       if (setGeneratedStrategy) setGeneratedStrategy(strategy);
       setGeneratedDoc(true);
-      setActiveTab('plan');
+      setShowRegenToast(true);
+      setTimeout(() => setShowRegenToast(false), 4000);
     } catch (err) {
       console.log('Strategy generation error:', err.message);
     } finally {
@@ -531,6 +533,31 @@ export const StrategyModule = () => {
         </div>
       )}
 
+      {/* ── REGENERATE SUCCESS FLOATING NOTIFICATION ── */}
+      {showRegenToast && (
+        <div className="fixed top-20 right-6 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-slate-900/95 dark:bg-slate-900/95 backdrop-blur-xl border border-brand-500/40 text-white p-3.5 px-4 rounded-2xl shadow-2xl shadow-brand-500/20 flex items-center gap-3 max-w-sm">
+            <div className="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-400 border border-brand-500/30 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4.5 h-4.5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-xs font-bold text-white flex items-center justify-between">
+                <span>Strategy Regenerated!</span>
+                <button
+                  onClick={() => setShowRegenToast(false)}
+                  className="text-slate-400 hover:text-white transition-colors ml-2 p-0.5"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </h4>
+              <p className="text-[11px] text-slate-300 mt-0.5 leading-snug">
+                Deep Brand DNA analysis complete for <strong className="text-brand-300">{activeWorkspace.brandName}</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ══════════ HEADER ══════════ */}
       <div className="relative overflow-hidden p-6 rounded-3xl border border-slate-200 dark:border-slate-800 glass-card">
         {/* Decorative background orbs */}
@@ -592,7 +619,27 @@ export const StrategyModule = () => {
             )}
           </div>
 
-          {/* Right: Actions (Removed as requested) */}
+          {/* Right: Regenerate Strategy Action Button */}
+          <div className="flex items-center gap-3 self-stretch md:self-auto justify-end">
+            <button
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              className="group relative px-5 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-purple-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs tracking-wider uppercase shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:pointer-events-none"
+              title={`Perform a deep AI Brand DNA re-analysis for ${activeWorkspace.brandName}`}
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <span>Re-Analyzing Brand DNA...</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 text-white transition-transform group-hover:rotate-180 duration-500" />
+                  <span>Regenerate Strategy</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 

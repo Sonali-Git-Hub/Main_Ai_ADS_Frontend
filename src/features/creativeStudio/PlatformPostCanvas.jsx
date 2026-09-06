@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Sparkles, Loader2, Copy, Heart, MessageSquare, Share2, Bookmark, MoreHorizontal, Download, CheckCircle2, FolderPlus, ArrowRight } from "lucide-react";
 import { useWorkspace } from "../../context/WorkspaceContext";
+import { downloadImageToDevice } from "../../utils/downloadHelper";
 
 const VisualControls = ({ visualStyle, setVisualStyle, generating, onGenerate }) => (
   <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
@@ -599,6 +600,19 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
               </div>
               <div className="aspect-square relative bg-slate-900 overflow-hidden">
                 <img src={slide.imageUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80"} alt={"Slide "+(activeSlide+1)} className="w-full h-full object-cover opacity-70" />
+                
+                {/* Brand Logo Overlay Badge */}
+                <div className="absolute top-3 left-3 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/25 shadow-lg">
+                  {workspace?.logoUrl || workspace?.faviconUrl ? (
+                    <img src={workspace.logoUrl || workspace.faviconUrl} alt={brand} className="w-5 h-5 rounded-full object-cover border border-white/30" />
+                  ) : (
+                    <div className="w-5 h-5 rounded-full bg-brand-500 text-white font-black text-[9px] flex items-center justify-center">
+                      {brand.substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-[10px] font-black tracking-wider text-white uppercase">{brand}</span>
+                </div>
+
                 <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-sm text-white text-[9px] font-black">{activeSlide+1} / {carouselSlides.length}</div>
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-5 space-y-2">
                   <span className="text-[8px] font-black uppercase tracking-widest text-white/50">{platform.toUpperCase()} SLIDE {slide.slide}</span>
@@ -706,6 +720,19 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
             <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-2xl bg-white dark:bg-slate-900 font-sans">
               <div className="aspect-video relative overflow-hidden">
                 <img src={visualUrl} alt={topic} className="w-full h-full object-cover" />
+                
+                {/* Brand Logo Overlay Badge */}
+                <div className="absolute top-4 left-4 z-10 flex items-center gap-2.5 px-3.5 py-2 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/25 shadow-xl">
+                  {workspace?.logoUrl || workspace?.faviconUrl ? (
+                    <img src={workspace.logoUrl || workspace.faviconUrl} alt={brand} className="w-6 h-6 rounded-full object-cover border border-white/30" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-brand-500 text-white font-black text-[10px] flex items-center justify-center">
+                      {brand.substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-xs font-black tracking-wider text-white uppercase">{brand}</span>
+                </div>
+
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 to-transparent flex items-end p-6">
                   <div className="space-y-1">
                     <span className="text-[9px] font-black uppercase tracking-widest text-brand-400">SEO Blog Article</span>
@@ -756,18 +783,13 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
   const handleDownloadImage = async () => {
     setDownloading(true);
     try {
-      const response = await fetch(visualUrl);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = `${brand.replace(/\s+/g, "_")}_visual_${Date.now()}.jpg`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch {
-      window.open(visualUrl, "_blank");
+      const fileName = `${brand.replace(/\s+/g, "_")}_visual_${Date.now()}.jpg`;
+      await downloadImageToDevice(visualUrl, fileName, {
+        brandName: brand,
+        logoUrl: workspace?.logoUrl || workspace?.faviconUrl
+      });
+    } catch (e) {
+      console.error("Download error:", e);
     } finally {
       setDownloading(false);
     }
@@ -842,6 +864,19 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
         {/* High-Res Image Display */}
         <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-video max-h-[520px] bg-slate-950 shadow-inner group flex items-center justify-center">
           <img src={visualUrl} alt={topic} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          
+          {/* Brand Logo Overlay Badge (Top Left Corner) */}
+          <div className="absolute top-4 left-4 z-10 flex items-center gap-2.5 px-3.5 py-2 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/25 shadow-xl">
+            {workspace?.logoUrl || workspace?.faviconUrl ? (
+              <img src={workspace.logoUrl || workspace.faviconUrl} alt={brand} className="w-6 h-6 rounded-full object-cover border border-white/30" />
+            ) : (
+              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-brand-500 to-indigo-600 flex items-center justify-center text-white font-black text-[10px] shadow-sm">
+                {brand.substring(0, 2).toUpperCase()}
+              </div>
+            )}
+            <span className="text-xs font-black tracking-wider text-white uppercase">{brand}</span>
+          </div>
+
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/50 to-transparent flex flex-col sm:flex-row justify-between sm:items-end gap-2">
             <div className="space-y-0.5">
               <p className="text-white font-extrabold text-xs sm:text-sm line-clamp-1">"{hook}"</p>

@@ -2179,7 +2179,24 @@ export const WorkspaceProvider = ({ children }) => {
   const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
   const [isAISAAssistantOpen, setIsAISAAssistantOpen] = useState(false);
 
+  const getWorkspaceLimit = (plan) => {
+    const p = (plan || 'starter').toLowerCase();
+    if (p === 'starter' || p === 'base' || p === 'free') return 3;
+    if (p === 'pro' || p === 'growth' || p === 'professional') return 10;
+    return 9999;
+  };
+
   const openScraperModal = (mode = 'NEW_BRAND') => {
+    if (mode === 'NEW_BRAND') {
+      const limit = getWorkspaceLimit(user?.plan);
+      if (workspaces.length >= limit) {
+        setActiveModule('settings');
+        if (setActiveSettingsTab) setActiveSettingsTab('billing');
+        setIsSettingsModalOpen(true);
+        alert(`Workspace Limit Reached! Your active plan (${user?.plan || 'Starter'}) allows a maximum of ${limit} Brand DNA Workspaces. Please upgrade your plan to add more brand workspaces.`);
+        return;
+      }
+    }
     setScraperMode(mode);
     setIsScraperOpen(true);
   };
@@ -2245,6 +2262,14 @@ export const WorkspaceProvider = ({ children }) => {
   };
 
   const addWorkspace = async (newWs) => {
+    const limit = getWorkspaceLimit(user?.plan);
+    if (workspaces.length >= limit) {
+      setActiveModule('settings');
+      if (setActiveSettingsTab) setActiveSettingsTab('billing');
+      setIsSettingsModalOpen(true);
+      alert(`Workspace Limit Reached! Your active plan (${user?.plan || 'Starter'}) permits a maximum of ${limit} Brand DNA Workspaces. Please upgrade your plan to add more brand workspaces.`);
+      return null;
+    }
     try {
       const email = user?.email || localStorage.getItem('aisa_user_email') || '';
       const payload = { ...newWs, userEmail: email };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
+import { downloadImageToDevice } from '../../utils/downloadHelper';
 import {
   FolderKanban, Search, Download, ExternalLink, Image as ImageIcon,
   FileText, Layers, Check, ArrowUpRight, Sparkles, Film, BookOpen,
@@ -75,27 +76,9 @@ const triggerDirectDeviceDownload = async (asset) => {
   const cleanName = (asset.name || 'asset').replace(/[^a-z0-9_\- ]/gi, '_').slice(0, 60);
 
   if (asset.url) {
-    if (asset.url.startsWith('data:')) {
-      const a = document.createElement('a');
-      a.href = asset.url;
-      a.download = `${cleanName}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      return true;
-    }
-
-    const apiBase = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
-    const proxyUrl = `${apiBase}/content/download-asset?url=${encodeURIComponent(asset.url)}&filename=${encodeURIComponent(cleanName)}`;
-
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = proxyUrl;
-    document.body.appendChild(iframe);
-    setTimeout(() => {
-      if (document.body.contains(iframe)) document.body.removeChild(iframe);
-    }, 15000);
-    return true;
+    return await downloadImageToDevice(asset.url, `${cleanName}.jpg`, {
+      brandName: asset.metadata?.brand || asset.brand
+    });
   }
 
   const textContent = asset.content || asset.name || '';

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
+import { downloadImageToDevice } from '../../utils/downloadHelper';
 import {
   Palette, Sparkles, ShieldAlert, Image as ImageIcon, CheckCircle2,
   ArrowLeft, ArrowUpRight, Film, Layers, BookOpen, Wand2, Download,
@@ -156,14 +157,27 @@ const VisualStudio = ({ workspace, credits, deductVisualCredits, setIsCreditModa
             <MetaStamp topic={result.topic || topic} type={result.style || style} date={result.createdAt} />
             <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-video bg-slate-950 flex items-center justify-center">
               <img src={result.imageUrl} alt={result.prompt} className="w-full h-full object-cover" />
+              
+              {/* Brand Logo Overlay Badge */}
+              <div className="absolute top-3 left-3 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/25 shadow-lg">
+                {workspace?.logoUrl || workspace?.faviconUrl ? (
+                  <img src={workspace.logoUrl || workspace.faviconUrl} alt={workspace?.brandName} className="w-5 h-5 rounded-full object-cover border border-white/30" />
+                ) : (
+                  <div className="w-5 h-5 rounded-full bg-brand-500 text-white font-black text-[9px] flex items-center justify-center">
+                    {(workspace?.brandName || 'Brand').substring(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <span className="text-[10px] font-black tracking-wider text-white uppercase">{workspace?.brandName || 'Brand'}</span>
+              </div>
+
               <div className="absolute bottom-3 left-3 right-3 p-3 rounded-xl bg-slate-950/80 backdrop-blur-md border border-slate-800 text-xs text-slate-200 flex justify-between items-center">
                 <span className="truncate max-w-sm font-medium">"{result.prompt}"</span>
                 <span className="text-[10px] bg-brand-500/20 text-brand-300 font-bold px-2 py-0.5 rounded-full flex-shrink-0 ml-2">{result.style}</span>
               </div>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => window.open(result.imageUrl, '_blank')}
-                className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5">
+              <button onClick={() => downloadImageToDevice(result.imageUrl, `${topic || 'creative'}_visual_${Date.now()}.jpg`, { brandName: workspace?.brandName, logoUrl: workspace?.logoUrl || workspace?.faviconUrl })}
+                className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer">
                 <Download className="w-3.5 h-3.5" /> Download
               </button>
               <button onClick={() => navigator.clipboard.writeText(result.imageUrl)}

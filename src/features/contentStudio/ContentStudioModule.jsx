@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { contentAPI } from '../../services/api';
 import { resolveBrandVisualAsset } from '../../services/brandVisualResolver';
+import { downloadImageToDevice } from '../../utils/downloadHelper';
 import {
   PenTool, ShieldCheck, ShieldAlert, Sparkles, Send, FileText, Share2,
   Globe, Mail, CheckCircle2, RefreshCw, Loader2, AlertCircle, Layers,
@@ -663,18 +664,12 @@ export const ContentStudioModule = () => {
 
   const handleDownloadImage = async (url, filename = 'social-creative.jpg') => {
     try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
+      await downloadImageToDevice(url, filename, {
+        brandName: activeWorkspace?.brandName,
+        logoUrl: activeWorkspace?.logoUrl || activeWorkspace?.faviconUrl
+      });
     } catch (e) {
-      window.open(url, '_blank');
+      console.error('Download error:', e);
     }
   };
 

@@ -64,11 +64,17 @@ export const CalendarModule = () => {
 
   // Derived active days count from date span
   const activeDaysCount = (() => {
-    if (!campaignConfig.startDate || !campaignConfig.endDate) return 30;
-    const start = new Date(campaignConfig.startDate);
-    const end = new Date(campaignConfig.endDate);
-    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return 30;
-    return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1);
+    const startStr = campaignConfig.startDate || currentCampaign?.startDate;
+    const endStr = campaignConfig.endDate || currentCampaign?.endDate;
+    if (!startStr || !endStr) return 30;
+    const sParts = startStr.split('T')[0].split('-').map(Number);
+    const eParts = endStr.split('T')[0].split('-').map(Number);
+    if (sParts.length !== 3 || eParts.length !== 3) return 30;
+    const startUtc = Date.UTC(sParts[0], sParts[1] - 1, sParts[2]);
+    const endUtc = Date.UTC(eParts[0], eParts[1] - 1, eParts[2]);
+    if (isNaN(startUtc) || isNaN(endUtc) || startUtc > endUtc) return 30;
+    const diffDays = Math.round((endUtc - startUtc) / (1000 * 60 * 60 * 24)) + 1;
+    return Math.max(1, diffDays);
   })();
 
   // Calendar UI states
@@ -280,14 +286,31 @@ export const CalendarModule = () => {
   };
 
   // Derived counts for Stats
-  const wsTrackerMap = (generatedPostsTracker && generatedPostsTracker[workspaceId]) || {};
-  const trackerGeneratedKeys = Object.keys(wsTrackerMap);
-  const totalCount = campaignPosts.length > 0 ? campaignPosts.length : (strategyPlan.length || activeDaysCount || 10);
-  const dbGeneratedCount = campaignPosts.filter(p => ['Generated', 'Approved', 'Scheduled', 'Published'].includes(p.status)).length;
-  const generatedCount = Math.max(dbGeneratedCount, trackerGeneratedKeys.length);
-  const scheduledCount = campaignPosts.filter(p => p.status === 'Scheduled').length;
+  const startStr = campaignConfig.startDate || currentCampaign?.startDate;
+  const endStr = campaignConfig.endDate || currentCampaign?.endDate;
+  const cleanStart = startStr ? startStr.split('T')[0] : '';
+  const cleanEnd = endStr ? endStr.split('T')[0] : '';
+
+  const hasGeneratedCampaign = campaignPosts && campaignPosts.length > 0;
+
+  const activePosts = hasGeneratedCampaign
+    ? campaignPosts.filter((p, idx) => {
+        if (!cleanStart || !cleanEnd) return idx < activeDaysCount;
+        if (!p.date) return idx < activeDaysCount;
+        const pDateStr = p.date.split('T')[0];
+        return pDateStr >= cleanStart && pDateStr <= cleanEnd;
+      })
+    : [];
+
+  const totalCount = hasGeneratedCampaign && activePosts.length > 0 ? activePosts.length : activeDaysCount;
+  const generatedCount = hasGeneratedCampaign
+    ? activePosts.filter(p => ['Generated', 'Approved', 'Scheduled', 'Published'].includes(p.status)).length
+    : 0;
+  const scheduledCount = hasGeneratedCampaign
+    ? activePosts.filter(p => p.status === 'Scheduled').length
+    : 0;
   const remainingCount = Math.max(0, totalCount - generatedCount);
-  const progressPercent = totalCount > 0 ? Math.min(100, Math.round((generatedCount / totalCount) * 100)) : 0;
+  const progressPercent = hasGeneratedCampaign && totalCount > 0 ? Math.min(100, Math.round((generatedCount / totalCount) * 100)) : 0;
 
   // Date helper
   const isSameDay = (date1, date2) => {
