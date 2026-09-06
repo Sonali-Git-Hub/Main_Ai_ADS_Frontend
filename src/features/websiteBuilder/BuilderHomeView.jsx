@@ -25,10 +25,13 @@ export const BuilderHomeView = ({
 }) => {
   const [isListening, setIsListening] = useState(false);
 
+  const { showCustomAlert } = useWorkspace();
   const handleVoiceCommand = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Voice input is not supported in this browser. Please use Chrome or Edge.");
+      if (showCustomAlert) {
+        showCustomAlert({ title: 'Voice Input Unsupported', message: 'Voice input is not supported in this browser. Please use Chrome or Edge.', type: 'info' });
+      }
       return;
     }
 

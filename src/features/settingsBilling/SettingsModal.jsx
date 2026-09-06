@@ -518,6 +518,7 @@ export const SettingsModal = () => {
     user,
     setUser,
     logout,
+    showCustomAlert,
     credits,
     setIsCreditModalOpen,
     notifications,
@@ -632,7 +633,7 @@ export const SettingsModal = () => {
       }
     } catch (err) {
       console.error("Camera access error:", err);
-      alert("Unable to access camera. Please verify camera permissions in your browser.");
+      showCustomAlert({ title: 'Camera Access Error', message: 'Unable to access camera. Please verify camera permissions in your browser.', type: 'error' });
       setIsCameraOpen(false);
     }
   };
@@ -663,7 +664,7 @@ export const SettingsModal = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
-      alert('File size exceeds 10MB limit. Please choose a smaller image.');
+      showCustomAlert({ title: 'File Too Large', message: 'File size exceeds 10MB limit. Please choose a smaller image.', type: 'warning' });
       return;
     }
     const reader = new FileReader();

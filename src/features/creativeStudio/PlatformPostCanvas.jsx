@@ -193,6 +193,7 @@ const renderFormattedArticle = (rawText = '') => {
 };
 
 export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deductVisualCredits, setIsCreditModalOpen }) => {
+  const { showToast } = useWorkspace();
   const unwrapped = unwrapAndCleanContent(generatedContent);
   const rawType     = (unwrapped?.type     || unwrapped?.postType || generatedContent?.type || generatedContent?.postType || "SOCIAL").toUpperCase();
   const [platform, setPlatform] = useState((unwrapped?.platform || generatedContent?.platform || "instagram").toLowerCase());
@@ -755,7 +756,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(`# ${blogTitle}\n\n${blogContent}`);
-                      alert('Blog article copied to clipboard!');
+                      if (showToast) showToast('Blog article copied to clipboard!', 'success');
                     }}
                     className="py-2 px-4 rounded-xl btn-secondary text-xs font-bold flex items-center gap-1.5"
                   >
@@ -936,7 +937,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
             onClick={() => {
               const fullText = `HOOK:\n${hook}\n\nSTORYTELLING:\n${story}\n\nSHORT CAPTION:\n${shortCap}\n\nLONG CAPTION:\n${longCap}\n\nCTA:\n${cta}\n\nHASHTAGS:\n${hashtags}`;
               navigator.clipboard.writeText(fullText);
-              alert("All post content copied to clipboard!");
+              if (showToast) showToast('All post content copied to clipboard!', 'success');
             }}
             className="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all"
           >

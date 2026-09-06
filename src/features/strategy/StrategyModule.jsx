@@ -103,6 +103,7 @@ export const StrategyModule = () => {
     calendarEvents,
     setGeneratedStrategy,
     setStudioTarget,
+    showCustomAlert,
     setGeneratedContent,
     t
   } = useWorkspace();
@@ -389,7 +390,7 @@ export const StrategyModule = () => {
   // ─── Generate Calendar Events ─────────────────────────────────────────────
   const handleGenerateCalendar = () => {
     if (!thirtyDayPlan || thirtyDayPlan.length === 0) {
-      alert("No Plan generated yet.");
+      showCustomAlert({ title: 'No Strategy Generated', message: 'Please generate a brand strategy plan first before scheduling calendar entries.', type: 'warning' });
       return;
     }
     setScheduleDays(String(Math.min(30, thirtyDayPlan.length)));

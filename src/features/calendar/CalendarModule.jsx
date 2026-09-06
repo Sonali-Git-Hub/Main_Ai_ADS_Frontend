@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 export const CalendarModule = () => {
-  const { activeWorkspace, setActiveModule, calendarEvents, setStudioTarget, setGeneratedContent, generatedStrategy, generatedPostsTracker, setSelectedAssetContext, t } = useWorkspace();
+  const { activeWorkspace, setActiveModule, calendarEvents, setStudioTarget, setGeneratedContent, generatedStrategy, generatedPostsTracker, setSelectedAssetContext, showCustomAlert, showToast, t } = useWorkspace();
   const workspaceId = activeWorkspace?._id || activeWorkspace?.id || 'ws_001';
 
   // Read 30-day strategy plan from workspace or context
@@ -170,7 +170,7 @@ export const CalendarModule = () => {
       }
     } catch (err) {
       console.error("Failed to generate post:", err);
-      alert(err.message || "Failed to generate post copy");
+      showCustomAlert({ title: 'Post Generation Failed', message: err.message || 'Failed to generate post copy', type: 'error' });
     } finally {
       setActionLoading(false);
     }
@@ -187,7 +187,7 @@ export const CalendarModule = () => {
       }
     } catch (err) {
       console.error("Failed to update post status:", err);
-      alert(err.message || "Failed to update status");
+      showCustomAlert({ title: 'Update Failed', message: err.message || 'Failed to update status', type: 'error' });
     } finally {
       setActionLoading(false);
     }
@@ -217,7 +217,7 @@ export const CalendarModule = () => {
       }
     } catch (err) {
       console.error("Failed to save post:", err);
-      alert(err.message || "Failed to save post");
+      showCustomAlert({ title: 'Save Failed', message: err.message || 'Failed to save post', type: 'error' });
     } finally {
       setIsSavingPost(false);
     }
@@ -226,15 +226,15 @@ export const CalendarModule = () => {
   // Generate / Create Calendar Campaign
   const handleCreateCampaign = async () => {
     if (!campaignConfig.startDate || !campaignConfig.endDate) {
-      alert("Please select Campaign Start and End dates.");
+      showCustomAlert({ title: 'Campaign Setup Required', message: 'Please select Campaign Start and End dates.', type: 'warning' });
       return;
     }
     if (new Date(campaignConfig.startDate) > new Date(campaignConfig.endDate)) {
-      alert("Start Date cannot be greater than End Date.");
+      showCustomAlert({ title: 'Invalid Date Range', message: 'Start Date cannot be greater than End Date.', type: 'warning' });
       return;
     }
     if (!campaignConfig.campaignName) {
-      alert("Please enter a Campaign Name.");
+      showCustomAlert({ title: 'Campaign Name Required', message: 'Please enter a Campaign Name.', type: 'warning' });
       return;
     }
 
@@ -279,7 +279,7 @@ export const CalendarModule = () => {
       }
     } catch (err) {
       console.error("Failed to generate campaign calendar:", err);
-      alert(err.message || "Failed to generate campaign");
+      showCustomAlert({ title: 'Campaign Generation Failed', message: err.message || 'Failed to generate campaign', type: 'error' });
     } finally {
       setIsCampaignLoading(false);
     }

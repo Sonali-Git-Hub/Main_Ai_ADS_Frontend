@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 export const ContentStudioModule = () => {
-  const { activeWorkspace, setActiveModule, setApprovalsQueue, studioTarget, setStudioTarget, setGeneratedContent, markPostAsGenerated, t } = useWorkspace();
+  const { activeWorkspace, setActiveModule, setApprovalsQueue, studioTarget, setStudioTarget, setGeneratedContent, markPostAsGenerated, showToast, showCustomAlert, t } = useWorkspace();
   const [activeSubPage, setActiveSubPage] = useState(null); // null = Main Hub, 'BLOG', 'SOCIAL', 'EMAIL', 'NEWSPAPER'
   const [tab, setTab] = useState('BLOG'); // BLOG, SOCIAL, EMAIL, AD_COPY
 
@@ -970,7 +970,7 @@ export const ContentStudioModule = () => {
                         onClick={() => {
                           const text = `# ${blogDraft.title}\n\n${blogDraft.content}`;
                           navigator.clipboard.writeText(text);
-                          alert('Article copied to clipboard!');
+                          if (showToast) showToast('Article copied to clipboard!', 'success');
                         }}
                         className="btn-secondary text-xs py-1 px-2.5 flex items-center gap-1 text-slate-600 dark:text-slate-300"
                       >
@@ -1221,7 +1221,7 @@ export const ContentStudioModule = () => {
                           onClick={() => {
                             const fullText = `HOOK:\n${socialResult.hook || ''}\n\nSTORYTELLING:\n${socialResult.storytelling || ''}\n\nCAPTION:\n${socialResult.shortCaption || socialResult.longCaption || socialResult.caption || ''}\n\nCTA:\n${socialResult.cta || socialResult.callToAction || ''}\n\nHASHTAGS:\n${(socialResult.hashtags || []).join(' ')}`;
                             navigator.clipboard.writeText(fullText);
-                            alert('All content copy copied to clipboard!');
+                            if (showToast) showToast('All content copy copied to clipboard!', 'success');
                           }}
                           className="py-1 px-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shadow-sm"
                         >
@@ -1839,7 +1839,7 @@ export const ContentStudioModule = () => {
                         onClick={() => {
                           const fullEmailText = `Subject: ${emailResult.subject}\nPreheader: ${emailResult.preheader}\n\n${emailResult.body}`;
                           navigator.clipboard.writeText(fullEmailText);
-                          alert('Email copy copied to clipboard!');
+                          if (showToast) showToast('Email copy copied to clipboard!', 'success');
                         }}
                         className="btn-secondary text-xs py-1 px-2.5 flex items-center gap-1 text-slate-600 dark:text-slate-300"
                       >

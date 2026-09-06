@@ -28,10 +28,23 @@ import { Login } from './features/auth/Login';
 import { AdminDashboardModule } from './features/admin/AdminDashboard';
 import { AdminLayout } from './components/layout/AdminLayout';
 
+import { CustomPopupModal } from './components/modals/CustomPopupModal';
+import { CustomToastContainer } from './components/modals/CustomToastContainer';
+
 import { PlanGate } from './components/layout/PlanGate';
 
 const MainContent = () => {
-  const { activeModule, isAISAAssistantOpen, setIsAISAAssistantOpen, user, loginUser } = useWorkspace();
+  const {
+    activeModule,
+    isAISAAssistantOpen,
+    setIsAISAAssistantOpen,
+    user,
+    loginUser,
+    customAlert,
+    closeCustomAlert,
+    toast,
+    closeToast
+  } = useWorkspace();
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -164,6 +177,8 @@ const MainContent = () => {
       <ScraperOverlayModal />
       <AISAAssistantDrawer />
       <SettingsModal />
+      <CustomPopupModal alertState={customAlert} onClose={closeCustomAlert} />
+      <CustomToastContainer toastState={toast} onClose={closeToast} />
 
       {/* Floating AISA Assistant Toggle Button (Hidden when drawer is open) */}
       {!isAISAAssistantOpen && (

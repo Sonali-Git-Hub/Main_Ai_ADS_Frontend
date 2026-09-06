@@ -2186,14 +2186,68 @@ export const WorkspaceProvider = ({ children }) => {
     return 9999;
   };
 
+  // Custom Popup Alert Modal & Toast System State
+  const [customAlert, setCustomAlert] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'warning',
+    confirmText: 'OK',
+    cancelText: null,
+    onConfirm: null,
+    onCancel: null
+  });
+
+  const [toast, setToast] = useState({
+    isVisible: false,
+    text: '',
+    type: 'success'
+  });
+
+  const showCustomAlert = ({ title, message, type = 'warning', confirmText = 'OK', cancelText = null, onConfirm = null, onCancel = null }) => {
+    setCustomAlert({
+      isOpen: true,
+      title,
+      message,
+      type,
+      confirmText,
+      cancelText,
+      onConfirm,
+      onCancel
+    });
+  };
+
+  const closeCustomAlert = () => {
+    setCustomAlert(prev => ({ ...prev, isOpen: false }));
+  };
+
+  const showToast = (text, type = 'success') => {
+    setToast({ isVisible: true, text, type });
+    setTimeout(() => {
+      setToast(prev => ({ ...prev, isVisible: false }));
+    }, 3000);
+  };
+
+  const closeToast = () => {
+    setToast(prev => ({ ...prev, isVisible: false }));
+  };
+
   const openScraperModal = (mode = 'NEW_BRAND') => {
     if (mode === 'NEW_BRAND') {
       const limit = getWorkspaceLimit(user?.plan);
       if (workspaces.length >= limit) {
-        setActiveModule('settings');
-        if (setActiveSettingsTab) setActiveSettingsTab('billing');
-        setIsSettingsModalOpen(true);
-        alert(`Workspace Limit Reached! Your active plan (${user?.plan || 'Starter'}) allows a maximum of ${limit} Brand DNA Workspaces. Please upgrade your plan to add more brand workspaces.`);
+        showCustomAlert({
+          title: 'Workspace Limit Reached!',
+          message: `Your active plan (${user?.plan || 'Starter'}) allows a maximum of ${limit} Brand DNA Workspaces. Please upgrade your plan to add more brand workspaces.`,
+          type: 'warning',
+          confirmText: 'Upgrade Plan Now',
+          cancelText: 'Cancel',
+          onConfirm: () => {
+            setActiveModule('settings');
+            if (setActiveSettingsTab) setActiveSettingsTab('billing');
+            setIsSettingsModalOpen(true);
+          }
+        });
         return;
       }
     }
@@ -2264,10 +2318,18 @@ export const WorkspaceProvider = ({ children }) => {
   const addWorkspace = async (newWs) => {
     const limit = getWorkspaceLimit(user?.plan);
     if (workspaces.length >= limit) {
-      setActiveModule('settings');
-      if (setActiveSettingsTab) setActiveSettingsTab('billing');
-      setIsSettingsModalOpen(true);
-      alert(`Workspace Limit Reached! Your active plan (${user?.plan || 'Starter'}) permits a maximum of ${limit} Brand DNA Workspaces. Please upgrade your plan to add more brand workspaces.`);
+      showCustomAlert({
+        title: 'Workspace Limit Reached!',
+        message: `Your active plan (${user?.plan || 'Starter'}) permits a maximum of ${limit} Brand DNA Workspaces. Please upgrade your plan to add more brand workspaces.`,
+        type: 'warning',
+        confirmText: 'Upgrade Plan Now',
+        cancelText: 'Cancel',
+        onConfirm: () => {
+          setActiveModule('settings');
+          if (setActiveSettingsTab) setActiveSettingsTab('billing');
+          setIsSettingsModalOpen(true);
+        }
+      });
       return null;
     }
     try {
@@ -2359,7 +2421,14 @@ export const WorkspaceProvider = ({ children }) => {
 
   const deductVisualCredits = (cost = 5, reason = 'AI Visual Synthesis') => {
     if (credits.balance < cost) {
-      alert(`Insufficient visual credits. Current balance: ${credits.balance}, required: ${cost}. Please top up.`);
+      showCustomAlert({
+        title: 'Insufficient Visual Credits',
+        message: `Current balance: ${credits.balance}, required: ${cost} credits. Please top up to generate more visual assets.`,
+        type: 'warning',
+        confirmText: 'Top Up Credits',
+        cancelText: 'Cancel',
+        onConfirm: () => setIsCreditModalOpen(true)
+      });
       return false;
     }
     setCredits(prev => ({
@@ -2524,6 +2593,10 @@ export const WorkspaceProvider = ({ children }) => {
       isAISAAssistantOpen, setIsAISAAssistantOpen,
       notifications, setNotifications,
       userAvatar, setUserAvatar,
+
+      // Custom Alert & Toast System
+      customAlert, showCustomAlert, closeCustomAlert,
+      toast, showToast, closeToast,
 
       // Mobile Navigation Drawer State & Account Settings
       isMobileMenuOpen, setIsMobileMenuOpen,
