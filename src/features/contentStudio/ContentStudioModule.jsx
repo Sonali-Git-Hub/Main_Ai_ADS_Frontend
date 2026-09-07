@@ -8,7 +8,7 @@ import {
   PenTool, ShieldCheck, ShieldAlert, Sparkles, Send, FileText, Share2,
   Globe, Mail, CheckCircle2, RefreshCw, Loader2, AlertCircle, Layers,
   Newspaper, ArrowUpRight, ArrowLeft, Copy, Download, X, Hash,
-  Image as ImageIcon, Palette, ExternalLink, Lock
+  Image as ImageIcon, Palette, ExternalLink, Lock, FolderKanban
 } from 'lucide-react';
 
 export const ContentStudioModule = () => {
@@ -20,6 +20,7 @@ export const ContentStudioModule = () => {
     setStudioTarget,
     setGeneratedContent,
     markPostAsGenerated,
+    addGlobalAsset,
     showToast,
     showCustomAlert,
     t,
@@ -577,6 +578,120 @@ export const ContentStudioModule = () => {
     }
   };
 
+  // ─── Creative Studio & Asset Library Interop Handlers ───────────────────────
+  const handleOpenBlogInCreativeStudio = () => {
+    if (!blogDraft) return;
+    const topic = blogDraft.title || blogTopic || `${activeWorkspace?.brandName || 'Brand'} Article`;
+    const brandName = activeWorkspace?.brandName || 'Brand';
+    const payload = {
+      platform: 'blog',
+      type: 'BLOG',
+      topic: topic,
+      hook: topic,
+      title: topic,
+      caption: (blogDraft.content || '').slice(0, 300),
+      content: blogDraft.content || '',
+      keywords: blogKeywords || '',
+      imagePrompt: `${topic} — ${brandName} premium editorial hero graphic, commercial advertising photography, 8k`,
+      data: {
+        title: topic,
+        content: blogDraft.content,
+        keywords: blogKeywords
+      }
+    };
+    if (setGeneratedContent) setGeneratedContent(payload);
+    setActiveModule('creative');
+    if (window.location.pathname !== '/creative-studio') {
+      window.history.pushState({ module: 'creative' }, '', '/creative-studio');
+    }
+    if (showToast) showToast('Opened article in Creative Studio! Design your hero visuals now.', 'success');
+  };
+
+  const handleSaveBlogToAssets = () => {
+    if (!blogDraft) return;
+    const topic = blogDraft.title || blogTopic || `${activeWorkspace?.brandName || 'Brand'} Article`;
+    if (addGlobalAsset) {
+      addGlobalAsset({
+        name: topic,
+        type: 'BLOG',
+        category: 'BLOG',
+        content: blogDraft.content || '',
+        metadata: {
+          brand: activeWorkspace?.brandName || '',
+          topic: topic,
+          keywords: blogKeywords || '',
+          wordCount: blogDraft.wordCount || blogDraft.content?.split(/\s+/).length || 0
+        }
+      });
+      if (showToast) showToast('Article successfully saved to Asset Library!', 'success');
+    }
+  };
+
+  const handleOpenEmailInCreativeStudio = () => {
+    if (!emailResult) return;
+    const topic = emailResult.subject || emailForm.subject || `${activeWorkspace?.brandName || 'Brand'} Newsletter`;
+    const brandName = activeWorkspace?.brandName || 'Brand';
+    const payload = {
+      platform: 'email',
+      type: 'EMAIL',
+      topic: topic,
+      hook: emailResult.subject || topic,
+      title: topic,
+      caption: emailResult.preheader || (emailResult.body || '').slice(0, 250),
+      content: emailResult.body || '',
+      imagePrompt: `${topic} — ${brandName} email header banner, commercial branding, 8k`,
+      data: emailResult
+    };
+    if (setGeneratedContent) setGeneratedContent(payload);
+    setActiveModule('creative');
+    if (window.location.pathname !== '/creative-studio') {
+      window.history.pushState({ module: 'creative' }, '', '/creative-studio');
+    }
+    if (showToast) showToast('Opened email in Creative Studio! Design your header banner now.', 'success');
+  };
+
+  const handleSaveEmailToAssets = () => {
+    if (!emailResult) return;
+    const topic = emailResult.subject || emailForm.subject || `${activeWorkspace?.brandName || 'Brand'} Email`;
+    if (addGlobalAsset) {
+      addGlobalAsset({
+        name: topic,
+        type: 'EMAIL',
+        category: 'EMAIL',
+        content: emailResult.body || '',
+        metadata: {
+          brand: activeWorkspace?.brandName || '',
+          subject: emailResult.subject || '',
+          preheader: emailResult.preheader || ''
+        }
+      });
+      if (showToast) showToast('Email saved to Asset Library!', 'success');
+    }
+  };
+
+  const handleOpenAdInCreativeStudio = () => {
+    if (!adResult) return;
+    const topic = adTopic || `${activeWorkspace?.brandName || 'Brand'} Ad Campaign`;
+    const headline = adResult.headlines?.[0] || topic;
+    const brandName = activeWorkspace?.brandName || 'Brand';
+    const payload = {
+      platform: adPlatform || 'facebook',
+      type: 'SOCIAL',
+      topic: topic,
+      hook: headline,
+      title: headline,
+      caption: adResult.descriptions?.[0] || adResult.longFormAd || '',
+      content: adResult.longFormAd || '',
+      imagePrompt: `${headline} — ${brandName} advertising creative, high conversion ad visual, 8k`,
+      data: adResult
+    };
+    if (setGeneratedContent) setGeneratedContent(payload);
+    setActiveModule('creative');
+    if (window.location.pathname !== '/creative-studio') {
+      window.history.pushState({ module: 'creative' }, '', '/creative-studio');
+    }
+    if (showToast) showToast('Opened ad copy in Creative Studio! Design your ad visual now.', 'success');
+  };
 
   // ─── Social Post Generation ──────────────────────────────────────────────────
   const handleGenerateSocial = async () => {
@@ -1090,10 +1205,30 @@ export const ContentStudioModule = () => {
                           navigator.clipboard.writeText(text);
                           if (showToast) showToast('Article copied to clipboard!', 'success');
                         }}
-                        className="btn-secondary text-xs py-1 px-2.5 flex items-center gap-1 text-slate-600 dark:text-slate-300"
+                        className="btn-secondary text-xs py-1 px-2.5 flex items-center gap-1 text-slate-600 dark:text-slate-300 cursor-pointer"
+                        title="Copy article text"
                       >
                         <Copy className="w-3.5 h-3.5" /> Copy
                       </button>
+
+                      <button
+                        type="button"
+                        onClick={handleSaveBlogToAssets}
+                        className="btn-secondary text-xs py-1 px-2.5 flex items-center gap-1.5 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-500/40 cursor-pointer"
+                        title="Save to Brand Asset Library"
+                      >
+                        <FolderKanban className="w-3.5 h-3.5 text-indigo-500" /> Save to Vault
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleOpenBlogInCreativeStudio}
+                        className="py-1 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shadow-md shadow-purple-600/20 cursor-pointer hover:scale-[1.02] active:scale-95"
+                        title="Open in Creative Studio to generate cover visuals & graphics"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Creative Studio →
+                      </button>
+
                       {renderSubmitToApprovalsButton(blogDraft)}
                     </div>
                   )}
@@ -1158,6 +1293,30 @@ export const ContentStudioModule = () => {
                         placeholder="Article content..."
                       />
                     )}
+
+                    {/* ── CREATIVE STUDIO VISUAL CALLOUT BANNER ── */}
+                    <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-purple-900/20 via-brand-500/15 to-indigo-900/20 border border-purple-500/30 flex flex-wrap items-center justify-between gap-2.5 shadow-2xs mt-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-brand-600 text-white flex items-center justify-center shadow-md shrink-0">
+                          <Sparkles className="w-4 h-4 text-amber-300" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
+                            Need Visual Covers &amp; Graphics for this Article?
+                          </h4>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                            Design 8K hero graphics, article covers, and social carousels tailored to this blog in Creative Studio.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleOpenBlogInCreativeStudio}
+                        className="py-1.5 px-3.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shadow-md shadow-purple-600/25 cursor-pointer hover:scale-[1.02] active:scale-95 shrink-0"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Design Visuals in Creative Studio →
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="p-8 text-center text-slate-500 space-y-1.5">
@@ -1959,10 +2118,30 @@ export const ContentStudioModule = () => {
                           navigator.clipboard.writeText(fullEmailText);
                           if (showToast) showToast('Email copy copied to clipboard!', 'success');
                         }}
-                        className="btn-secondary text-xs py-1 px-2.5 flex items-center gap-1 text-slate-600 dark:text-slate-300"
+                        className="btn-secondary text-xs py-1 px-2.5 flex items-center gap-1 text-slate-600 dark:text-slate-300 cursor-pointer"
+                        title="Copy email text"
                       >
                         <Copy className="w-3.5 h-3.5" /> Copy Email
                       </button>
+
+                      <button
+                        type="button"
+                        onClick={handleSaveEmailToAssets}
+                        className="btn-secondary text-xs py-1 px-2.5 flex items-center gap-1.5 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer"
+                        title="Save to Brand Asset Library"
+                      >
+                        <FolderKanban className="w-3.5 h-3.5 text-indigo-500" /> Save to Vault
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleOpenEmailInCreativeStudio}
+                        className="py-1 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shadow-md shadow-purple-600/20 cursor-pointer hover:scale-[1.02] active:scale-95"
+                        title="Design Header Banner in Creative Studio"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Creative Studio →
+                      </button>
+
                       {renderSubmitToApprovalsButton(emailResult)}
                     </div>
                   )}
@@ -2101,7 +2280,19 @@ export const ContentStudioModule = () => {
               </div>
 
               <div className="lg:col-span-2 p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-4">
-                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Ad Copy Variations</h2>
+                <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5 gap-2">
+                  <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Ad Copy Variations</h2>
+                  {adResult && (
+                    <button
+                      type="button"
+                      onClick={handleOpenAdInCreativeStudio}
+                      className="py-1 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shadow-md shadow-purple-600/20 cursor-pointer hover:scale-[1.02] active:scale-95"
+                      title="Design Ad Visuals in Creative Studio"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Creative Studio →
+                    </button>
+                  )}
+                </div>
                 {adResult ? (
                   <div className="space-y-4 text-xs">
                     {adResult.headlines?.length > 0 && (
