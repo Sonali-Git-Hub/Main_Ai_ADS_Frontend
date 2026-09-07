@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Sparkles, Loader2, Copy, Heart, MessageSquare, Share2, Bookmark, MoreHorizontal, Download, CheckCircle2, FolderPlus, ArrowRight } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Sparkles, Loader2, Copy, Heart, MessageSquare, Share2, Bookmark, MoreHorizontal, Download, CheckCircle2, FolderPlus, ArrowRight, FolderKanban } from "lucide-react";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { downloadImageToDevice } from "../../utils/downloadHelper";
 
@@ -34,7 +34,7 @@ const ContentPill = ({ label, value, color = "slate" }) => {
   );
 };
 
-const HeaderRow = ({ platform, topic, onSaveAsset, isSaving }) => (
+const HeaderRow = ({ platform, topic, onViewAssetLibrary }) => (
   <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
     <div className="flex items-center gap-3 min-w-0">
       <span className="px-3.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-black uppercase tracking-wider shrink-0">
@@ -45,14 +45,13 @@ const HeaderRow = ({ platform, topic, onSaveAsset, isSaving }) => (
       </span>
     </div>
 
-    {onSaveAsset && (
+    {onViewAssetLibrary && (
       <button
-        onClick={onSaveAsset}
-        disabled={isSaving}
-        className="py-2 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60 shrink-0"
+        onClick={onViewAssetLibrary}
+        className="py-2 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer shrink-0"
       >
-        {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FolderPlus className="w-3.5 h-3.5" />}
-        {isSaving ? "Saving..." : "Save to Asset Library"}
+        <FolderKanban className="w-3.5 h-3.5" />
+        <span>View Asset Library</span>
       </button>
     )}
   </div>
@@ -193,7 +192,7 @@ const renderFormattedArticle = (rawText = '') => {
 };
 
 export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deductVisualCredits, setIsCreditModalOpen }) => {
-  const { showToast } = useWorkspace();
+  const { showToast, addGlobalAsset, setActiveModule } = useWorkspace();
   const unwrapped = unwrapAndCleanContent(generatedContent);
   const rawType     = (unwrapped?.type     || unwrapped?.postType || generatedContent?.type || generatedContent?.postType || "SOCIAL").toUpperCase();
   const [platform, setPlatform] = useState((unwrapped?.platform || generatedContent?.platform || "instagram").toLowerCase());
@@ -511,22 +510,29 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
   const isBlog      = rawType==="BLOG"      || platform==="blog"      || platform==="seo";
   const formatLabel = isCarousel?"Carousel":isEmail?"Email Template":isBlog?"SEO Blog Article":"Single Image Post";
 
-  // ─── Save Asset to Library & Redirect ─────────────────────────────────────
-  const [isSavingAsset, setIsSavingAsset] = useState(false);
-  const { addGlobalAsset, setActiveModule } = useWorkspace();
+  // ─── Auto-Save to Asset Library & Navigation ──────────────────────────────
+  const autoSavedRef = useRef(new Set());
 
-  const handleSaveToAssetLibrary = () => {
-    setIsSavingAsset(true);
+  // Function to navigate to Asset Library
+  const handleViewAssetLibrary = () => {
+    setActiveModule('assets');
+    if (window.location.pathname !== '/asset-library') {
+      window.history.pushState({ module: 'assets' }, '', '/asset-library');
+    }
+  };
+
+  // Helper to compile asset payload
+  const compileAssetPayload = () => {
     let assetType = 'DOCUMENT';
     let assetName = topic || 'Brand Asset';
-    let assetUrl = visualUrl || '';
+    let assetUrl = visualUrl || defaultVisual || '';
     let assetContent = '';
 
     if (isBlog) {
       assetType = 'BLOG';
       assetName = generatedContent?.title || hook || topic || 'SEO Blog Article';
       assetContent = generatedContent?.content || longCap || caption || '';
-      assetUrl = visualUrl;
+      assetUrl = visualUrl || defaultVisual || '';
     } else if (isEmail) {
       assetType = 'EMAIL';
       assetName = `Email: ${generatedContent?.subject || hook || topic}`;
@@ -540,12 +546,12 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
     } else {
       // Social / Visual Post
       assetType = 'SOCIAL';
-      assetName = `${platform.toUpperCase()} Post: ${topic || hook}`;
-      assetUrl = visualUrl;
+      assetName = `${platform ? platform.toUpperCase() : 'SOCIAL'} Post: ${topic || hook}`;
+      assetUrl = visualUrl || defaultVisual || '';
       assetContent = `${hook}\n\n${caption}\n\n${cta}\n${hashtags}`;
     }
 
-    addGlobalAsset({
+    return {
       name: assetName,
       type: assetType,
       url: assetUrl,
@@ -556,18 +562,29 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
         platform,
         formatLabel,
         topic,
-        brand
+        brand,
+        autoSaved: true
       }
-    });
-
-    setTimeout(() => {
-      setIsSavingAsset(false);
-      setActiveModule('assets');
-      if (window.location.pathname !== '/asset-library') {
-        window.history.pushState({ module: 'assets' }, '', '/asset-library');
-      }
-    }, 300);
+    };
   };
+
+  // Automatically save any content that reaches Creative Studio into Asset Library
+  useEffect(() => {
+    if (!generatedContent && !contentData) return;
+    if (!topic && !hook && !generatedContent?.title && !generatedContent?.subject) return;
+
+    const contentKey = `${topic}_${hook}_${generatedContent?.title || generatedContent?.subject || ''}_${platform}_${isBlog ? 'blog' : isEmail ? 'email' : isCarousel ? 'carousel' : 'social'}`;
+    
+    if (autoSavedRef.current.has(contentKey)) return;
+    autoSavedRef.current.add(contentKey);
+
+    const assetPayload = compileAssetPayload();
+    addGlobalAsset(assetPayload);
+
+    if (showToast) {
+      showToast('Asset automatically saved to Asset Library!', 'success');
+    }
+  }, [generatedContent, topic, hook, platform, isBlog, isEmail, isCarousel, visualUrl]);
 
   // ── A. CAROUSEL ──
   if (isCarousel) {
@@ -575,7 +592,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
     const isLast = activeSlide===carouselSlides.length-1;
     return (
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
-        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
+        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onViewAssetLibrary={handleViewAssetLibrary} />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4 space-y-4">
             <VisualControls visualStyle={visualStyle} setVisualStyle={setVisualStyle} generating={generating} onGenerate={handleGenerateVisual} />
@@ -646,7 +663,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
     const domain       = (workspace?.domainUrl||"").replace(/https?:\/\//,"") || "brand.com";
     return (
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
-        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
+        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onViewAssetLibrary={handleViewAssetLibrary} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="space-y-4">
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
@@ -689,7 +706,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
 
     return (
       <div className="p-6 rounded-3xl glass-card border border-slate-200 dark:border-slate-800 space-y-6">
-        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onSaveAsset={handleSaveToAssetLibrary} isSaving={isSavingAsset} />
+        <HeaderRow platform={platform} topic={topic} formatLabel={formatLabel} onViewAssetLibrary={handleViewAssetLibrary} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="space-y-4">
             <VisualControls visualStyle={visualStyle} setVisualStyle={setVisualStyle} generating={generating} onGenerate={handleGenerateVisual} />
@@ -763,11 +780,10 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
                     <Copy className="w-3.5 h-3.5" /> Copy Full Article
                   </button>
                   <button
-                    onClick={handleSaveToAssetLibrary}
-                    disabled={isSavingAsset}
+                    onClick={handleViewAssetLibrary}
                     className="py-2.5 px-5 rounded-xl btn-primary font-bold text-xs flex items-center gap-1.5 shadow-md"
                   >
-                    <FolderPlus className="w-3.5 h-3.5" /> Save Blog to Assets
+                    <FolderKanban className="w-3.5 h-3.5" /> View Asset Library
                   </button>
                 </div>
               </div>
@@ -822,8 +838,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
       <HeaderRow 
         platform={platform} 
         topic={topic} 
-        onSaveAsset={handleSaveToAssetLibrary} 
-        isSaving={isSavingAsset} 
+        onViewAssetLibrary={handleViewAssetLibrary} 
       />
 
       {/* ── 1. PROMINENT HERO IMAGE SHOWCASE (TOP) ── */}
@@ -833,24 +848,9 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             <h3 className="text-xs font-black uppercase text-slate-800 dark:text-white tracking-wider">AI Visual Asset Showcase</h3>
-            <span className="text-[10px] font-extrabold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-3 py-0.5 rounded-full border border-brand-500/20">
-              {visualStyle}
-            </span>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <select 
-              value={visualStyle} 
-              onChange={(e) => setVisualStyle(e.target.value)} 
-              className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none"
-            >
-              <option>Glassmorphic Modern 3D</option>
-              <option>Minimalist Corporate Tech</option>
-              <option>Cyberpunk Neon Gradients</option>
-              <option>Photorealistic B2B Studio</option>
-              <option>Bold Editorial Fashion</option>
-            </select>
-
             <button 
               onClick={handleGenerateVisual} 
               disabled={generating} 
@@ -907,12 +907,11 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
           </button>
 
           <button
-            onClick={handleSaveToAssetLibrary}
-            disabled={isSavingAsset}
-            className="py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+            onClick={handleViewAssetLibrary}
+            className="py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
-            {isSavingAsset ? <Loader2 className="w-4 h-4 animate-spin" /> : <FolderPlus className="w-4 h-4" />}
-            {isSavingAsset ? "Saving..." : "Save to Library"}
+            <FolderKanban className="w-4 h-4" />
+            <span>View Asset Library</span>
           </button>
         </div>
       </div>

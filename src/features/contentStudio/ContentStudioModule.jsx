@@ -7,11 +7,28 @@ import {
   PenTool, ShieldCheck, ShieldAlert, Sparkles, Send, FileText, Share2,
   Globe, Mail, CheckCircle2, RefreshCw, Loader2, AlertCircle, Layers,
   Newspaper, ArrowUpRight, ArrowLeft, Copy, Download, X, Hash,
-  Image as ImageIcon, Palette, ExternalLink
+  Image as ImageIcon, Palette, ExternalLink, Lock
 } from 'lucide-react';
 
 export const ContentStudioModule = () => {
-  const { activeWorkspace, setActiveModule, setApprovalsQueue, studioTarget, setStudioTarget, setGeneratedContent, markPostAsGenerated, showToast, showCustomAlert, t } = useWorkspace();
+  const {
+    activeWorkspace,
+    setActiveModule,
+    setApprovalsQueue,
+    studioTarget,
+    setStudioTarget,
+    setGeneratedContent,
+    markPostAsGenerated,
+    showToast,
+    showCustomAlert,
+    t,
+    user,
+    setIsSettingsModalOpen,
+    setActiveSettingsTab
+  } = useWorkspace();
+
+  const userPlanNorm = (user?.plan || 'starter').toLowerCase();
+  const isStarter = userPlanNorm === 'starter' || userPlanNorm === 'base' || userPlanNorm === 'free';
   const [activeSubPage, setActiveSubPage] = useState(null); // null = Main Hub, 'BLOG', 'SOCIAL', 'EMAIL', 'NEWSPAPER'
   const [tab, setTab] = useState('BLOG'); // BLOG, SOCIAL, EMAIL, AD_COPY
 
@@ -814,7 +831,59 @@ export const ContentStudioModule = () => {
     }
   };
 
+  const handleLockedApprovalsClick = () => {
+    if (showCustomAlert) {
+      showCustomAlert({
+        title: 'Approvals Desk is Locked',
+        message: 'The Approvals Desk & Governance Review Queue requires the Pro or higher subscription plan. Upgrade now to unlock approval workflows and team collaboration.',
+        type: 'warning',
+        confirmText: 'Upgrade to Pro',
+        cancelText: 'Cancel',
+        onConfirm: () => {
+          if (setActiveSettingsTab) setActiveSettingsTab('billing');
+          if (setIsSettingsModalOpen) setIsSettingsModalOpen(true);
+          else setActiveModule('settings');
+        }
+      });
+    } else if (showToast) {
+      showToast('Approvals Desk is locked on Starter plan. Upgrade to Pro to unlock.', 'warning');
+    }
+  };
+
+  const renderSubmitToApprovalsButton = (item, customClass = '') => {
+    if (isStarter) {
+      return (
+        <button
+          type="button"
+          onClick={handleLockedApprovalsClick}
+          className={`py-1 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700 text-xs font-bold flex items-center gap-1.5 shadow-xs hover:border-amber-500/60 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-500/5 transition-all cursor-pointer group ${customClass}`}
+          title="Locked on Starter Plan — Upgrade to Pro to unlock Approvals Desk"
+        >
+          <Lock className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
+          <span>Submit to Approvals</span>
+          <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+            PRO
+          </span>
+        </button>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        onClick={() => submitToApprovals(item)}
+        className={`btn-primary text-xs py-1 px-3 flex items-center gap-1 shadow-sm ${customClass}`}
+      >
+        <Send className="w-3.5 h-3.5" /> Submit to Approvals
+      </button>
+    );
+  };
+
   const submitToApprovals = (item) => {
+    if (isStarter) {
+      handleLockedApprovalsClick();
+      return;
+    }
     if (!item) return;
     if (setApprovalsQueue) {
       const data = item.data || item;
@@ -1009,9 +1078,7 @@ export const ContentStudioModule = () => {
                       >
                         <Copy className="w-3.5 h-3.5" /> Copy
                       </button>
-                      <button onClick={() => submitToApprovals(blogDraft)} className="btn-primary text-xs py-1 px-3 flex items-center gap-1 shadow-sm">
-                        <Send className="w-3.5 h-3.5" /> Submit to Approvals
-                      </button>
+                      {renderSubmitToApprovalsButton(blogDraft)}
                     </div>
                   )}
                 </div>
@@ -1218,11 +1285,7 @@ export const ContentStudioModule = () => {
                     </div>
                     <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Generated Social Asset</h2>
                   </div>
-                  {socialResult && (
-                    <button onClick={() => submitToApprovals(socialResult)} className="btn-primary text-xs py-1 px-3 flex items-center gap-1 shadow-sm">
-                      <Send className="w-3.5 h-3.5" /> Submit to Approvals
-                    </button>
-                  )}
+                  {socialResult && renderSubmitToApprovalsButton(socialResult)}
                 </div>
 
                 {socialResult ? (
@@ -1338,7 +1401,6 @@ export const ContentStudioModule = () => {
                         <Sparkles className="w-3.5 h-3.5" /> Design Visual in Creative Studio →
                       </button>
                     </div>
-
                     {/* Structured Rectangle Cards Stack (Vertical Layout Compact) */}
                     <div className="flex flex-col space-y-2.5">
 
@@ -1880,9 +1942,7 @@ export const ContentStudioModule = () => {
                       >
                         <Copy className="w-3.5 h-3.5" /> Copy Email
                       </button>
-                      <button onClick={() => submitToApprovals(emailResult)} className="btn-primary text-xs py-1 px-3 flex items-center gap-1 shadow-sm">
-                        <Send className="w-3.5 h-3.5" /> Submit to Approvals
-                      </button>
+                      {renderSubmitToApprovalsButton(emailResult)}
                     </div>
                   )}
                 </div>
