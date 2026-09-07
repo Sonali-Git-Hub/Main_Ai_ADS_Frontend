@@ -1,3 +1,5 @@
+import { getBrandLogoUrl } from './brandLogoHelper';
+
 /**
  * Triggers a file download directly to the user's device.
  * Burns brand logo and brand name watermark badge onto canvas prior to downloading.
@@ -7,6 +9,7 @@ export const downloadImageToDevice = async (imageUrl, defaultFilename = 'ai_ads_
 
   // Extract brand details or fallback from localStorage if available
   let brandName = brandOptions.brandName || brandOptions.brand;
+  let domainUrl = brandOptions.domainUrl || brandOptions.domain;
   let logoUrl = brandOptions.logoUrl || brandOptions.faviconUrl;
 
   if (!brandName) {
@@ -18,12 +21,14 @@ export const downloadImageToDevice = async (imageUrl, defaultFilename = 'ai_ads_
         const activeWs = wsList.find(w => w.id === activeWsId || w._id === activeWsId) || wsList[0];
         if (activeWs) {
           brandName = activeWs.brandName;
+          domainUrl = domainUrl || activeWs.domainUrl;
           logoUrl = logoUrl || activeWs.logoUrl || activeWs.faviconUrl;
         }
       }
     } catch (e) {}
   }
   brandName = brandName || 'Brand';
+  logoUrl = getBrandLogoUrl({ brandName, domainUrl, logoUrl });
 
   // Sanitize filename to ASCII for clean file system & header compliance
   const fileName = (defaultFilename || 'ai_ads_visual.jpg')

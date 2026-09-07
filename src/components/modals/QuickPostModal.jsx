@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
+import { getBrandLogoUrl } from '../../utils/brandLogoHelper';
 import { X, Zap, Sparkles, Copy, Check, Send } from 'lucide-react';
 
 export const QuickPostModal = () => {
@@ -48,7 +49,7 @@ export const QuickPostModal = () => {
   };
 
   const handleGenerate = async () => {
-    if (!topic.trim()) return;
+    if (loading || !topic.trim()) return;
     setLoading(true);
 
     try {
@@ -89,8 +90,13 @@ export const QuickPostModal = () => {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-purple-500 flex items-center justify-center text-white shadow-glow">
-              <Zap className="w-5 h-5 text-amber-300 fill-amber-300" />
+            <div className="w-10 h-10 rounded-2xl bg-white border border-slate-700 flex items-center justify-center p-1 shadow-md shrink-0 overflow-hidden">
+              <img 
+                src={getBrandLogoUrl({ brandName: activeWorkspace?.brandName, domainUrl: activeWorkspace?.domainUrl, logoUrl: activeWorkspace?.logoUrl, faviconUrl: activeWorkspace?.faviconUrl })} 
+                alt={activeWorkspace?.brandName} 
+                className="w-full h-full object-contain"
+                onError={(e) => { e.target.src = `https://www.google.com/s2/favicons?domain=${(activeWorkspace?.brandName || 'google').toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=256`; }}
+              />
             </div>
             <div>
               <h2 className="font-bold text-white text-base">Quick Social Post Generator</h2>

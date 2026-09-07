@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, Loader2, Copy, Heart, MessageSquare, Share2, Bookmark, MoreHorizontal, Download, CheckCircle2, FolderPlus, ArrowRight, FolderKanban } from "lucide-react";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { downloadImageToDevice } from "../../utils/downloadHelper";
+import { getBrandLogoUrl } from "../../utils/brandLogoHelper";
 
 const VisualControls = ({ visualStyle, setVisualStyle, generating, onGenerate }) => (
   <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
@@ -460,6 +461,7 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
       ];
 
   const handleGenerateVisual = async () => {
+    if (generating) return;
     const cost = 5;
     if ((credits?.balance ?? 0) < cost) { setIsCreditModalOpen(true); return; }
     setGenerating(true);
@@ -621,13 +623,12 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
                 
                 {/* Brand Logo Overlay Badge */}
                 <div className="absolute top-3 left-3 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/25 shadow-lg">
-                  {workspace?.logoUrl || workspace?.faviconUrl ? (
-                    <img src={workspace.logoUrl || workspace.faviconUrl} alt={brand} className="w-5 h-5 rounded-full object-cover border border-white/30" />
-                  ) : (
-                    <div className="w-5 h-5 rounded-full bg-brand-500 text-white font-black text-[9px] flex items-center justify-center">
-                      {brand.substring(0, 2).toUpperCase()}
-                    </div>
-                  )}
+                  <img 
+                    src={getBrandLogoUrl({ brandName: brand, domainUrl: workspace?.domainUrl, logoUrl: workspace?.logoUrl, faviconUrl: workspace?.faviconUrl })} 
+                    alt={brand} 
+                    className="w-5 h-5 rounded-full object-cover border border-white/30 bg-white" 
+                    onError={(e) => { e.target.src = `https://www.google.com/s2/favicons?domain=${brand.toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=256`; }}
+                  />
                   <span className="text-[10px] font-black tracking-wider text-white uppercase">{brand}</span>
                 </div>
 
@@ -741,13 +742,12 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
                 
                 {/* Brand Logo Overlay Badge */}
                 <div className="absolute top-4 left-4 z-10 flex items-center gap-2.5 px-3.5 py-2 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/25 shadow-xl">
-                  {workspace?.logoUrl || workspace?.faviconUrl ? (
-                    <img src={workspace.logoUrl || workspace.faviconUrl} alt={brand} className="w-6 h-6 rounded-full object-cover border border-white/30" />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-brand-500 text-white font-black text-[10px] flex items-center justify-center">
-                      {brand.substring(0, 2).toUpperCase()}
-                    </div>
-                  )}
+                  <img 
+                    src={getBrandLogoUrl({ brandName: brand, domainUrl: workspace?.domainUrl, logoUrl: workspace?.logoUrl, faviconUrl: workspace?.faviconUrl })} 
+                    alt={brand} 
+                    className="w-6 h-6 rounded-full object-cover border border-white/30 bg-white" 
+                    onError={(e) => { e.target.src = `https://www.google.com/s2/favicons?domain=${brand.toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=256`; }}
+                  />
                   <span className="text-xs font-black tracking-wider text-white uppercase">{brand}</span>
                 </div>
 
@@ -868,13 +868,12 @@ export const PlatformPostCanvas = ({ workspace, generatedContent, credits, deduc
           
           {/* Brand Logo Overlay Badge (Top Left Corner) */}
           <div className="absolute top-4 left-4 z-10 flex items-center gap-2.5 px-3.5 py-2 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/25 shadow-xl">
-            {workspace?.logoUrl || workspace?.faviconUrl ? (
-              <img src={workspace.logoUrl || workspace.faviconUrl} alt={brand} className="w-6 h-6 rounded-full object-cover border border-white/30" />
-            ) : (
-              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-brand-500 to-indigo-600 flex items-center justify-center text-white font-black text-[10px] shadow-sm">
-                {brand.substring(0, 2).toUpperCase()}
-              </div>
-            )}
+            <img 
+              src={getBrandLogoUrl({ brandName: brand, domainUrl: workspace?.domainUrl, logoUrl: workspace?.logoUrl, faviconUrl: workspace?.faviconUrl })} 
+              alt={brand} 
+              className="w-6 h-6 rounded-full object-cover border border-white/30 bg-white" 
+              onError={(e) => { e.target.src = `https://www.google.com/s2/favicons?domain=${brand.toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=256`; }}
+            />
             <span className="text-xs font-black tracking-wider text-white uppercase">{brand}</span>
           </div>
 

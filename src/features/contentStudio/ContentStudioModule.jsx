@@ -3,6 +3,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { contentAPI } from '../../services/api';
 import { resolveBrandVisualAsset } from '../../services/brandVisualResolver';
 import { downloadImageToDevice } from '../../utils/downloadHelper';
+import { getBrandLogoUrl } from '../../utils/brandLogoHelper';
 import {
   PenTool, ShieldCheck, ShieldAlert, Sparkles, Send, FileText, Share2,
   Globe, Mail, CheckCircle2, RefreshCw, Loader2, AlertCircle, Layers,
@@ -220,9 +221,23 @@ export const ContentStudioModule = () => {
     setAdCopyPrompt(buildAdPrompt(adProduct, adPlatform));
   }, [buildAdPrompt, adProduct, adPlatform]);
 
+  const processedStudioTargetRef = React.useRef(null);
+
   // ─── Direct Redirect & Pre-fill from Calendar / Other Modules ────────────────
   React.useEffect(() => {
     if (studioTarget) {
+      const targetKey = JSON.stringify({
+        topic: studioTarget.topic,
+        platform: studioTarget.platform,
+        autoGenerate: studioTarget.autoGenerate,
+        date: studioTarget.calendarDate || studioTarget.calendarDay || studioTarget.title
+      });
+
+      if (processedStudioTargetRef.current === targetKey) {
+        return;
+      }
+      processedStudioTargetRef.current = targetKey;
+
       const key = studioTarget.calendarDate || studioTarget.calendarDay || studioTarget.topic || studioTarget.title;
       if (key && markPostAsGenerated) {
         markPostAsGenerated(key, studioTarget);
@@ -565,6 +580,7 @@ export const ContentStudioModule = () => {
 
   // ─── Social Post Generation ──────────────────────────────────────────────────
   const handleGenerateSocial = async () => {
+    if (draftingSocial) return;
     setDraftingSocial(true);
     try {
       const res = await contentAPI.generateSocialPost({
@@ -1293,8 +1309,13 @@ export const ContentStudioModule = () => {
                     {/* Header */}
                     <div className="flex flex-wrap items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 gap-2">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center font-black text-brand-600 dark:text-brand-400 text-xs uppercase shrink-0">
-                          {activeWorkspace?.brandName ? activeWorkspace.brandName.substring(0, 3).toUpperCase() : 'AI'}
+                        <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden shrink-0 shadow-sm p-0.5">
+                          <img 
+                            src={getBrandLogoUrl({ brandName: activeWorkspace?.brandName, domainUrl: activeWorkspace?.domainUrl, logoUrl: activeWorkspace?.logoUrl, faviconUrl: activeWorkspace?.faviconUrl })} 
+                            alt={activeWorkspace?.brandName} 
+                            className="w-full h-full object-contain"
+                            onError={(e) => { e.target.src = `https://www.google.com/s2/favicons?domain=${(activeWorkspace?.brandName || 'google').toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=256`; }}
+                          />
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">

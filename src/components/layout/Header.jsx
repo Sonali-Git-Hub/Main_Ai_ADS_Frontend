@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
+import { getBrandLogoUrl } from '../../utils/brandLogoHelper';
 import { 
   Building2, 
   ShieldCheck, 
@@ -105,12 +106,13 @@ export const Header = () => {
             onClick={() => setShowWorkspaceMenu(!showWorkspaceMenu)}
             className="flex items-center gap-1.5 sm:gap-2.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800 shadow-xs hover:shadow-md transition-all text-left max-w-full"
           >
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs p-0.5 sm:p-1">
-              {activeWorkspace?.logoUrl || activeWorkspace?.faviconUrl ? (
-                <img src={activeWorkspace.logoUrl || activeWorkspace.faviconUrl} alt={activeWorkspace.brandName} className="w-full h-full object-contain" />
-              ) : (
-                <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-500" />
-              )}
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs p-0.5 sm:p-1 border border-slate-200 dark:border-slate-700">
+              <img 
+                src={getBrandLogoUrl({ brandName: activeWorkspace?.brandName, domainUrl: activeWorkspace?.domainUrl, logoUrl: activeWorkspace?.logoUrl, faviconUrl: activeWorkspace?.faviconUrl })} 
+                alt={activeWorkspace?.brandName} 
+                className="w-full h-full object-contain"
+                onError={(e) => { e.target.src = `https://www.google.com/s2/favicons?domain=${(activeWorkspace?.brandName || 'google').toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=256`; }} 
+              />
             </div>
             <div className="min-w-0">
               <span className="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-slate-100 block truncate max-w-[75px] min-[380px]:max-w-[100px] min-[440px]:max-w-[140px] sm:max-w-[180px] md:max-w-[220px]">
@@ -137,11 +139,12 @@ export const Header = () => {
                     className={`w-full px-3 py-2 flex items-center justify-between group/ws text-sm text-left hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors ${isActive ? 'text-brand-400 font-medium bg-brand-500/10' : 'text-slate-700 dark:text-slate-300'}`}
                   >
                     <div className="flex items-center gap-2.5 truncate">
-                      {ws.logoUrl || ws.faviconUrl ? (
-                        <img src={ws.logoUrl || ws.faviconUrl} alt={ws.brandName} className="w-5 h-5 rounded-lg object-contain bg-white shrink-0 border border-slate-200 dark:border-slate-700" />
-                      ) : (
-                        <Building2 className="w-4 h-4 text-brand-400 shrink-0" />
-                      )}
+                      <img 
+                        src={getBrandLogoUrl({ brandName: ws.brandName, domainUrl: ws.domainUrl, logoUrl: ws.logoUrl, faviconUrl: ws.faviconUrl })} 
+                        alt={ws.brandName} 
+                        className="w-5 h-5 rounded-lg object-contain bg-white shrink-0 border border-slate-200 dark:border-slate-700"
+                        onError={(e) => { e.target.src = `https://www.google.com/s2/favicons?domain=${(ws.brandName || 'google').toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=256`; }}
+                      />
                       <span className="truncate">{ws.brandName}</span>
                     </div>
                     <button
