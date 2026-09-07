@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { analyticsAPI, campaignAPI } from '../../services/api';
 
 import {
   Search, PenTool, CheckCircle2, ArrowUpRight, TrendingUp,
-  Layers, Zap, Repeat, Loader2, RefreshCw, AlertCircle, Rocket, Dna, FolderKanban
+  Layers, Zap, Repeat, Loader2, RefreshCw, AlertCircle, Rocket, Dna, FolderKanban, Sparkles, Globe, Lock
 } from 'lucide-react';
 
 export const DashboardModule = () => {
-  const { activeWorkspace, setActiveModule, setIsQuickPostOpen, setIsScraperOpen, openScraperModal, workspaces = [], globalAssets = [], user, t } = useWorkspace();
+  const {
+    activeWorkspace,
+    setActiveModule,
+    setIsQuickPostOpen,
+    setIsScraperOpen,
+    openScraperModal,
+    workspaces = [],
+    globalAssets = [],
+    user,
+    t,
+    showCustomAlert,
+    setIsSettingsModalOpen,
+    setActiveSettingsTab
+  } = useWorkspace();
   const [analytics, setAnalytics] = useState(null);
   const [campaignsList, setCampaignsList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,6 +30,69 @@ export const DashboardModule = () => {
   const workspaceId = activeWorkspace?._id || activeWorkspace?.id;
 
   const userEmail = user?.email || localStorage.getItem('aisa_user_email') || activeWorkspace?.userEmail || '';
+
+  const displayName = (() => {
+    try {
+      const savedName = localStorage.getItem('aisa_user_name');
+      if (savedName && savedName.trim()) return savedName.trim();
+      const savedUser = localStorage.getItem('aisa_user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed.name && parsed.name.trim()) return parsed.name.trim();
+        if (parsed.fullName && parsed.fullName.trim()) return parsed.fullName.trim();
+      }
+    } catch(e) {}
+    if (user?.name && user.name.trim()) return user.name.trim();
+    if (user?.fullName && user.fullName.trim()) return user.fullName.trim();
+    if (user?.email) {
+      const prefix = user.email.split('@')[0];
+      return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+    }
+    return 'Creator';
+  })();
+
+  const timeGreeting = (() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  })();
+
+  const userPlanNorm = (user?.plan || 'starter').toLowerCase();
+  const isStarter = userPlanNorm === 'starter' || userPlanNorm === 'base' || userPlanNorm === 'free';
+
+  const handleWebsiteBuilderClick = () => {
+    if (isStarter) {
+      if (showCustomAlert) {
+        showCustomAlert({
+          title: 'AI Website Builder is Locked',
+          message: 'AI Website Builder requires the Pro or higher subscription plan. Upgrade now to generate, customize, and deploy AI websites.',
+          type: 'warning',
+          confirmText: 'Upgrade to Pro',
+          cancelText: 'Cancel',
+          onConfirm: () => {
+            setActiveModule('settings');
+            if (setActiveSettingsTab) setActiveSettingsTab('billing');
+            if (setIsSettingsModalOpen) setIsSettingsModalOpen(true);
+          }
+        });
+      } else {
+        setActiveModule('websiteBuilder');
+      }
+      return;
+    }
+    setActiveModule('websiteBuilder');
+    if (window.location.pathname !== '/website-builder') {
+      window.history.pushState({ module: 'websiteBuilder' }, '', '/website-builder');
+    }
+  };
+
+  const handleAssetLibraryClick = () => {
+    setActiveModule('assets');
+    if (window.location.pathname !== '/asset-library') {
+      window.history.pushState({ module: 'assets' }, '', '/asset-library');
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -107,56 +184,101 @@ export const DashboardModule = () => {
 
   return (
     <div className="space-y-4 animate-in fade-in w-full max-w-[1600px] mx-auto px-1 sm:px-4 pt-1 pb-6">
-      {/* Banner */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-brand-50/80 via-white to-purple-50/80 dark:from-brand-900/50 dark:via-slate-900 dark:to-purple-950/50 shadow-[0_10px_30px_-5px_rgba(0,0,0,0.03)] dark:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.3)] relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-        <div className="relative z-10 space-y-1">
+      {/* ── LUXURY ANIMATED WELCOME BANNER ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 16, scale: 0.99 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+        className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-brand-500/10 via-purple-500/10 to-indigo-500/10 dark:from-brand-950/40 dark:via-purple-950/30 dark:to-slate-900/60 border border-brand-500/25 dark:border-brand-500/30 shadow-[0_12px_40px_-10px_rgba(123,97,255,0.12)] relative overflow-hidden backdrop-blur-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+      >
+        {/* Animated ambient glowing orb in background */}
+        <motion.div
+          animate={{
+            scale: [1, 1.25, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          className="absolute -top-12 -right-12 w-64 h-64 bg-gradient-to-br from-brand-500/20 via-purple-500/20 to-pink-500/20 rounded-full blur-3xl pointer-events-none"
+        />
+
+        <div className="relative z-10 space-y-2 max-w-2xl">
+          {/* Top Status Badge */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[10px] sm:text-xs uppercase font-extrabold tracking-widest text-brand-600 dark:text-brand-400 bg-brand-500/10 dark:bg-brand-500/20 px-2.5 py-0.5 rounded-full">{t('canonicalOps', 'Canonical Operations')}</span>
-            <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{t('opsFlow', 'Brand → Strategy → SEO → Create → Approve → Publish')}</span>
+            <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs uppercase font-black tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 px-3 py-0.5 rounded-full shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+              <span>AI Growth Engine Active</span>
+            </span>
           </div>
-          <h1 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">{t('opsHubTitle', 'AI ADS™ Operations Hub')}</h1>
-          <p className="text-xs text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
-            {t('currentlyGoverning', 'Currently governing')} <strong className="text-slate-900 dark:text-white">{activeWorkspace?.brandName || 'your brand'}</strong> ({activeWorkspace?.domainUrl || 'website'}). {t('anchoredToDna', 'All output is anchored to immutable Brand DNA.')}
+
+          {/* Animated Greeting with User's Name */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <span>{timeGreeting},</span>
+              <span className="bg-gradient-to-r from-brand-600 via-purple-600 to-indigo-600 dark:from-brand-400 dark:via-purple-400 dark:to-cyan-400 bg-clip-text text-transparent drop-shadow-xs">
+                {displayName}
+              </span>
+              <motion.span
+                animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }}
+                transition={{ repeat: Infinity, repeatDelay: 2, duration: 1.8 }}
+                className="inline-block origin-bottom-right"
+              >
+                👋
+              </motion.span>
+            </h1>
+          </div>
+
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            {t('currentlyGoverning', 'Currently governing')} <strong className="text-slate-900 dark:text-white font-bold">{activeWorkspace?.brandName || 'your brand'}</strong> ({activeWorkspace?.domainUrl || 'website'}). {t('anchoredToDna', 'All campaign outputs & visuals are anchored to your immutable Brand DNA.')}
           </p>
         </div>
 
-        <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full md:w-auto relative z-10">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto relative z-10 shrink-0">
           <button
             onClick={() => openScraperModal ? openScraperModal() : setIsScraperOpen(true)}
-            className="btn-secondary text-xs flex-1 md:flex-none flex items-center justify-center gap-1.5 py-2.5 px-3 cursor-pointer"
+            className="btn-secondary text-xs flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl font-bold shadow-xs hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer transition-all hover:scale-[1.02]"
           >
-            <Dna className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+            <Dna className="w-3.5 h-3.5 text-brand-500" />
             <span className="truncate">{t('brandDna', 'Enter Your Brand')}</span>
           </button>
+          
           <button
             onClick={() => setIsQuickPostOpen(true)}
-            className="btn-secondary text-xs flex-1 md:flex-none flex items-center justify-center gap-1.5 py-2.5 px-3"
+            className="btn-primary text-xs flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl font-bold shadow-md shadow-brand-500/20 cursor-pointer transition-all hover:scale-[1.02]"
           >
-            <Zap className="w-4 h-4 text-amber-500" />
+            <Zap className="w-3.5 h-3.5 text-amber-300" />
             <span className="truncate">{t('quickPost', 'Quick Post')}</span>
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {stats.map((s, idx) => {
           const Icon = s.icon;
           return (
-            <div
+            <motion.div
               key={idx}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.1 + idx * 0.08, ease: 'easeOut' }}
               onClick={() => s.moduleId && setActiveModule(s.moduleId)}
-              className={`p-4 sm:p-5 rounded-2xl ${s.bg} flex items-center justify-between cursor-pointer transition-all hover:-translate-y-0.5 group`}
+              className={`p-4 sm:p-5 rounded-2xl ${s.bg} flex items-center justify-between cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg group border border-slate-200/60 dark:border-slate-800/80`}
             >
-              <div>
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{s.label}</span>
-                <div className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white my-0.5">{s.value}</div>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{s.sub}</span>
+              <div className="space-y-1">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">{s.label}</span>
+                <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight block">
+                  {typeof s.value === 'number' ? s.value.toLocaleString() : s.value}
+                </span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block">{s.sub}</span>
               </div>
               <div className={`p-2.5 sm:p-3 rounded-2xl ${s.iconBg} ${s.color} group-hover:scale-110 transition-transform shadow-2xs`}>
                 <Icon className="w-5 h-5" />
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -167,26 +289,57 @@ export const DashboardModule = () => {
           <Layers className="w-4 h-4 text-brand-500" /> {t('endToEndPipeline', 'End-to-End Content Pipeline')}
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
           {[
             { id: 'brands', label: t('dnaStepTitle', '1. Brand DNA'), sub: t('dnaStepSub', 'Positioning & Claims'), icon: Dna, color: 'text-brand-600 dark:text-brand-400', bg: 'bg-brand-500/10' },
             { id: 'seo', label: t('seoStepTitle', '2. SEO Briefs'), sub: t('seoStepSub', 'Topic Clusters & Intent'), icon: Search, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-500/10' },
-            { id: 'studio', label: t('studioStepTitle', '3. Editorial Studio'), sub: t('studioStepSub', 'Multi-Channel Generation'), icon: PenTool, color: 'text-brand-600 dark:text-brand-400', bg: 'bg-brand-500/10' },
+            { id: 'studio', label: t('studioStepTitle', '3. Editorial Studio'), sub: t('studioStepSub', 'Multi-Channel Generation'), icon: PenTool, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500/10' },
+            { id: 'assets', label: t('assetsStepTitle', '4. Asset Library'), sub: t('assetsStepSub', 'Saved Media & Vault'), icon: FolderKanban, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-500/10' },
+            { id: 'websiteBuilder', label: t('websiteBuilderStepTitle', '5. Website Builder'), sub: t('websiteBuilderStepSub', 'AI Pages & Sites'), icon: Globe, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10', isLocked: isStarter },
           ].map((step) => {
             const Icon = step.icon;
             return (
               <button
                 key={step.id}
-                onClick={() => setActiveModule(step.id)}
-                className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 shadow-2xs hover:shadow-md transition-all text-left group flex flex-col justify-between"
+                onClick={() => {
+                  if (step.id === 'websiteBuilder' && isStarter) {
+                    handleWebsiteBuilderClick();
+                    return;
+                  }
+                  if (step.id === 'assets') {
+                    handleAssetLibraryClick();
+                    return;
+                  }
+                  setActiveModule(step.id);
+                  const pathMap = {
+                    brands: '/brand-dna',
+                    seo: '/seo-briefs',
+                    studio: '/content-studio',
+                    assets: '/asset-library',
+                    websiteBuilder: '/website-builder',
+                  };
+                  if (pathMap[step.id]) {
+                    window.history.pushState({ module: step.id }, '', pathMap[step.id]);
+                  }
+                }}
+                className={`p-3.5 sm:p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 shadow-2xs hover:shadow-md transition-all text-left group flex flex-col justify-between relative cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700 ${
+                  step.isLocked ? 'hover:border-amber-500/40' : ''
+                }`}
               >
                 <div>
-                  <div className={`w-8 h-8 rounded-xl ${step.bg} ${step.color} flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
-                    <Icon className="w-4 h-4" />
+                  <div className="flex items-center justify-between mb-2">
+                    <div className={`w-8 h-8 rounded-xl ${step.bg} ${step.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    {step.isLocked && (
+                      <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded-md shadow-2xs">
+                        <Lock className="w-2.5 h-2.5" /> PRO
+                      </span>
+                    )}
                   </div>
                   <span className="text-xs font-bold text-slate-900 dark:text-white block leading-tight">{step.label}</span>
                 </div>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">{step.sub}</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-2 block">{step.sub}</span>
               </button>
             );
           })}
