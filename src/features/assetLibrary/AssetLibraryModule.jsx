@@ -219,7 +219,17 @@ const AssetDetailDrawer = ({ asset, onClose, onDelete }) => {
 
 // ━━━ Main Asset Library Module ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 export const AssetLibraryModule = () => {
-  const { activeWorkspace, t, globalAssets = [], removeGlobalAsset, selectedAssetContext, setSelectedAssetContext, setActiveModule, studioTarget } = useWorkspace();
+  const { 
+    activeWorkspace, 
+    t, 
+    globalAssets = [], 
+    activeBrandAssets, 
+    removeGlobalAsset, 
+    selectedAssetContext, 
+    setSelectedAssetContext, 
+    setActiveModule, 
+    studioTarget 
+  } = useWorkspace();
   const [activeSection, setActiveSection] = useState(() => {
     return studioTarget?.assetTab || studioTarget?.targetTab || 'ALL';
   });
@@ -238,12 +248,18 @@ export const AssetLibraryModule = () => {
   }, [studioTarget]);
 
   const currentWsId = activeWorkspace?._id || activeWorkspace?.id;
-  const currentBrand = activeWorkspace?.brandName;
+  const currentBrand = (activeWorkspace?.brandName || '').trim().toLowerCase();
 
-  const assets = globalAssets.filter(a => {
-    if (!a.workspaceId && !a.metadata?.brand) return true;
-    return a.workspaceId === currentWsId || a.metadata?.brand === currentBrand;
-  });
+  const assets = activeBrandAssets !== undefined
+    ? activeBrandAssets
+    : (globalAssets || []).filter(a => {
+        const aWs = a.workspaceId || a.workspace?._id || a.workspace;
+        const aBrand = (a.metadata?.brand || a.brandName || a.brand || '').trim().toLowerCase();
+        if (currentWsId && aWs && String(aWs) === String(currentWsId)) return true;
+        if (currentBrand && aBrand && aBrand === currentBrand) return true;
+        if (!aWs && !aBrand) return true;
+        return false;
+      });
 
   const isSameDayAsset = (assetDate, calDate) => {
     if (!assetDate || !calDate) return false;

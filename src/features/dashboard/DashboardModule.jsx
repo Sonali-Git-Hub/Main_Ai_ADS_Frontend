@@ -17,6 +17,7 @@ export const DashboardModule = () => {
     openScraperModal,
     workspaces = [],
     globalAssets = [],
+    activeBrandAssets,
     user,
     t,
     showCustomAlert,
@@ -128,10 +129,22 @@ export const DashboardModule = () => {
     ? workspaces.length 
     : (analytics?.brands?.total || 1);
 
-  // Real generated content count saved in DB & Asset Library (excludes planned calendar slots)
-  const totalGeneratedAssetsCount = analytics?.posts?.total !== undefined 
-    ? analytics.posts.total 
-    : (globalAssets?.length || 0);
+  // Real generated content count strictly for the active brand's Asset Library
+  const currentWsId = activeWorkspace?._id || activeWorkspace?.id || workspaceId;
+  const currentBrand = (activeWorkspace?.brandName || '').trim().toLowerCase();
+
+  const brandAssetsList = activeBrandAssets !== undefined
+    ? activeBrandAssets
+    : (globalAssets || []).filter(a => {
+        const aWs = a.workspaceId || a.workspace?._id || a.workspace;
+        const aBrand = (a.metadata?.brand || a.brandName || a.brand || '').trim().toLowerCase();
+        if (currentWsId && aWs && String(aWs) === String(currentWsId)) return true;
+        if (currentBrand && aBrand && aBrand === currentBrand) return true;
+        if (!aWs && !aBrand) return true;
+        return false;
+      });
+
+  const totalGeneratedAssetsCount = brandAssetsList.length;
 
   // Total Campaigns strictly for this active brand
   const brandRegex = activeWorkspace?.brandName ? new RegExp(activeWorkspace.brandName.trim(), 'i') : null;
@@ -163,7 +176,7 @@ export const DashboardModule = () => {
     {
       label: 'Total Generated Content',
       value: totalGeneratedAssetsCount,
-      sub: `Saved in Asset Library & DB (excl. calendar)`,
+      sub: `Saved in ${activeWorkspace?.brandName || 'Brand'} Asset Library`,
       icon: FolderKanban,
       color: 'text-indigo-600 dark:text-indigo-400',
       bg: 'bg-white dark:bg-slate-900/80 shadow-xs hover:shadow-md',

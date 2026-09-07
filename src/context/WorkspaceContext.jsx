@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
 const WorkspaceContext = createContext();
 
@@ -2463,11 +2463,13 @@ export const WorkspaceProvider = ({ children }) => {
     setCalendarEvents(prev => [...newEvents, ...prev]);
   };
 
-  // ─── Global Asset Management ────────────────────────────────────────────────
+  // ─── Global & Per-Brand Asset Management ─────────────────────────────────────
   const [globalAssets, setGlobalAssets] = useState(() => {
     try {
-      const saved = localStorage.getItem(`aisa_assets_${activeWorkspaceId}`) || localStorage.getItem('aisa_global_assets');
-      return saved ? JSON.parse(saved) : [];
+      const saved = localStorage.getItem(`aisa_assets_${activeWorkspaceId}`);
+      if (saved) return JSON.parse(saved);
+      const fallback = localStorage.getItem('aisa_global_assets');
+      return fallback ? JSON.parse(fallback) : [];
     } catch {
       return [];
     }
@@ -2481,14 +2483,46 @@ export const WorkspaceProvider = ({ children }) => {
         setGlobalAssets(JSON.parse(saved));
       } else {
         const fallback = localStorage.getItem('aisa_global_assets');
-        setGlobalAssets(fallback ? JSON.parse(fallback) : []);
+        if (fallback) {
+          const all = JSON.parse(fallback);
+          const currentBrandNorm = (activeWorkspace?.brandName || '').trim().toLowerCase();
+          const matched = all.filter(a => {
+            const aWs = a.workspaceId || a.workspace?._id || a.workspace;
+            const aBrand = (a.metadata?.brand || a.brandName || a.brand || '').trim().toLowerCase();
+            if (activeWorkspaceId && aWs && String(aWs) === String(activeWorkspaceId)) return true;
+            if (currentBrandNorm && aBrand && aBrand === currentBrandNorm) return true;
+            return false;
+          });
+          setGlobalAssets(matched);
+        } else {
+          setGlobalAssets([]);
+        }
       }
     } catch {
       setGlobalAssets([]);
     }
-  }, [activeWorkspaceId]);
+  }, [activeWorkspaceId, activeWorkspace?.brandName]);
+
+  // Derived assets strictly matching the currently active workspace/brand
+  const activeBrandAssets = useMemo(() => {
+    const currentWsId = activeWorkspace?._id || activeWorkspace?.id || activeWorkspaceId;
+    const currentBrand = (activeWorkspace?.brandName || '').trim().toLowerCase();
+
+    return (globalAssets || []).filter(a => {
+      const aWs = a.workspaceId || a.workspace?._id || a.workspace;
+      const aBrand = (a.metadata?.brand || a.brandName || a.brand || '').trim().toLowerCase();
+
+      if (currentWsId && aWs && String(aWs) === String(currentWsId)) return true;
+      if (currentBrand && aBrand && aBrand === currentBrand) return true;
+      if (!aWs && !aBrand) return true;
+      return false;
+    });
+  }, [globalAssets, activeWorkspace, activeWorkspaceId]);
 
   const addGlobalAsset = (asset) => {
+    const currentWsId = activeWorkspace?._id || activeWorkspace?.id || activeWorkspaceId;
+    const currentBrand = activeWorkspace?.brandName || '';
+
     const newAsset = {
       id: asset.id || `asset_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
       name: asset.name || asset.title || 'Brand Asset',
@@ -2496,9 +2530,12 @@ export const WorkspaceProvider = ({ children }) => {
       url: asset.url || '',
       date: asset.date || new Date().toISOString(),
       credits: asset.credits || 0,
-      workspaceId: asset.workspaceId || activeWorkspaceId,
+      workspaceId: asset.workspaceId || currentWsId,
       content: asset.content || asset.caption || '',
-      metadata: asset.metadata || {},
+      metadata: {
+        brand: currentBrand,
+        ...(asset.metadata || {})
+      },
       category: asset.category || asset.type || 'DOCUMENT'
     };
 
@@ -2515,7 +2552,7 @@ export const WorkspaceProvider = ({ children }) => {
     setGlobalAssets(prev => {
       const updated = [newAsset, ...prev];
       try {
-        if (activeWorkspaceId) localStorage.setItem(`aisa_assets_${activeWorkspaceId}`, JSON.stringify(updated));
+        if (currentWsId) localStorage.setItem(`aisa_assets_${currentWsId}`, JSON.stringify(updated));
         localStorage.setItem('aisa_global_assets', JSON.stringify(updated));
       } catch (e) { }
       return updated;
@@ -2525,10 +2562,11 @@ export const WorkspaceProvider = ({ children }) => {
   };
 
   const removeGlobalAsset = (id) => {
+    const currentWsId = activeWorkspace?._id || activeWorkspace?.id || activeWorkspaceId;
     setGlobalAssets(prev => {
       const updated = prev.filter(a => a.id !== id);
       try {
-        if (activeWorkspaceId) localStorage.setItem(`aisa_assets_${activeWorkspaceId}`, JSON.stringify(updated));
+        if (currentWsId) localStorage.setItem(`aisa_assets_${currentWsId}`, JSON.stringify(updated));
         localStorage.setItem('aisa_global_assets', JSON.stringify(updated));
       } catch (e) { }
       return updated;
@@ -2585,7 +2623,7 @@ export const WorkspaceProvider = ({ children }) => {
       credits, deductVisualCredits, topUpCredits,
       approvalsQueue, setApprovalsQueue, updateApprovalStatus,
       calendarEvents, setCalendarEvents, addCalendarEvent, bulkAddCalendarEvents,
-      globalAssets, setGlobalAssets, addGlobalAsset, removeGlobalAsset,
+      globalAssets, setGlobalAssets, addGlobalAsset, removeGlobalAsset, activeBrandAssets,
       isQuickPostOpen, setIsQuickPostOpen,
       isScraperOpen, setIsScraperOpen, scraperMode, setScraperMode, openScraperModal,
 
