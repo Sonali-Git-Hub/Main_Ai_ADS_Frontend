@@ -10,6 +10,7 @@ export const CreativeStudioModule = () => {
   const [generatedVisual, setGeneratedVisual] = useState(null);
 
   const handleGenerateVisual = async () => {
+    if (generating) return;
     const cost = 5;
     if (credits.balance < cost) {
       setIsCreditModalOpen(true);

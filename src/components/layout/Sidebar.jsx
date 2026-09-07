@@ -243,6 +243,7 @@ export const Sidebar = ({ isMobileMenuOpen: propIsMobile, setIsMobileMenuOpen: p
                 <div className="space-y-1">
                   <button
                     onClick={() => {
+                      if (setActiveSettingsTab) setActiveSettingsTab('account');
                       setIsSettingsModalOpen(true);
                       setShowProfileMenu(false);
                     }}
@@ -282,11 +283,8 @@ export const Sidebar = ({ isMobileMenuOpen: propIsMobile, setIsMobileMenuOpen: p
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11.5px] font-bold text-slate-900 dark:text-white truncate leading-snug group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                  <p className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white truncate leading-tight group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                     {user?.name || user?.email?.split('@')[0] || 'Agency Admin'}
-                  </p>
-                  <p className="text-[9.5px] text-slate-500 dark:text-slate-400 truncate">
-                    {user?.role === 'SuperAdmin' ? 'Super Admin' : activeWorkspace?.name || 'Enterprise Suite'}
                   </p>
                 </div>
               </div>

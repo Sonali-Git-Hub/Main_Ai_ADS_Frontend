@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
+import { getBrandLogoUrl } from '../../utils/brandLogoHelper';
 import { X, Zap, Sparkles, Copy, Check, Send } from 'lucide-react';
 
 export const QuickPostModal = () => {
-  const { isQuickPostOpen, setIsQuickPostOpen, activeWorkspace, setActiveModule } = useWorkspace();
+  const { isQuickPostOpen, setIsQuickPostOpen, activeWorkspace, setActiveModule, setStudioTarget } = useWorkspace();
   const [platform, setPlatform] = useState('LinkedIn');
   const [topic, setTopic] = useState('');
   const [tone, setTone] = useState('Authoritative & Professional');
@@ -13,8 +14,42 @@ export const QuickPostModal = () => {
 
   if (!isQuickPostOpen) return null;
 
+  const handleOpenInStudio = () => {
+    const platformLower = (platform || 'LinkedIn').toLowerCase();
+    const socialMap = {
+      'x/twitter': 'twitter',
+      twitter: 'twitter',
+      linkedin: 'linkedin',
+      instagram: 'instagram',
+      facebook: 'facebook'
+    };
+    const matchedPlatform = socialMap[platformLower] || platformLower;
+
+    if (setStudioTarget) {
+      setStudioTarget({
+        platform: matchedPlatform,
+        topic: topic || 'Quick Social Post',
+        tone: tone,
+        postType: 'educational',
+        output: output,
+        imageUrl: output?.imageUrl,
+        imagePrompt: output?.imagePrompt,
+        autoGenerate: !output,
+        hook: output?.hook,
+        caption: output?.caption,
+        hashtags: output?.hashtags,
+        cta: output?.cta,
+      });
+    }
+
+    setIsQuickPostOpen(false);
+    if (setActiveModule) {
+      setActiveModule('studio');
+    }
+  };
+
   const handleGenerate = async () => {
-    if (!topic.trim()) return;
+    if (loading || !topic.trim()) return;
     setLoading(true);
 
     try {
@@ -61,8 +96,13 @@ export const QuickPostModal = () => {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-brand-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
-              <Zap className="w-5 h-5 text-amber-300 fill-amber-300" />
+            <div className="w-10 h-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center p-1 shadow-md shrink-0 overflow-hidden">
+              <img 
+                src={getBrandLogoUrl({ brandName: activeWorkspace?.brandName, domainUrl: activeWorkspace?.domainUrl, logoUrl: activeWorkspace?.logoUrl, faviconUrl: activeWorkspace?.faviconUrl })} 
+                alt={activeWorkspace?.brandName} 
+                className="w-full h-full object-contain"
+                onError={(e) => { e.target.src = `https://www.google.com/s2/favicons?domain=${(activeWorkspace?.brandName || 'google').toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=256`; }}
+              />
             </div>
             <div>
               <h2 className="font-extrabold text-slate-900 text-base sm:text-lg">Quick Social Post Generator</h2>
@@ -149,18 +189,28 @@ export const QuickPostModal = () => {
             </div>
             
             <div className="space-y-2 text-xs text-slate-900">
+              {output.imageUrl && (
+                <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-sm max-h-72 my-2 bg-slate-100">
+                  <img 
+                    src={output.imageUrl} 
+                    alt={output.imagePrompt || output.topic || 'Generated visual'} 
+                    className="w-full h-full object-cover max-h-72"
+                  />
+                  <div className="absolute bottom-2 left-2 right-2 px-3 py-1.5 rounded-xl bg-slate-950/80 backdrop-blur-md text-[10px] text-white font-semibold flex items-center justify-between shadow-lg">
+                    <span className="truncate">🎨 AI Generated Visual (Gemini 3.1 Flash Image)</span>
+                    <span className="font-bold text-emerald-400 shrink-0">Ready</span>
+                  </div>
+                </div>
+              )}
               <p className="font-extrabold text-brand-500 text-sm">{output.hook}</p>
               <p className="whitespace-pre-wrap font-medium leading-relaxed">{output.caption}</p>
-              <p className="text-brand-500 font-semibold">{output.hashtags.join(' ')}</p>
+              <p className="text-brand-500 font-semibold">{output.hashtags?.join(' ')}</p>
               <p className="font-bold text-slate-700">{output.cta}</p>
             </div>
 
             <div className="pt-2 flex gap-2">
               <button 
-                onClick={() => {
-                  setIsQuickPostOpen(false);
-                  setActiveModule('studio');
-                }}
+                onClick={handleOpenInStudio}
                 className="w-full btn-secondary text-xs"
               >
                 <Send className="w-3.5 h-3.5" />

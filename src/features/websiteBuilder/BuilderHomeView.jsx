@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useWorkspace } from '../../context/WorkspaceContext';
 import {
   Sparkles,
   ArrowRight,

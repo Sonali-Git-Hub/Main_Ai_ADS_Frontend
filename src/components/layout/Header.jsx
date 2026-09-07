@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
+import { getBrandLogoUrl } from '../../utils/brandLogoHelper';
 import { 
   Building2, 
   ShieldCheck, 
@@ -12,7 +13,9 @@ import {
   Trash2,
   LogOut,
   Menu,
-  X
+  X,
+  Sparkles,
+  Crown
 } from 'lucide-react';
 
 export const Header = () => {
@@ -29,6 +32,7 @@ export const Header = () => {
     openScraperModal,
     setIsAISAAssistantOpen,
     setIsSettingsModalOpen,
+    setActiveSettingsTab,
     isMobileMenuOpen,
     setIsMobileMenuOpen,
 
@@ -43,32 +47,25 @@ export const Header = () => {
   } = useWorkspace();
 
   const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-
   const workspaceRef = useRef(null);
-  const profileRef = useRef(null);
 
-  const getUserDisplayName = () => {
-    try {
-      const savedName = localStorage.getItem('aisa_user_name');
-      if (savedName) return savedName;
-    } catch(e){}
-    if (user?.name) return user.name;
-    if (user?.fullName) return user.fullName;
-    if (user?.email) {
-      const prefix = user.email.split('@')[0];
-      return prefix.charAt(0).toUpperCase() + prefix.slice(1);
-    }
-    return 'Agency User';
+  const getPlanDisplayName = () => {
+    const rawPlan = user?.plan || user?.subscriptionTier || user?.planName || 'Enterprise';
+    const lower = String(rawPlan).toLowerCase();
+    if (lower.includes('enterprise')) return 'Enterprise Suite';
+    if (lower.includes('agency')) return 'Agency Pro';
+    if (lower.includes('pro')) return 'Pro Plan';
+    if (lower.includes('starter') || lower.includes('base')) return 'Starter Plan';
+    if (lower.includes('growth')) return 'Growth Plan';
+
+    const cleaned = String(rawPlan).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    return cleaned.endsWith('Plan') || cleaned.endsWith('Suite') || cleaned.endsWith('Tier') ? cleaned : `${cleaned} Plan`;
   };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (workspaceRef.current && !workspaceRef.current.contains(e.target)) {
         setShowWorkspaceMenu(false);
-      }
-      if (profileRef.current && !profileRef.current.contains(e.target)) {
-        setShowProfileMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -109,12 +106,13 @@ export const Header = () => {
             onClick={() => setShowWorkspaceMenu(!showWorkspaceMenu)}
             className="flex items-center gap-1.5 sm:gap-2.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800 shadow-xs hover:shadow-md transition-all text-left max-w-full"
           >
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs p-0.5 sm:p-1">
-              {activeWorkspace?.logoUrl || activeWorkspace?.faviconUrl ? (
-                <img src={activeWorkspace.logoUrl || activeWorkspace.faviconUrl} alt={activeWorkspace.brandName} className="w-full h-full object-contain" />
-              ) : (
-                <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-500" />
-              )}
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs p-0.5 sm:p-1 border border-slate-200 dark:border-slate-700">
+              <img 
+                src={getBrandLogoUrl({ brandName: activeWorkspace?.brandName, domainUrl: activeWorkspace?.domainUrl, logoUrl: activeWorkspace?.logoUrl, faviconUrl: activeWorkspace?.faviconUrl })} 
+                alt={activeWorkspace?.brandName} 
+                className="w-full h-full object-contain"
+                onError={(e) => { e.target.src = `https://www.google.com/s2/favicons?domain=${(activeWorkspace?.brandName || 'google').toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=256`; }} 
+              />
             </div>
             <div className="min-w-0">
               <span className="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-slate-100 block truncate max-w-[75px] min-[380px]:max-w-[100px] min-[440px]:max-w-[140px] sm:max-w-[180px] md:max-w-[220px]">
@@ -141,11 +139,12 @@ export const Header = () => {
                     className={`w-full px-3 py-2 flex items-center justify-between group/ws text-sm text-left hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors ${isActive ? 'text-brand-400 font-medium bg-brand-500/10' : 'text-slate-700 dark:text-slate-300'}`}
                   >
                     <div className="flex items-center gap-2.5 truncate">
-                      {ws.logoUrl || ws.faviconUrl ? (
-                        <img src={ws.logoUrl || ws.faviconUrl} alt={ws.brandName} className="w-5 h-5 rounded-lg object-contain bg-white shrink-0 border border-slate-200 dark:border-slate-700" />
-                      ) : (
-                        <Building2 className="w-4 h-4 text-brand-400 shrink-0" />
-                      )}
+                      <img 
+                        src={getBrandLogoUrl({ brandName: ws.brandName, domainUrl: ws.domainUrl, logoUrl: ws.logoUrl, faviconUrl: ws.faviconUrl })} 
+                        alt={ws.brandName} 
+                        className="w-5 h-5 rounded-lg object-contain bg-white shrink-0 border border-slate-200 dark:border-slate-700"
+                        onError={(e) => { e.target.src = `https://www.google.com/s2/favicons?domain=${(ws.brandName || 'google').toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=256`; }}
+                      />
                       <span className="truncate">{ws.brandName}</span>
                     </div>
                     <button
@@ -181,66 +180,31 @@ export const Header = () => {
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-1 sm:gap-2.5 shrink-0 ml-auto sm:ml-0">
-        {/* Profile Button & Dropdown */}
-        <div className="relative" ref={profileRef}>
-          <button
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className={`p-1.5 sm:p-2 rounded-xl border transition-all flex items-center justify-center shrink-0 ${
-              showProfileMenu || activeModule === 'settings'
-                ? 'bg-brand-50 border-brand-200 text-brand-600 dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-400'
-                : 'border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
-            }`}
-            title="User Profile Menu"
-          >
-            {userAvatar ? (
-              <img src={userAvatar} alt="Profile" className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover" />
-            ) : (
-              <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            )}
-          </button>
-
-          {showProfileMenu && (
-            <div className="absolute top-full right-0 mt-2 w-60 max-w-[calc(100vw-1.5rem)] glass-card bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-3 px-4 z-50 animate-in fade-in slide-in-from-top-2">
-              <div className="border-b border-slate-200 dark:border-slate-800 pb-3 mb-3">
-                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">{t('signedInAs', 'Signed In As')}</p>
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate mt-0.5">{getUserDisplayName()}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{user?.email}</p>
-                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                  <span className="inline-block text-[10px] bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 font-extrabold px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-500/30 uppercase">
-                    {user?.plan ? `${user.plan} Tier` : 'Free Tier'}
-                  </span>
-                  <span className="inline-block text-[10px] bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">
-                    {t('activeAccount', 'Active Account')}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="space-y-1">
-                <button
-                  onClick={() => {
-                    setIsSettingsModalOpen(true);
-                    setShowProfileMenu(false);
-                  }}
-                  className="w-full text-left py-2 px-3 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl transition-colors text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2"
-                >
-                  <User className="w-4 h-4 text-slate-400" />
-                  {t('accountSettings', 'Account Settings')}
-                </button>
-                <button
-                  onClick={() => {
-                    logout();
-                    setShowProfileMenu(false);
-                  }}
-                  className="w-full text-left py-2 px-3 hover:bg-red-500/10 text-red-500 rounded-xl transition-colors text-xs font-semibold flex items-center gap-2"
-                >
-                  <LogOut className="w-4 h-4 text-red-500" />
-                  {t('signOut', 'Sign Out')}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto sm:ml-0">
+        {/* User Current Plan Badge */}
+        <button
+          onClick={() => {
+            if (setActiveSettingsTab) setActiveSettingsTab('billing');
+            if (setIsSettingsModalOpen) setIsSettingsModalOpen(true);
+          }}
+          className="group relative flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/30 dark:border-brand-500/40 hover:border-brand-500/60 transition-all shadow-2xs hover:shadow-md cursor-pointer shrink-0"
+          title="Click to manage subscription & plan details"
+        >
+          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+          </div>
+          <div className="flex flex-col text-left">
+            <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-extrabold text-brand-600 dark:text-brand-400 leading-none hidden min-[480px]:block">
+              {t('currentPlan', 'Current Plan')}
+            </span>
+            <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors leading-tight">
+              {getPlanDisplayName()}
+            </span>
+          </div>
+          <span className="ml-1 text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-brand-500/15 text-brand-600 dark:text-brand-400 border border-brand-500/30 group-hover:bg-brand-500 group-hover:text-white transition-colors hidden sm:inline-block">
+            {t('managePlan', 'Manage')}
+          </span>
+        </button>
       </div>
     </div>
   </header>

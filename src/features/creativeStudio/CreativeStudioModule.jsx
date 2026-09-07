@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { downloadImageToDevice } from '../../utils/downloadHelper';
+import { getBrandLogoUrl } from '../../utils/brandLogoHelper';
 import {
   Palette, Sparkles, ShieldAlert, Image as ImageIcon, CheckCircle2,
   ArrowLeft, ArrowUpRight, Film, Layers, BookOpen, Wand2, Download,
@@ -76,6 +77,7 @@ const VisualStudio = ({ workspace, credits, deductVisualCredits, setIsCreditModa
   const [result, setResult] = useState(null);
 
   const handleGenerate = async () => {
+    if (generating) return;
     const cost = 5;
     if (credits.balance < cost) { setIsCreditModalOpen(true); return; }
     setGenerating(true);
@@ -160,13 +162,12 @@ const VisualStudio = ({ workspace, credits, deductVisualCredits, setIsCreditModa
               
               {/* Brand Logo Overlay Badge */}
               <div className="absolute top-3 left-3 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/25 shadow-lg">
-                {workspace?.logoUrl || workspace?.faviconUrl ? (
-                  <img src={workspace.logoUrl || workspace.faviconUrl} alt={workspace?.brandName} className="w-5 h-5 rounded-full object-cover border border-white/30" />
-                ) : (
-                  <div className="w-5 h-5 rounded-full bg-brand-500 text-white font-black text-[9px] flex items-center justify-center">
-                    {(workspace?.brandName || 'Brand').substring(0, 2).toUpperCase()}
-                  </div>
-                )}
+                <img 
+                  src={getBrandLogoUrl({ brandName: workspace?.brandName, domainUrl: workspace?.domainUrl, logoUrl: workspace?.logoUrl, faviconUrl: workspace?.faviconUrl })} 
+                  alt={workspace?.brandName} 
+                  className="w-5 h-5 rounded-full object-cover border border-white/30 bg-white" 
+                  onError={(e) => { e.target.src = `https://www.google.com/s2/favicons?domain=${(workspace?.brandName || 'google').toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=256`; }}
+                />
                 <span className="text-[10px] font-black tracking-wider text-white uppercase">{workspace?.brandName || 'Brand'}</span>
               </div>
 

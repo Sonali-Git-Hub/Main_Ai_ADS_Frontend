@@ -3,6 +3,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { contentAPI } from '../../services/api';
 import { resolveBrandVisualAsset } from '../../services/brandVisualResolver';
 import { downloadImageToDevice } from '../../utils/downloadHelper';
+import { getBrandLogoUrl } from '../../utils/brandLogoHelper';
 import {
   PenTool, ShieldCheck, ShieldAlert, Sparkles, Send, FileText, Share2,
   Globe, Mail, CheckCircle2, RefreshCw, Loader2, AlertCircle, Layers,
@@ -220,9 +221,23 @@ export const ContentStudioModule = () => {
     setAdCopyPrompt(buildAdPrompt(adProduct, adPlatform));
   }, [buildAdPrompt, adProduct, adPlatform]);
 
+  const processedStudioTargetRef = React.useRef(null);
+
   // ─── Direct Redirect & Pre-fill from Calendar / Other Modules ────────────────
   React.useEffect(() => {
     if (studioTarget) {
+      const targetKey = JSON.stringify({
+        topic: studioTarget.topic,
+        platform: studioTarget.platform,
+        autoGenerate: studioTarget.autoGenerate,
+        date: studioTarget.calendarDate || studioTarget.calendarDay || studioTarget.title
+      });
+
+      if (processedStudioTargetRef.current === targetKey) {
+        return;
+      }
+      processedStudioTargetRef.current = targetKey;
+
       const key = studioTarget.calendarDate || studioTarget.calendarDay || studioTarget.topic || studioTarget.title;
       if (key && markPostAsGenerated) {
         markPostAsGenerated(key, studioTarget);
@@ -308,7 +323,40 @@ export const ContentStudioModule = () => {
           setSocialPostType(postType.toLowerCase() === 'image' || postType.toLowerCase() === 'reel' ? 'engagement' : postType.toLowerCase());
         }
 
-        if (studioTarget.autoGenerate) {
+        if (studioTarget.output || studioTarget.caption || studioTarget.hook) {
+          const out = studioTarget.output || studioTarget;
+          const brand = activeWorkspace?.brandName || 'Brand';
+          const imgPrompt = studioTarget.imagePrompt || `${topic} — ${brand} commercial advertising photography, 8k`;
+          const imgUrl = studioTarget.imageUrl || resolveBrandVisualAsset({
+            prompt: imgPrompt,
+            brandName: brand,
+            topic: topic,
+            style: 'Photorealistic Commercial',
+            aspect: initialAspect,
+            variationIndex: 0
+          });
+
+          const payload = {
+            ...(typeof out === 'object' ? out : {}),
+            type: 'SOCIAL',
+            platform: matchedPlatform,
+            topic: topic,
+            hook: out.hook || `🚀 ${topic}`,
+            shortCaption: out.shortCaption || out.caption || '',
+            caption: out.caption || '',
+            longCaption: out.longCaption || out.caption || '',
+            cta: out.cta || '👉 Click the link in bio to learn more & get started today!',
+            hashtags: Array.isArray(out.hashtags) ? out.hashtags : [`#${brand.replace(/\s+/g, '')}`],
+            imageUrl: imgUrl,
+            imagePrompt: imgPrompt,
+            imageStyle: 'Photorealistic Commercial',
+            imageAspect: initialAspect,
+            createdAt: new Date().toISOString(),
+          };
+
+          setSocialResult(payload);
+          if (setGeneratedContent) setGeneratedContent(payload);
+        } else if (studioTarget.autoGenerate) {
           setDraftingSocial(true);
           const fullStrategyContext = studioTarget.strategyDescription || studioTarget.actionItem || studioTarget.customPrompt || '';
           contentAPI.generateSocialPost({
@@ -532,6 +580,7 @@ export const ContentStudioModule = () => {
 
   // ─── Social Post Generation ──────────────────────────────────────────────────
   const handleGenerateSocial = async () => {
+    if (draftingSocial) return;
     setDraftingSocial(true);
     try {
       const res = await contentAPI.generateSocialPost({
@@ -1260,8 +1309,13 @@ export const ContentStudioModule = () => {
                     {/* Header */}
                     <div className="flex flex-wrap items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 gap-2">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center font-black text-brand-600 dark:text-brand-400 text-xs uppercase shrink-0">
-                          {activeWorkspace?.brandName ? activeWorkspace.brandName.substring(0, 3).toUpperCase() : 'AI'}
+                        <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden shrink-0 shadow-sm p-0.5">
+                          <img 
+                            src={getBrandLogoUrl({ brandName: activeWorkspace?.brandName, domainUrl: activeWorkspace?.domainUrl, logoUrl: activeWorkspace?.logoUrl, faviconUrl: activeWorkspace?.faviconUrl })} 
+                            alt={activeWorkspace?.brandName} 
+                            className="w-full h-full object-contain"
+                            onError={(e) => { e.target.src = `https://www.google.com/s2/favicons?domain=${(activeWorkspace?.brandName || 'google').toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=256`; }}
+                          />
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -1305,6 +1359,7 @@ export const ContentStudioModule = () => {
                                 cta: socialResult?.cta || socialResult?.callToAction || '',
                                 hashtags: socialResult?.hashtags || [],
                                 strategyPillar: socialResult?.strategyPillar || activeWorkspace?.positioningSummary || 'Brand Strategy',
+                                imageUrl: socialResult?.imageUrl,
                                 imagePrompt: socialResult?.imagePrompt || `${socialTopic} — ${activeWorkspace?.brandName || 'Brand'} commercial advertising photography, 8k`,
                                 data: socialResult,
                               });
@@ -1325,6 +1380,48 @@ export const ContentStudioModule = () => {
                       </div>
                     </div>
 
+                    {/* ── CREATIVE STUDIO VISUAL CALLOUT BANNER ── */}
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-purple-900/20 via-brand-500/15 to-indigo-900/20 border border-purple-500/30 flex flex-wrap items-center justify-between gap-2.5 shadow-sm">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md shrink-0">
+                          <Sparkles className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
+                            Need Visual Creative &amp; Ad Banners for This Post?
+                          </h4>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                            Design 8K visual assets, carousels, and templates tailored to this copy in Creative Studio.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (setGeneratedContent) {
+                            setGeneratedContent({
+                              platform: socialPlatform,
+                              type: 'SOCIAL',
+                              topic: socialTopic,
+                              hook: socialResult?.hook || socialTopic,
+                              caption: socialResult?.shortCaption || socialResult?.longCaption || socialResult?.caption || '',
+                              shortCaption: socialResult?.shortCaption || '',
+                              longCaption: socialResult?.longCaption || '',
+                              storytelling: socialResult?.storytelling || '',
+                              cta: socialResult?.cta || socialResult?.callToAction || '',
+                              hashtags: socialResult?.hashtags || [],
+                              strategyPillar: socialResult?.strategyPillar || activeWorkspace?.positioningSummary || 'Brand Strategy',
+                              imageUrl: socialResult?.imageUrl,
+                              imagePrompt: socialResult?.imagePrompt || `${socialTopic} — ${activeWorkspace?.brandName || 'Brand'} commercial advertising photography, 8k`,
+                              data: socialResult,
+                            });
+                          }
+                          setActiveModule('creative');
+                        }}
+                        className="py-1.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 shrink-0"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" /> Design Visual in Creative Studio →
+                      </button>
+                    </div>
                     {/* Structured Rectangle Cards Stack (Vertical Layout Compact) */}
                     <div className="flex flex-col space-y-2.5">
 

@@ -168,9 +168,10 @@ export const DashboardModule = () => {
       value: totalBrandsCount,
       sub: `${totalBrandsCount} brand profile${totalBrandsCount === 1 ? '' : 's'} in your account`,
       icon: Dna,
-      color: 'text-brand-600 dark:text-brand-400',
-      bg: 'bg-white dark:bg-slate-900/80 shadow-xs hover:shadow-md',
-      iconBg: 'bg-brand-500/10 dark:bg-brand-500/20',
+      color: 'text-amber-600 dark:text-amber-400',
+      labelColor: 'text-amber-600 dark:text-amber-400',
+      bg: 'bg-white dark:bg-slate-900/90 border border-slate-100 dark:border-slate-800/80 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]',
+      iconBg: 'bg-amber-500/15 dark:bg-amber-500/25',
       moduleId: 'brands'
     },
     {
@@ -179,8 +180,9 @@ export const DashboardModule = () => {
       sub: `Saved in ${activeWorkspace?.brandName || 'Brand'} Asset Library`,
       icon: FolderKanban,
       color: 'text-indigo-600 dark:text-indigo-400',
-      bg: 'bg-white dark:bg-slate-900/80 shadow-xs hover:shadow-md',
-      iconBg: 'bg-indigo-500/10 dark:bg-indigo-500/20',
+      labelColor: 'text-indigo-600 dark:text-indigo-400',
+      bg: 'bg-white dark:bg-slate-900/90 border border-slate-100 dark:border-slate-800/80 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]',
+      iconBg: 'bg-indigo-500/15 dark:bg-indigo-500/25',
       moduleId: 'assets'
     },
     {
@@ -189,8 +191,9 @@ export const DashboardModule = () => {
       sub: `${activeCampaignsCount} currently active`,
       icon: Layers,
       color: 'text-purple-600 dark:text-purple-400',
-      bg: 'bg-white dark:bg-slate-900/80 shadow-xs hover:shadow-md',
-      iconBg: 'bg-purple-500/10 dark:bg-purple-500/20',
+      labelColor: 'text-purple-600 dark:text-purple-400',
+      bg: 'bg-white dark:bg-slate-900/90 border border-slate-100 dark:border-slate-800/80 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]',
+      iconBg: 'bg-purple-500/15 dark:bg-purple-500/25',
       moduleId: 'campaigns'
     }
   ];
@@ -279,17 +282,17 @@ export const DashboardModule = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.1 + idx * 0.08, ease: 'easeOut' }}
               onClick={() => s.moduleId && setActiveModule(s.moduleId)}
-              className={`p-4 sm:p-5 rounded-2xl ${s.bg} flex items-center justify-between cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg group border border-slate-200/60 dark:border-slate-800/80`}
+              className={`p-5 sm:p-6 rounded-2xl ${s.bg} accent-card-hover flex items-center justify-between cursor-pointer group`}
             >
               <div className="space-y-1">
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">{s.label}</span>
+                <span className={`text-xs font-extrabold ${s.labelColor} block tracking-tight`}>{s.label}</span>
                 <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight block">
                   {typeof s.value === 'number' ? s.value.toLocaleString() : s.value}
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block">{s.sub}</span>
               </div>
-              <div className={`p-2.5 sm:p-3 rounded-2xl ${s.iconBg} ${s.color} group-hover:scale-110 transition-transform shadow-2xs`}>
-                <Icon className="w-5 h-5" />
+              <div className={`p-3.5 sm:p-4 rounded-2xl ${s.iconBg} ${s.color} group-hover:scale-110 transition-transform shadow-xs shrink-0`}>
+                <Icon className="w-6 h-6" />
               </div>
             </motion.div>
           );
@@ -297,7 +300,7 @@ export const DashboardModule = () => {
       </div>
 
       {/* Pipeline Shortcuts */}
-      <div className="p-4 sm:p-6 rounded-3xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-xs space-y-4">
+      <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-100 dark:border-slate-800/80 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)] space-y-4">
         <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
           <Layers className="w-4 h-4 text-brand-500" /> {t('endToEndPipeline', 'End-to-End Content Pipeline')}
         </h2>
@@ -335,7 +338,7 @@ export const DashboardModule = () => {
                     window.history.pushState({ module: step.id }, '', pathMap[step.id]);
                   }
                 }}
-                className={`p-3.5 sm:p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 shadow-2xs hover:shadow-md transition-all text-left group flex flex-col justify-between relative cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700 ${
+                className={`p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 accent-card-hover text-left group flex flex-col justify-between relative cursor-pointer ${
                   step.isLocked ? 'hover:border-amber-500/40' : ''
                 }`}
               >

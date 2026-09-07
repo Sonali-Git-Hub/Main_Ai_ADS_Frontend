@@ -59,18 +59,18 @@ function getModuleFromLocation() {
 
 export const TRANSLATIONS = {
   "English": {
-    "dashboard": "1. Dashboard",
-    "brands": "2. Brand DNA",
-    "seo": "3. SEO Intelligence",
-    "strategy": "4. Strategy",
-    "campaigns": "5. Campaigns",
-    "calendar": "6. Calendar",
-    "studio": "7. Content Studio",
-    "approvals": "8. Approvals Desk",
-    "creative": "9. Creative Studio",
-    "assets": "10. Asset Library",
-    "websiteBuilder": "11. AI Website Builder",
-    "settings": "12. Settings & Billing",
+    "dashboard": "Dashboard",
+    "brands": "Brand DNA",
+    "seo": "SEO Intelligence",
+    "strategy": "Strategy",
+    "campaigns": "Campaigns",
+    "calendar": "Calendar",
+    "studio": "Content Studio",
+    "approvals": "Approvals Desk",
+    "creative": "Creative Studio",
+    "assets": "Asset Library",
+    "websiteBuilder": "AI Website Builder",
+    "settings": "Settings & Billing",
     "settingsBtn": "Settings & Billing",
     "quickSocialPost": "Quick Social Post",
     "engineActive": "AISA™ Engine Active",
@@ -1649,7 +1649,7 @@ export const WorkspaceProvider = ({ children }) => {
   // Settings Modal & Personalization Preferences State
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [activeSettingsTab, setActiveSettingsTab] = useState('personalization');
+  const [activeSettingsTab, setActiveSettingsTab] = useState('account');
 
   const [appearance, setAppearanceState] = useState(() => {
     try {
