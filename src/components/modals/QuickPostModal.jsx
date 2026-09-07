@@ -3,7 +3,7 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { X, Zap, Sparkles, Copy, Check, Send } from 'lucide-react';
 
 export const QuickPostModal = () => {
-  const { isQuickPostOpen, setIsQuickPostOpen, activeWorkspace, setActiveModule } = useWorkspace();
+  const { isQuickPostOpen, setIsQuickPostOpen, activeWorkspace, setActiveModule, setStudioTarget } = useWorkspace();
   const [platform, setPlatform] = useState('LinkedIn');
   const [topic, setTopic] = useState('');
   const [tone, setTone] = useState('Authoritative & Professional');
@@ -12,6 +12,40 @@ export const QuickPostModal = () => {
   const [copied, setCopied] = useState(false);
 
   if (!isQuickPostOpen) return null;
+
+  const handleOpenInStudio = () => {
+    const platformLower = (platform || 'LinkedIn').toLowerCase();
+    const socialMap = {
+      'x/twitter': 'twitter',
+      twitter: 'twitter',
+      linkedin: 'linkedin',
+      instagram: 'instagram',
+      facebook: 'facebook'
+    };
+    const matchedPlatform = socialMap[platformLower] || platformLower;
+
+    if (setStudioTarget) {
+      setStudioTarget({
+        platform: matchedPlatform,
+        topic: topic || 'Quick Social Post',
+        tone: tone,
+        postType: 'educational',
+        output: output,
+        imageUrl: output?.imageUrl,
+        imagePrompt: output?.imagePrompt,
+        autoGenerate: !output,
+        hook: output?.hook,
+        caption: output?.caption,
+        hashtags: output?.hashtags,
+        cta: output?.cta,
+      });
+    }
+
+    setIsQuickPostOpen(false);
+    if (setActiveModule) {
+      setActiveModule('studio');
+    }
+  };
 
   const handleGenerate = async () => {
     if (!topic.trim()) return;
@@ -143,18 +177,28 @@ export const QuickPostModal = () => {
             </div>
             
             <div className="space-y-2 text-xs text-slate-200">
+              {output.imageUrl && (
+                <div className="relative rounded-2xl overflow-hidden border border-slate-800 shadow-sm max-h-72 my-2 bg-slate-950">
+                  <img 
+                    src={output.imageUrl} 
+                    alt={output.imagePrompt || output.topic || 'Generated visual'} 
+                    className="w-full h-full object-cover max-h-72"
+                  />
+                  <div className="absolute bottom-2 left-2 right-2 px-3 py-1.5 rounded-xl bg-slate-950/80 backdrop-blur-md text-[10px] text-white font-semibold flex items-center justify-between shadow-lg">
+                    <span className="truncate">🎨 AI Generated Visual (Gemini 3.1 Flash Image)</span>
+                    <span className="font-bold text-emerald-400 shrink-0">Ready</span>
+                  </div>
+                </div>
+              )}
               <p className="font-bold text-brand-300">{output.hook}</p>
               <p className="whitespace-pre-wrap">{output.caption}</p>
-              <p className="text-cyan-400">{output.hashtags.join(' ')}</p>
+              <p className="text-cyan-400">{output.hashtags?.join(' ')}</p>
               <p className="font-semibold text-slate-400">{output.cta}</p>
             </div>
 
             <div className="pt-2 flex gap-2">
               <button 
-                onClick={() => {
-                  setIsQuickPostOpen(false);
-                  setActiveModule('studio');
-                }}
+                onClick={handleOpenInStudio}
                 className="w-full btn-secondary text-xs"
               >
                 <Send className="w-3.5 h-3.5" />

@@ -291,7 +291,40 @@ export const ContentStudioModule = () => {
           setSocialPostType(postType.toLowerCase() === 'image' || postType.toLowerCase() === 'reel' ? 'engagement' : postType.toLowerCase());
         }
 
-        if (studioTarget.autoGenerate) {
+        if (studioTarget.output || studioTarget.caption || studioTarget.hook) {
+          const out = studioTarget.output || studioTarget;
+          const brand = activeWorkspace?.brandName || 'Brand';
+          const imgPrompt = studioTarget.imagePrompt || `${topic} — ${brand} commercial advertising photography, 8k`;
+          const imgUrl = studioTarget.imageUrl || resolveBrandVisualAsset({
+            prompt: imgPrompt,
+            brandName: brand,
+            topic: topic,
+            style: 'Photorealistic Commercial',
+            aspect: initialAspect,
+            variationIndex: 0
+          });
+
+          const payload = {
+            ...(typeof out === 'object' ? out : {}),
+            type: 'SOCIAL',
+            platform: matchedPlatform,
+            topic: topic,
+            hook: out.hook || `🚀 ${topic}`,
+            shortCaption: out.shortCaption || out.caption || '',
+            caption: out.caption || '',
+            longCaption: out.longCaption || out.caption || '',
+            cta: out.cta || '👉 Click the link in bio to learn more & get started today!',
+            hashtags: Array.isArray(out.hashtags) ? out.hashtags : [`#${brand.replace(/\s+/g, '')}`],
+            imageUrl: imgUrl,
+            imagePrompt: imgPrompt,
+            imageStyle: 'Photorealistic Commercial',
+            imageAspect: initialAspect,
+            createdAt: new Date().toISOString(),
+          };
+
+          setSocialResult(payload);
+          if (setGeneratedContent) setGeneratedContent(payload);
+        } else if (studioTarget.autoGenerate) {
           setDraftingSocial(true);
           const fullStrategyContext = studioTarget.strategyDescription || studioTarget.actionItem || studioTarget.customPrompt || '';
           contentAPI.generateSocialPost({
@@ -1242,6 +1275,7 @@ export const ContentStudioModule = () => {
                                 cta: socialResult?.cta || socialResult?.callToAction || '',
                                 hashtags: socialResult?.hashtags || [],
                                 strategyPillar: socialResult?.strategyPillar || activeWorkspace?.positioningSummary || 'Brand Strategy',
+                                imageUrl: socialResult?.imageUrl,
                                 imagePrompt: socialResult?.imagePrompt || `${socialTopic} — ${activeWorkspace?.brandName || 'Brand'} commercial advertising photography, 8k`,
                                 data: socialResult,
                               });
@@ -1292,6 +1326,7 @@ export const ContentStudioModule = () => {
                               cta: socialResult?.cta || socialResult?.callToAction || '',
                               hashtags: socialResult?.hashtags || [],
                               strategyPillar: socialResult?.strategyPillar || activeWorkspace?.positioningSummary || 'Brand Strategy',
+                              imageUrl: socialResult?.imageUrl,
                               imagePrompt: socialResult?.imagePrompt || `${socialTopic} — ${activeWorkspace?.brandName || 'Brand'} commercial advertising photography, 8k`,
                               data: socialResult,
                             });
